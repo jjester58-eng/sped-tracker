@@ -16,9 +16,11 @@ A simple Next.js data tracker for special education teachers. This app is config
    npm install
    ```
 
-3. Create the Supabase table using `supabase.sql` in the Supabase SQL editor.
+3. Set the same Supabase environment variables in Vercel if you deploy there.
 
-4. Run the development server:
+4. Create the Supabase table using `supabase.sql` in the Supabase SQL editor.
+
+5. Run the development server:
 
    ```bash
    npm run dev

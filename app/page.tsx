@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 
 interface StudentRecord {
   id: string;
@@ -30,10 +30,19 @@ export default function HomePage() {
   });
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      return;
+    }
+
     refreshRecords();
   }, []);
 
   async function refreshRecords() {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -65,6 +74,12 @@ export default function HomePage() {
       teacher_name: formState.teacherName,
       review_date: formState.reviewDate || null
     };
+
+    if (!isSupabaseConfigured) {
+      setError("Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      setLoading(false);
+      return;
+    }
 
     const { error: insertError } = await supabase
       .from("student_data")
