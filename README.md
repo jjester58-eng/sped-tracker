@@ -10,7 +10,9 @@ A simple Next.js data tracker for special education teachers. This app is config
    cp .env.local.example .env.local
    ```
 
-2. Install dependencies:
+2. Open `.env.local` and replace the placeholders with your Supabase values.
+
+3. Install dependencies:
 
    ```bash
    npm install
