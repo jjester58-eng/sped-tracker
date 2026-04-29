@@ -48,8 +48,12 @@ export default function HomePage() {
       return;
     }
 
-    loadDropdownOptions();
-    refreshRecords();
+    async function init() {
+      await loadDropdownOptions();
+      await refreshRecords();
+    }
+
+    init();
   }, []);
 
   async function loadDropdownOptions() {
@@ -82,25 +86,22 @@ export default function HomePage() {
 
     const { data, error: fetchError } = await supabase
       .from("weekly_progress")
-      .select(
-        `id, student_id, goal_id, case_manager_id, progress_notes, accommodations_used, review_date, created_at,
-        student:students(name),
-        goal:goals(goal_description),
-        case_manager:case_managers(name)`
-      )
+      .select("id, student_id, goal_id, case_manager_id, progress_notes, accommodations_used, review_date, created_at")
       .order("created_at", { ascending: false });
 
     if (fetchError) {
       setError(fetchError.message);
     } else if (data) {
+      const studentMap = new Map(students.map((s) => [s.id, s.name]));
+      const caseManagerMap = new Map(caseManagers.map((cm) => [cm.id, cm.name]));
       const transformed = data.map((row: any) => ({
         id: row.id,
         student_id: row.student_id,
-        student_name: row.student?.name || "Unknown",
+        student_name: studentMap.get(row.student_id) || "Unknown",
         goal_id: row.goal_id,
-        goal_description: row.goal?.goal_description || "No goal",
+        goal_description: "No goal",
         case_manager_id: row.case_manager_id,
-        case_manager_name: row.case_manager?.name || "Unknown",
+        case_manager_name: caseManagerMap.get(row.case_manager_id) || "Unknown",
         progress_notes: row.progress_notes,
         accommodations_used: row.accommodations_used,
         review_date: row.review_date,
