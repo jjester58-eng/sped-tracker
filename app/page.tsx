@@ -84,9 +84,9 @@ export default function HomePage() {
       .from("weekly_progress")
       .select(
         `id, student_id, goal_id, case_manager_id, progress_notes, accommodations_used, review_date, created_at,
-        student(name),
-        goal(goal_description),
-        case_manager(name)`
+        student:students(name),
+        goal:goals(goal_description),
+        case_manager:case_managers(name)`
       )
       .order("created_at", { ascending: false });
 
