@@ -84,9 +84,9 @@ export default function HomePage() {
       .from("weekly_progress")
       .select(
         `id, student_id, goal_id, case_manager_id, progress_notes, accommodations_used, review_date, created_at,
-        students(name),
-        goals(goal_description),
-        case_managers(name)`
+        student(name),
+        goal(goal_description),
+        case_manager(name)`
       )
       .order("created_at", { ascending: false });
 
@@ -96,11 +96,11 @@ export default function HomePage() {
       const transformed = data.map((row: any) => ({
         id: row.id,
         student_id: row.student_id,
-        student_name: row.students?.name || "Unknown",
+        student_name: row.student?.name || "Unknown",
         goal_id: row.goal_id,
-        goal_description: row.goals?.goal_description || "No goal",
+        goal_description: row.goal?.goal_description || "No goal",
         case_manager_id: row.case_manager_id,
-        case_manager_name: row.case_managers?.name || "Unknown",
+        case_manager_name: row.case_manager?.name || "Unknown",
         progress_notes: row.progress_notes,
         accommodations_used: row.accommodations_used,
         review_date: row.review_date,
