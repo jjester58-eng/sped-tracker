@@ -1,6 +1,6 @@
 # SPED Tracker
 
-A Next.js  data tracker for special education teachers working in public schools. This app connects to Supabase and helps track student progress, accommodations, and IEP goals.
+A Next.js data tracker for special education teachers working in public schools. This app connects to Supabase and helps track student progress, accommodations, and IEP goals.
 
 ## Setup
 
