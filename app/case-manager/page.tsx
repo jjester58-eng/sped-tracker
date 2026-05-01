@@ -1,23 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import CsvUploader from "../components/CsvUploader";
-import StudentSelector from "../components/StudentSelector";
-import { getSupabase } from "@/lib/supabaseClient";
+type Props = {
+  mode?: "edit" | "select";
+  onStudentSelected?: (student: any) => void;
+};
 
-export default function CaseManagerPage() {
-  const supabase = getSupabase();
-
+export default function StudentSelector({ mode, onStudentSelected }: Props) {
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Case Manager Dashboard</h1>
+    <div className="border p-4 rounded">
+      <p>Student Selector ({mode})</p>
 
-      <CsvUploader />
-
-      <StudentSelector
-        mode="edit"
-        onStudentSelected={(student) => console.log("Edit student:", student)}
-      />
+      <button
+        onClick={() =>
+          onStudentSelected?.({ id: "1", name: "Test Student" })
+        }
+      >
+        Select Test Student
+      </button>
     </div>
   );
 }
