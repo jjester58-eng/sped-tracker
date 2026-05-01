@@ -23,16 +23,12 @@ export default function TeacherPage() {
     if (!supabase || !goal) return;
 
     for (const student of selectedStudents) {
-      const { error } = await supabase.from("weekly_progress").insert({
+      await supabase.from("weekly_progress").insert({
         student_id: student.id,
         goal_id: goal,
         progress_notes: notes,
         review_date: new Date().toISOString(),
       });
-
-      if (error) {
-        console.error("Save error:", error);
-      }
     }
 
     alert("Saved successfully");

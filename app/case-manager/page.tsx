@@ -1,9 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import CsvUploader from "../components/CsvUploader";
 import StudentSelector from "../components/StudentSelector";
+import StudentEditor from "../components/StudentEditor";
+
+type Student = {
+  id: string;
+  name: string;
+  grade_level: string | null;
+};
 
 export default function CaseManagerPage() {
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
   return (
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-bold">Case Manager Dashboard</h1>
@@ -12,8 +22,12 @@ export default function CaseManagerPage() {
 
       <StudentSelector
         mode="edit"
-        onStudentSelected={(student) => console.log("Edit student:", student)}
+        onStudentSelected={(student) => setSelectedStudent(student)}
       />
+
+      {selectedStudent && (
+        <StudentEditor student={selectedStudent} />
+      )}
     </div>
   );
 }
