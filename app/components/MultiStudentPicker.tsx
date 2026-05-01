@@ -3,33 +3,62 @@
 import { useEffect, useState } from "react";
 import { getSupabase } from "@/lib/supabaseClient";
 
-export default function MultiStudentPicker({ subject, onChange }) {
-  const [students, setStudents] = useState([]);
+type Student = {
+  id: string;
+  name: string;
+};
+
+type Props = {
+  subject: string;
+  onChange: React.Dispatch<React.SetStateAction<Student[]>>;
+};
+
+export default function MultiStudentPicker({ subject, onChange }: Props) {
+  const [students, setStudents] = useState<Student[]>([]);
   const supabase = getSupabase();
 
   useEffect(() => {
-    if (!subject) return;
+    if (!subject || !supabase) return;
 
-    async function load() {
-      const { data: goals } = await supabase
+    async function loadStudents() {
+      const { data: goals, error } = await supabase
         .from("goals")
         .select("student_id, goal_description")
         .ilike("goal_description", `%${subject}%`);
 
-      const studentIds = goals.map((g) => g.student_id);
+      if (error) {
+        console.error("Goals fetch error:", error);
+        setStudents([]);
+        return;
+      }
 
-      const { data: filteredStudents } = await supabase
+      const studentIds = (goals || [])
+        .map((g: any) => g.student_id)
+        .filter(Boolean);
+
+      if (studentIds.length === 0) {
+        setStudents([]);
+        return;
+      }
+
+      const { data: filteredStudents, error: studentError } = await supabase
         .from("students")
-        .select("*")
+        .select("id, name")
         .in("id", studentIds);
 
-      setStudents(filteredStudents || []);
+      if (studentError) {
+        console.error("Students fetch error:", studentError);
+        setStudents([]);
+        return;
+      }
+
+      setStudents((filteredStudents || []) as Student[]);
     }
 
-    load();
+    loadStudents();
   }, [subject]);
 
-  function toggle(student) {
+  function toggle(student: Student) {
     onChange((prev) =>
       prev.some((s) => s.id === student.id)
         ? prev.filter((s) => s.id !== student.id)
@@ -40,13 +69,18 @@ export default function MultiStudentPicker({ subject, onChange }) {
   return (
     <div>
       <label className="font-semibold">Select Students</label>
-      <div className="space-y-2">
-        {students.map((s) => (
-          <div key={s.id}>
-            <input type="checkbox" onChange={() => toggle(s)} />
-            <span className="ml-2">{s.name}</span>
-          </div>
-        ))}
+
+      <div className="space-y-2 mt-2">
+        {students.length === 0 ? (
+          <p className="text-sm text-gray-500">No students found</p>
+        ) : (
+          students.map((s) => (
+            <div key={s.id} className="flex items-center">
+              <input type="checkbox" onChange={() => toggle(s)} />
+              <span className="ml-2">{s.name}</span>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

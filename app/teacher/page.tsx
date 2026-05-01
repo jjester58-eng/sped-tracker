@@ -6,8 +6,13 @@ import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
 import { getSupabase } from "@/lib/supabaseClient";
 
+type Student = {
+  id: string;
+  name: string;
+};
+
 export default function TeacherPage() {
-  const [selectedStudents, setSelectedStudents] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [subject, setSubject] = useState("");
   const [goal, setGoal] = useState("");
   const [notes, setNotes] = useState("");
@@ -15,14 +20,22 @@ export default function TeacherPage() {
   const supabase = getSupabase();
 
   async function saveProgress() {
+    if (!supabase || !goal) return;
+
     for (const student of selectedStudents) {
-      await supabase.from("weekly_progress").insert({
+      const { error } = await supabase.from("weekly_progress").insert({
         student_id: student.id,
         goal_id: goal,
         progress_notes: notes,
-        review_date: new Date(),
+        review_date: new Date().toISOString(),
       });
+
+      if (error) {
+        console.error("Save error:", error);
+      }
     }
+
+    alert("Saved successfully");
   }
 
   return (
@@ -31,9 +44,16 @@ export default function TeacherPage() {
 
       <SubjectSelector onChange={setSubject} />
 
-      <MultiStudentPicker subject={subject} onChange={setSelectedStudents} />
+      <MultiStudentPicker
+        subject={subject}
+        onChange={setSelectedStudents}
+      />
 
-      <GoalSelector subject={subject} students={selectedStudents} onChange={setGoal} />
+      <GoalSelector
+        subject={subject}
+        students={selectedStudents}
+        onChange={setGoal}
+      />
 
       <textarea
         className="border p-2 w-full"
