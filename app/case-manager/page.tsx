@@ -28,6 +28,13 @@ export default function CaseManagerPage() {
       {selectedStudent && (
         <StudentEditor student={selectedStudent} />
       )}
+
+      <button
+        onClick={() => alert("Archive logic goes here")}
+        className="bg-gray-600 text-white px-4 py-2 rounded"
+      >
+        Archive
+      </button>
     </div>
   );
 }

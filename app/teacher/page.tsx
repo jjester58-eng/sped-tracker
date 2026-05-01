@@ -5,6 +5,7 @@ import MultiStudentPicker from "../components/MultiStudentPicker";
 import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
 import { getSupabase } from "@/lib/supabaseClient";
+import GradeLevelSelector from "../components/GradeLevelSelector";
 
 type Student = {
   id: string;
@@ -20,6 +21,13 @@ export default function TeacherPage() {
   const supabase = getSupabase();
 
   async function saveProgress() {
+    <button
+  onClick={() => alert("Archive logic goes here")}
+  className="bg-gray-600 text-white px-4 py-2 rounded"
+>
+  Archive
+</button>
+
     if (!supabase || !goal) return;
 
     for (const student of selectedStudents) {
@@ -50,6 +58,8 @@ export default function TeacherPage() {
         students={selectedStudents}
         onChange={setGoal}
       />
+      <GradeLevelSelector onChange={setGradeLevel} />
+      const [gradeLevel, setGradeLevel] = useState("");
 
       <textarea
         className="border p-2 w-full"
