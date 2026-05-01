@@ -1,22 +1,19 @@
 "use client";
 
-type Props = {
-  mode?: "edit" | "select";
-  onStudentSelected?: (student: any) => void;
-};
+import CsvUploader from "../components/CsvUploader";
+import StudentSelector from "../components/StudentSelector";
 
-export default function StudentSelector({ mode, onStudentSelected }: Props) {
+export default function CaseManagerPage() {
   return (
-    <div className="border p-4 rounded">
-      <p>Student Selector ({mode})</p>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Case Manager Dashboard</h1>
 
-      <button
-        onClick={() =>
-          onStudentSelected?.({ id: "1", name: "Test Student" })
-        }
-      >
-        Select Test Student
-      </button>
+      <CsvUploader />
+
+      <StudentSelector
+        mode="edit"
+        onStudentSelected={(student) => console.log("Edit student:", student)}
+      />
     </div>
   );
 }
