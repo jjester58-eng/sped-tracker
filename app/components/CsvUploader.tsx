@@ -1,7 +1,7 @@
 "use client";
 
 import Papa from "papaparse";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 type CsvRow = {
   name: string;
@@ -9,11 +9,9 @@ type CsvRow = {
 };
 
 export default function CsvUploader() {
-  const supabase = getSupabase();
-
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!file || !supabase) return;
+    if (!file) return;
 
     Papa.parse<CsvRow>(file, {
       header: true,
@@ -25,13 +23,13 @@ export default function CsvUploader() {
         for (const row of rows) {
           if (!row?.name) continue;
 
-          const { error } = await supabase.from("students").upsert({
+          const { error } = await supabase.from("students").insert({
             name: row.name,
             grade_level: row.grade_level || null,
           });
 
           if (error) {
-            console.error("Insert error:", error);
+            console.error(error);
           }
         }
       },
@@ -39,14 +37,8 @@ export default function CsvUploader() {
   }
 
   return (
-    <div className="space-y-2">
-      <label className="font-semibold">Upload Students CSV</label>
-
-      <input
-        type="file"
-        accept=".csv"
-        onChange={handleUpload}
-      />
+    <div>
+      <input type="file" accept=".csv" onChange={handleUpload} />
     </div>
   );
 }

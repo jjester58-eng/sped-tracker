@@ -112,50 +112,48 @@ export default function TeacherInputPage() {
   }
 
   /* ---------------- SAVE PROGRESS ---------------- */
-
-  async function saveProgress() {
-    if (Object.keys(progress).length === 0) {
-      setError("Enter notes before saving.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const entries: ProgressEntry[] = Object.entries(progress)
-      .map(([goal_id, notes]) => {
-        const goal = goals.find((g) => g.id === goal_id);
-        if (!goal) return null;
-
-        return {
-          student_id: goal.student_id,
-          goal_id,
-          progress_notes: notes.trim(),
-          review_date: new Date().toISOString(),
-        };
-      })
-      .filter(Boolean) as ProgressEntry[];
-
-    if (entries.length === 0) {
-      setError("No valid entries to save.");
-      setLoading(false);
-      return;
-    }
-
-    const { error } = await supabase
-      .from("weekly_progress")
-      .insert(entries);
-
-    if (error) {
-      setError(error.message);
-    } else {
-      flash("Progress saved successfully!");
-      setProgress({});
-    }
-
-    setLoading(false);
+async function saveProgress() {
+  if (Object.keys(progress).length === 0) {
+    setError("Enter notes before saving.");
+    return;
   }
 
+  setLoading(true);
+  setError(null);
+
+  const entries = Object.entries(progress)
+    .map(([goal_id, notes]) => {
+      const goal = goals.find((g) => g.id === goal_id);
+      if (!goal) return null;
+
+      return {
+        student_id: goal.student_id,
+        goal_id,
+        progress_notes: notes.trim(),
+        review_date: new Date().toISOString(),
+      };
+    })
+    .filter(Boolean);
+
+  if (entries.length === 0) {
+    setError("No valid entries to save.");
+    setLoading(false);
+    return;
+  }
+
+  const { error } = await supabase
+    .from("weekly_progress")
+    .insert(entries as any); // 👈 TEMP FIX
+
+  if (error) {
+    setError(error.message);
+  } else {
+    flash("Progress saved successfully!");
+    setProgress({});
+  }
+
+  setLoading(false);
+}
   /* ---------------- UI ---------------- */
 
   return (

@@ -4,11 +4,12 @@ import type { Database } from "@/types/supabase";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export const isSupabaseConfigured = Boolean(
-  supabaseUrl && supabaseAnonKey
-);
+// Safety check (optional but helpful)
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("Missing Supabase env vars");
+}
 
-// ✅ SINGLE fully-typed client (use everywhere)
+// SINGLE exported client
 export const supabase = createClient<Database>(
   supabaseUrl,
   supabaseAnonKey
