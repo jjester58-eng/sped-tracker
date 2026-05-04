@@ -4,7 +4,7 @@ import { useState } from "react";
 import MultiStudentPicker from "../components/MultiStudentPicker";
 import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import GradeLevelSelector from "../components/GradeLevelSelector";
 
 type Student = {
@@ -18,7 +18,7 @@ export default function TeacherPage() {
   const [goal, setGoal] = useState("");
   const [notes, setNotes] = useState("");
 
-  const supabase = getSupabase();
+
 
   async function saveProgress() {
     <button
