@@ -1,8 +1,22 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+// lib/supabaseClient.ts
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
-export function getSupabase(): SupabaseClient {
-  return createClient(supabaseUrl, supabaseAnonKey);
+export const isSupabaseConfigured = !!(supabaseUrl && supabaseKey);
+
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
+
+export function getSupabase() {
+  if (!isSupabaseConfigured) {
+    console.error("Supabase is not configured. Check your .env.local file.");
+    return null;
+  }
+
+  if (!supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseKey);
+  }
+
+  return supabaseInstance;
 }
