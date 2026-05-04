@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 type Student = {
   id: string;
@@ -11,6 +11,7 @@ type Student = {
 type Goal = {
   id: string;
   goal_description: string;
+  student_id: string;
 };
 
 type Props = {
@@ -19,12 +20,18 @@ type Props = {
   onChange: (goalId: string) => void;
 };
 
-export default function GoalSelector({ subject, students, onChange }: Props) {
+export default function GoalSelector({
+  subject,
+  students,
+  onChange,
+}: Props) {
   const [goals, setGoals] = useState<Goal[]>([]);
-  const supabase = getSupabase();
+
+  // ✅ FIX: do NOT redeclare supabase
+  // const supabase = supabase(); ❌ REMOVE THIS
 
   useEffect(() => {
-    if (!supabase || !subject || students.length === 0) {
+    if (!subject || students.length === 0) {
       setGoals([]);
       return;
     }
@@ -32,13 +39,19 @@ export default function GoalSelector({ subject, students, onChange }: Props) {
     async function load() {
       const studentIds = students.map((s) => s.id);
 
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("goals")
         .select("id, goal_description, student_id")
         .in("student_id", studentIds)
         .ilike("goal_description", `%${subject}%`);
 
-      if (data) setGoals(data as Goal[]);
+      if (error) {
+        console.error(error);
+        setGoals([]);
+        return;
+      }
+
+      setGoals((data as Goal[]) || []);
     }
 
     load();
@@ -53,6 +66,7 @@ export default function GoalSelector({ subject, students, onChange }: Props) {
         onChange={(e) => onChange(e.target.value)}
       >
         <option value="">Select goal</option>
+
         {goals.map((g) => (
           <option key={g.id} value={g.id}>
             {g.goal_description}
