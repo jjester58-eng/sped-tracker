@@ -8,7 +8,7 @@ export const isSupabaseConfigured = Boolean(
   supabaseUrl && supabaseAnonKey
 );
 
-// ✅ SINGLE typed client (use everywhere)
+// ✅ SINGLE fully-typed client (use everywhere)
 export const supabase = createClient<Database>(
   supabaseUrl,
   supabaseAnonKey
