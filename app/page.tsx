@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
+
+/* ---------------- TYPES ---------------- */
 
 type Student = {
   id: string;
@@ -15,29 +17,47 @@ type Goal = {
   goal_description: string;
 };
 
+type ProgressEntry = {
+  student_id: string;
+  goal_id: string;
+  progress_notes: string;
+  review_date: string;
+};
+
+/* ---------------- COMPONENT ---------------- */
+
 export default function TeacherInputPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [gradeFilter, setGradeFilter] = useState("");
+
   const [progress, setProgress] = useState<Record<string, string>>({});
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  /* ---------------- LOAD DATA ---------------- */
 
   useEffect(() => {
     loadData();
   }, []);
 
   async function loadData() {
-    const supabase = getSupabase();
-    if (!supabase) return;
-
     setLoading(true);
+    setError(null);
 
     const [studentsRes, goalsRes] = await Promise.all([
-      supabase.from("students").select("id, name, grade_level").order("name"),
-      supabase.from("goals").select("id, student_id, goal_description"),
+      supabase
+        .from("students")
+        .select("id, name, grade_level")
+        .order("name"),
+
+      supabase
+        .from("goals")
+        .select("id, student_id, goal_description"),
     ]);
 
     if (studentsRes.error) {
@@ -55,6 +75,8 @@ export default function TeacherInputPage() {
     setLoading(false);
   }
 
+  /* ---------------- HELPERS ---------------- */
+
   function toggleStudent(id: string) {
     setSelectedStudentIds((prev) =>
       prev.includes(id)
@@ -64,7 +86,10 @@ export default function TeacherInputPage() {
   }
 
   function handleNotesChange(goalId: string, notes: string) {
-    setProgress((prev) => ({ ...prev, [goalId]: notes }));
+    setProgress((prev) => ({
+      ...prev,
+      [goalId]: notes,
+    }));
   }
 
   function clearFilters() {
@@ -73,18 +98,22 @@ export default function TeacherInputPage() {
     setProgress({});
   }
 
-  const filteredStudents = students.filter((student) => {
-    return !gradeFilter || student.grade_level === gradeFilter;
-  });
+  const filteredStudents = students.filter((s) =>
+    !gradeFilter ? true : s.grade_level === gradeFilter
+  );
 
   const visibleGoals = goals.filter((g) =>
     selectedStudentIds.includes(g.student_id)
   );
 
-  async function saveProgress() {
-    const supabase = getSupabase();
-    if (!supabase) return;
+  function flash(msg: string) {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(null), 3000);
+  }
 
+  /* ---------------- SAVE PROGRESS ---------------- */
+
+  async function saveProgress() {
     if (Object.keys(progress).length === 0) {
       setError("Enter notes before saving.");
       return;
@@ -93,7 +122,7 @@ export default function TeacherInputPage() {
     setLoading(true);
     setError(null);
 
-    const entries = Object.entries(progress)
+    const entries: ProgressEntry[] = Object.entries(progress)
       .map(([goal_id, notes]) => {
         const goal = goals.find((g) => g.id === goal_id);
         if (!goal) return null;
@@ -105,7 +134,7 @@ export default function TeacherInputPage() {
           review_date: new Date().toISOString(),
         };
       })
-      .filter(Boolean);
+      .filter(Boolean) as ProgressEntry[];
 
     if (entries.length === 0) {
       setError("No valid entries to save.");
@@ -115,28 +144,33 @@ export default function TeacherInputPage() {
 
     const { error } = await supabase
       .from("weekly_progress")
-      .insert(entries as any);
+      .insert(entries);
 
     if (error) {
       setError(error.message);
     } else {
-      setSuccessMsg("Progress saved successfully!");
+      flash("Progress saved successfully!");
       setProgress({});
-      setTimeout(() => setSuccessMsg(null), 3000);
     }
 
     setLoading(false);
   }
 
+  /* ---------------- UI ---------------- */
+
   return (
     <main className="p-6 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-2">Teacher Input</h1>
-      <p className="text-gray-600 mb-6">Record progress on IEP goals</p>
+      <p className="text-gray-600 mb-6">
+        Record progress on IEP goals
+      </p>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
-      {successMsg && <p className="text-green-600 mb-4">{successMsg}</p>}
+      {successMsg && (
+        <p className="text-green-600 mb-4">{successMsg}</p>
+      )}
 
-      {/* Filters */}
+      {/* FILTERS */}
       <div className="mb-8 border p-4 rounded">
         <h2 className="text-xl font-semibold mb-4">Filters</h2>
 
@@ -146,40 +180,55 @@ export default function TeacherInputPage() {
             <label className="block text-sm font-medium mb-2">
               Select Students
             </label>
+
             <div className="max-h-60 overflow-y-auto border rounded p-2">
               {filteredStudents.map((student) => (
-                <label key={student.id} className="flex items-center gap-2">
+                <label
+                  key={student.id}
+                  className="flex items-center gap-2"
+                >
                   <input
                     type="checkbox"
-                    checked={selectedStudentIds.includes(student.id)}
-                    onChange={() => toggleStudent(student.id)}
+                    checked={selectedStudentIds.includes(
+                      student.id
+                    )}
+                    onChange={() =>
+                      toggleStudent(student.id)
+                    }
                   />
                   <span>
                     {student.name}{" "}
-                    {student.grade_level && `(Gr ${student.grade_level})`}
+                    {student.grade_level &&
+                      `(Gr ${student.grade_level})`}
                   </span>
                 </label>
               ))}
             </div>
           </div>
 
-          {/* Grade */}
+          {/* Grade Filter */}
           <div>
             <label className="block text-sm font-medium mb-2">
               Grade Level
             </label>
+
             <select
               value={gradeFilter}
-              onChange={(e) => setGradeFilter(e.target.value)}
+              onChange={(e) =>
+                setGradeFilter(e.target.value)
+              }
               className="w-full border p-2 rounded"
             >
               <option value="">All Grades</option>
-              {[...new Set(students.map((s) => s.grade_level).filter(Boolean))]
-                .map((grade) => (
-                  <option key={grade} value={grade ?? ""}>
-                    Grade {grade}
-                  </option>
-                ))}
+              {[...new Set(
+                students
+                  .map((s) => s.grade_level)
+                  .filter(Boolean)
+              )].map((grade) => (
+                <option key={grade} value={grade || ""}>
+                  Grade {grade}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -192,7 +241,7 @@ export default function TeacherInputPage() {
         </button>
       </div>
 
-      {/* Goals */}
+      {/* GOALS */}
       {selectedStudentIds.length === 0 ? (
         <p className="text-gray-500 text-center">
           Select students to begin.
@@ -219,19 +268,27 @@ export default function TeacherInputPage() {
             );
 
             return (
-              <div key={goal.id} className="border p-4 mb-4 rounded">
+              <div
+                key={goal.id}
+                className="border p-4 mb-4 rounded"
+              >
                 <p className="font-semibold">
                   {student?.name}
                   {student?.grade_level &&
                     ` (Gr ${student.grade_level})`}
                 </p>
 
-                <p className="mb-2">{goal.goal_description}</p>
+                <p className="mb-2">
+                  {goal.goal_description}
+                </p>
 
                 <textarea
                   value={progress[goal.id] || ""}
                   onChange={(e) =>
-                    handleNotesChange(goal.id, e.target.value)
+                    handleNotesChange(
+                      goal.id,
+                      e.target.value
+                    )
                   }
                   className="w-full border p-2 rounded"
                   rows={3}
