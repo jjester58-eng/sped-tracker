@@ -4,8 +4,8 @@ import { useState } from "react";
 import MultiStudentPicker from "../components/MultiStudentPicker";
 import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
-import { supabase } from "@/lib/supabaseClient";
 import GradeLevelSelector from "../components/GradeLevelSelector";
+import { supabase } from "@/lib/supabaseClient";
 
 type Student = {
   id: string;
@@ -17,26 +17,30 @@ export default function TeacherPage() {
   const [subject, setSubject] = useState("");
   const [goal, setGoal] = useState("");
   const [notes, setNotes] = useState("");
-
-
+  const [gradeLevel, setGradeLevel] = useState(""); // ✅ FIXED
 
   async function saveProgress() {
-    <button
-  onClick={() => alert("Archive logic goes here")}
-  className="bg-gray-600 text-white px-4 py-2 rounded"
->
-  Archive
-</button>
-
-    if (!supabase || !goal) return;
+    if (!goal || selectedStudents.length === 0) return;
 
     for (const student of selectedStudents) {
-      await supabase.from("weekly_progress").insert({
-        student_id: student.id,
-        goal_id: goal,
-        progress_notes: notes,
-        review_date: new Date().toISOString(),
-      });
+      const { error } = await supabase
+        .from("weekly_progress")
+        .insert({
+          student_id: student.id,
+          goal_id: goal,
+          progress_notes: notes,
+          review_date: new Date().toISOString(),
+
+          // REQUIRED FIELDS
+          entered_by_id: "teacher-id",
+          week_of: new Date().toISOString(),
+        });
+
+      if (error) {
+        console.error(error);
+        alert("Error saving progress");
+        return;
+      }
     }
 
     alert("Saved successfully");
@@ -58,8 +62,8 @@ export default function TeacherPage() {
         students={selectedStudents}
         onChange={setGoal}
       />
+
       <GradeLevelSelector onChange={setGradeLevel} />
-      const [gradeLevel, setGradeLevel] = useState("");
 
       <textarea
         className="border p-2 w-full"
