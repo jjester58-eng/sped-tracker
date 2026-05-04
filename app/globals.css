@@ -1,733 +1,479 @@
+:root {
+  --bg: #0f1117;
+  --surface: #181c27;
+  --surface-2: #1e2436;
+  --border: #2a3049;
+  --border-light: #364060;
+  --accent: #4f8ef7;
+  --accent-2: #7b5ea7;
+  --success: #3ecf8e;
+  --warning: #f5a623;
+  --danger: #e05c5c;
+  --text: #e8eaf0;
+  --text-muted: #7a849e;
+  --text-dim: #4a5168;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --font-mono: ui-monospace, 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+  --font-display: Georgia, 'Times New Roman', serif;
+}
 
-Claude finished the response
-You said: I am going to need to add pages to this.
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-"use client"; import { useEffect, useState } from "react"; import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient"; interface ProgressEntry { id: string; student_id: string; student_name: string; goal_id: string; goal_description: string; case_manager_id: s
+html { font-size: 16px; }
 
-pasted
-
-I am going to need to add pages to this. I need a "Case Manager" page to upload csv, and edit student info.  I need a teacher input page for slecting students and inputting Notes for the weekly goals.  Each of the pages will need a Dropdown selector for Name, Subject, Goals.  If no goals are there for the subject requested, do not return names.  I also need to be able to select multiple students for the report.  12 students returned, but I only need 3 for the current class, I select those 3 and filter the rest out.  I need a save and grade level
-
-html,
 body {
-  padding: 0;
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: linear-gradient(135deg, #dbeafe 0%, #f0f9ff 100%);
-  color: #111827;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+  line-height: 1.6;
 }
 
-* {
-  box-sizing: border-box;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-.page {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 40px 24px;
-}
-
-.card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-  padding: 24px;
-  margin-bottom: 24px;
-}
-
-.header {
+/* NAV */
+.nav-bar {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 60px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: clamp(2rem, 2.5vw, 2.8rem);
-}
-
-.header p {
-  margin: 0;
-  max-width: 760px;
-  line-height: 1.7;
-  color: #4b5563;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-}
-
-.form-grid.full {
-  grid-template-columns: 1fr;
-}
-
-.field {
+.nav-brand {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.field label {
+.nav-logo {
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.nav-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text);
+  letter-spacing: 0.01em;
 }
 
-.field input,
-.field select,
-.field textarea {
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 12px 14px;
-  background: #fafafa;
-  color: #111827;
+.nav-links {
+  display: flex;
+  gap: 0.25rem;
 }
 
-.field textarea {
-  min-height: 100px;
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius);
+  transition: all 0.15s;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nav-link:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+/* MAIN */
+.main-content {
+  padding: 2.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* PAGE HEADER */
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.page-title span {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.page-subtitle {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  margin-top: 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title::before {
+  content: '';
+  display: block;
+  width: 3px;
+  height: 1rem;
+  background: var(--accent);
+  border-radius: 2px;
+}
+
+/* FORM ELEMENTS */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+select,
+input[type="text"],
+input[type="email"],
+input[type="date"],
+textarea {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 0.55rem 0.75rem;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+  appearance: none;
+}
+
+select:focus,
+input:focus,
+textarea:focus {
+  border-color: var(--accent);
+}
+
+select option {
+  background: var(--surface-2);
+}
+
+textarea {
   resize: vertical;
+  min-height: 80px;
 }
 
-.button {
+/* BUTTONS */
+.btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px 22px;
+  gap: 0.4rem;
+  padding: 0.55rem 1.25rem;
+  border-radius: var(--radius);
   border: none;
-  border-radius: 999px;
-  background: #111827;
-  color: white;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.15s;
 }
 
-.button:hover {
-  background: #1f2937;
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
 }
 
-.entry {
-  border-top: 1px solid #e5e7eb;
-  padding: 18px 0;
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-success {
+  background: var(--success);
+  color: #0a2018;
 }
 
-.entry:first-child {
-  border-top: none;
+.btn-success:hover { opacity: 0.88; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }
 
-.entry-meta {
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-danger:hover { opacity: 0.85; }
+
+.btn-sm {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+}
+
+.btn-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+}
+
+/* TABLE */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+thead tr {
+  background: var(--surface-2);
+}
+
+th {
+  text-align: left;
+  padding: 0.6rem 0.9rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+tr:last-child td { border-bottom: none; }
+
+tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* STUDENT MULTI-SELECT */
+.student-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(140px, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-  color: #6b7280;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.5rem;
 }
 
-.entry-meta span {
+.student-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.82rem;
+  user-select: none;
+}
+
+.student-chip:hover {
+  border-color: var(--border-light);
+}
+
+.student-chip.selected {
+  border-color: var(--accent);
+  background: rgba(79, 142, 247, 0.1);
+  color: var(--accent);
+}
+
+.student-chip .check {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-light);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  transition: all 0.15s;
+}
+
+.student-chip.selected .check {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface-2);
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(79, 142, 247, 0.05);
+}
+
+.upload-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
   display: block;
 }
 
-.note {
-  white-space: pre-line;
-  margin: 16px 0 0;
-  color: #374151;
+.upload-label {
+  color: var(--text-muted);
+  font-size: 0.82rem;
 }
 
-.status {
-  color: #2563eb;
-  font-weight: 700;
+.upload-label strong {
+  color: var(--accent);
 }
 
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.tab {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font-mono);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+
+.tab:hover { color: var(--text); }
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* BADGES */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 500;
+}
+
+.badge-blue { background: rgba(79,142,247,0.15); color: var(--accent); }
+.badge-green { background: rgba(62,207,142,0.15); color: var(--success); }
+.badge-purple { background: rgba(123,94,167,0.15); color: #a47fd4; }
+
+/* ALERTS */
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.alert-info { background: rgba(79,142,247,0.1); border: 1px solid rgba(79,142,247,0.25); color: #a0bef7; }
+.alert-success { background: rgba(62,207,142,0.1); border: 1px solid rgba(62,207,142,0.25); color: #7de8bf; }
+.alert-error { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.25); color: #f0a0a0; }
+
+/* EMPTY STATE */
 .empty-state {
   text-align: center;
-  padding: 32px 0;
-  color: #6b7280;
+  padding: 3rem 1rem;
+  color: var(--text-dim);
+  font-size: 0.82rem;
 }
-Show more
-May 1
-Claude responded: This is a substantial multi-page app.
 
-Reading frontend design skill
-Reading frontend design skill
-This is a substantial multi-page app. Let me build it as a well-structured React artifact with routing between the three pages, matching your existing CSS aesthetic.
-
-V
-
-Connecting to visualize...
-Claude's response was interrupted
-You said: This is a next.
-This is a next.js project.  I was not sure which files in github you needed
-
-May 1
-Claude responded: No worries!
-No worries! To build this properly for your Next.js project, I need to understand the structure a bit better.
-
-You said: Q: What's your Next.
-Q: What's your Next.js routing setup?
-A: I really don't know.  Copilot set it up
-
-Q: What files would be most helpful to share?
-A: Full folder structure / file tree
-
-May 1
-Claude responded: No problem!
-No problem! Can you run this command in your project's root folder and paste the output here?
-
-bash
-find . -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/.next/*' | sort
-That will give me the full file tree without all the noise from dependencies. If you're on Windows in PowerShell, use this instead:
-
-powershell
-Get-ChildItem -Recurse -Exclude node_modules,.git,.next | Select-Object FullName | Sort-Object FullName
-You said: @jjester58-eng ➜ /workspaces/sped-tracker (main) $ find .
-@jjester58-eng ➜ /workspaces/sped-tracker (main) $ find . -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/.next/*' | sort
-.
-./.env.local
-./.env.local.example
-./.git
-./.gitignore
-./.next
-./[README.md](http://README.md)
-./app
-./app/globals.css
-./app/layout.tsx
-./app/page.tsx
-./lib
-./lib/supabaseClient.ts
-./next-env.d.ts
-./next.config.mjs
-./node_modules
-./package-lock.json
-./package.json
-./supabase.sql
-./tsconfig.json
-./vercel.json
-@jjester58-eng ➜ /workspaces/sped-tracker (main) $
-
-Show more
-May 1
-Claude responded: Perfect — this is the App Router setup (the app/ directory is the tell).
-Perfect — this is the App Router setup (the app/ directory is the tell). Copilot did you right!
-
-Can you share a few more files so I get the full picture before writing code?
-
-app/layout.tsx — to see how the nav/shell is structured
-lib/supabaseClient.ts — to match your existing client pattern
-supabase.sql — critical for knowing your exact table/column names so the queries are correct from the start
-You can just paste their contents here and I'll build all three pages (case-manager, teacher-input, and the updated home page) with proper App Router file structure.
-
-You said: layout.
-layout.tsx: 
-
-import "./globals.css";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "SPED Tracker",
-  description: "Special education progress tracker for teachers",
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>{children}</body>
-    </html>
-  );
+.empty-state-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
 }
-supabaseClient.ts: 
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
-
-export function getSupabase(): SupabaseClient | null {
-  if (!isSupabaseConfigured) {
-    return null;
-  }
-
-  return createClient(supabaseUrl!, supabaseAnonKey!);
+/* DIVIDER */
+.divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.25rem 0;
 }
-supabase sql: 
 
--- This file documents the SPED Tracker database schema.
--- The following tables should already exist in your Supabase project:
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
 
--- Students table
-CREATE TABLE IF NOT EXISTS students (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  grade_level TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Case managers (teachers) table
-CREATE TABLE IF NOT EXISTS case_managers (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  email TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Classes table
-CREATE TABLE IF NOT EXISTS classes (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- IEP Goals table
-CREATE TABLE IF NOT EXISTS goals (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  student_id UUID REFERENCES students(id),
-  goal_description TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Weekly progress tracking
-CREATE TABLE IF NOT EXISTS weekly_progress (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  student_id UUID REFERENCES students(id),
-  case_manager_id UUID REFERENCES case_managers(id),
-  goal_id UUID REFERENCES goals(id),
-  progress_notes TEXT,
-  accommodations_used TEXT,
-  review_date DATE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Data entry people
-CREATE TABLE IF NOT EXISTS data_entry_people (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name TEXT NOT NULL,
-  email TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Data entry assignments
-CREATE TABLE IF NOT EXISTS data_entry_assignments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  person_id UUID REFERENCES data_entry_people(id),
-  student_id UUID REFERENCES students(id),
-  case_manager_id UUID REFERENCES case_managers(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-Show more
-May 1
-Claude responded: I have everything I need.
-I have everything I need. Let me build this out — here's what I'll create:
-
-app/layout.tsx — updated with a nav bar linking all pages
-app/page.tsx — your existing home page (cleaned up, goal description fixed)
-app/case-manager/page.tsx — CSV upload + student/goal management
-app/teacher/page.tsx — teacher input with subject/goal/student filtering + multi-select
-app/globals.css — updated with nav styles and new components
-Let's go:
-
-
-Created 5 files
-Created 5 files
-
-Updated layout with nav
-layout.tsx
-
-Updated home page with goal_description fix (join goals table)
-page.tsx
-
-Teacher input page with cascading dropdowns and multi-select students
-page.tsx
-
-Case manager page with CSV upload and student/goal editing
-page.tsx
-
-Updated globals.css with nav, tabs, table, chips, and all new component styles
-globals.css
-Done
-You said: continue
-continue
-
-9:35 AM
-Claude responded: All 5 files are ready.
-
-Presented 5 files
-Presented 5 files
-All 5 files are ready. Here's what to do:
-
-Drop these files into your project, replacing the originals:
-
-app/layout.tsx          ← adds the nav bar
-app/page.tsx            ← fixes goal description (now joins goals table)
-app/globals.css         ← all new styles
-app/teacher/page.tsx    ← new folder + file
-app/case-manager/page.tsx ← new folder + file
-For the two new pages, create the folders first:
-
-bash
-mkdir -p app/teacher app/case-manager
-What each page does:
-
-Teacher Input (/teacher)
-
-Step 1: Pick a case manager + filter by goal — students with no goals for that subject won't appear
-Step 2: Checkbox chips to pick your 3 out of 12 students, with Select All / Clear
-Step 3: A notes block per selected student (progress notes, accommodations, review date)
-One save button submits all selected students at once
-Case Manager (/case-manager) — 3 tabs:
-
-Students — add, edit, delete students with name + grade level
-IEP Goals — add, edit, delete goals linked to a specific student
-CSV Upload — paste a .csv with name and optional grade_level columns, preview before importing
-One thing to be aware of: your goals table doesn't have a subject column — goals are just free-text descriptions. The goal filter on the Teacher page filters by matching goal description. If you want a proper subject/class dropdown, I can add a subject column to your schema and update the goals table accordingly — just say the word.
-
-
-Layout
-Code · TSX 
-
-Page
-Code · TSX 
-
-Page
-Code · TSX 
-
-Page
-Code · TSX 
-
-Globals
-Code · CSS 
-
-Want to be notified when Claude responds?
-
-
-
-Claude is AI and can make mistakes. Please double-check responses.
-Page · TSX
-Copy
-
-"use client";
- 
-import { useEffect, useState } from "react";
-import { getSupabase, isSupabaseConfigured } from "../../lib/supabaseClient";
- 
-interface Student {
-  id: string;
-  name: string;
-  grade_level: string;
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .main-content { padding: 1.5rem 1rem; }
+  .nav-bar { padding: 0 1rem; }
+  .form-row { grid-template-columns: 1fr; }
 }
- 
-interface CaseManager {
-  id: string;
-  name: string;
-}
- 
-interface Goal {
-  id: string;
-  student_id: string;
-  goal_description: string;
-}
- 
-export default function TeacherPage() {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
-  const [allGoals, setAllGoals] = useState<Goal[]>([]);
- 
-  // Filters
-  const [selectedCaseManagerId, setSelectedCaseManagerId] = useState("");
-  const [selectedGoalId, setSelectedGoalId] = useState("");
-  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
- 
-  // Form fields per student (keyed by student id)
-  const [notesMap, setNotesMap] = useState<Record<string, string>>({});
-  const [accommodationsMap, setAccommodationsMap] = useState<Record<string, string>>({});
-  const [reviewDateMap, setReviewDateMap] = useState<Record<string, string>>({});
- 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
- 
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setError("Supabase is not configured.");
-      return;
-    }
-    loadData();
-  }, []);
- 
-  async function loadData() {
-    const supabase = getSupabase();
-    if (!supabase) return;
-    setLoading(true);
- 
-    const [studentsRes, caseManagersRes, goalsRes] = await Promise.all([
-      supabase.from("students").select("id, name, grade_level").order("name"),
-      supabase.from("case_managers").select("id, name").order("name"),
-      supabase.from("goals").select("id, student_id, goal_description"),
-    ]);
- 
-    if (studentsRes.data) setStudents(studentsRes.data as Student[]);
-    if (caseManagersRes.data) setCaseManagers(caseManagersRes.data as CaseManager[]);
-    if (goalsRes.data) setAllGoals(goalsRes.data as Goal[]);
-    setLoading(false);
-  }
- 
-  // Students who have at least one goal for the selected goal filter
-  const studentsWithGoal = selectedGoalId
-    ? students.filter((s) =>
-        allGoals.some((g) => g.id === selectedGoalId && g.student_id === s.id)
-      )
-    : students;
- 
-  const selectedGoal = allGoals.find((g) => g.id === selectedGoalId);
- 
-  // Unique goals for the dropdown (all goals or filtered by case manager's students)
-  const availableGoals = allGoals.filter((g) =>
-    studentsWithGoal.some((s) => s.id === g.student_id)
-  );
- 
-  // Deduplicate goals by description for the dropdown
-  const uniqueGoalDescriptions = Array.from(
-    new Map(availableGoals.map((g) => [g.goal_description, g])).values()
-  );
- 
-  function toggleStudent(id: string) {
-    setSelectedStudentIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  }
- 
-  function selectAll() {
-    setSelectedStudentIds(studentsWithGoal.map((s) => s.id));
-  }
- 
-  function clearAll() {
-    setSelectedStudentIds([]);
-  }
- 
-  async function handleSave() {
-    if (!selectedCaseManagerId) {
-      setError("Please select a case manager.");
-      return;
-    }
-    if (selectedStudentIds.length === 0) {
-      setError("Please select at least one student.");
-      return;
-    }
- 
-    const supabase = getSupabase();
-    if (!supabase) return;
- 
-    setLoading(true);
-    setError(null);
-    setSuccessMsg(null);
- 
-    const rows = selectedStudentIds.map((studentId) => ({
-      student_id: studentId,
-      case_manager_id: selectedCaseManagerId,
-      goal_id: selectedGoalId || null,
-      progress_notes: notesMap[studentId] || "",
-      accommodations_used: accommodationsMap[studentId] || "",
-      review_date: reviewDateMap[studentId] || null,
-    }));
- 
-    const { error: insertError } = await supabase.from("weekly_progress").insert(rows);
- 
-    if (insertError) {
-      setError(insertError.message);
-    } else {
-      setSuccessMsg(`Saved ${rows.length} progress record${rows.length > 1 ? "s" : ""} successfully.`);
-      setNotesMap({});
-      setAccommodationsMap({});
-      setReviewDateMap({});
-      setSelectedStudentIds([]);
-    }
-    setLoading(false);
-  }
- 
-  const selectedStudents = students.filter((s) => selectedStudentIds.includes(s.id));
- 
-  return (
-    <main className="page">
-      <section className="header">
-        <div>
-          <h1>Teacher Input</h1>
-          <p>Select a case manager, filter by goal, choose students, and log weekly progress.</p>
-        </div>
-      </section>
- 
-      {/* Step 1: Case Manager + Goal filters */}
-      <section className="card">
-        <h2>Step 1 — Filter students</h2>
-        <div className="form-grid">
-          <div className="field">
-            <label htmlFor="caseManager">Case manager</label>
-            <select
-              id="caseManager"
-              value={selectedCaseManagerId}
-              onChange={(e) => setSelectedCaseManagerId(e.target.value)}
-            >
-              <option value="">-- Select case manager --</option>
-              {caseManagers.map((cm) => (
-                <option key={cm.id} value={cm.id}>
-                  {cm.name}
-                </option>
-              ))}
-            </select>
-          </div>
- 
-          <div className="field">
-            <label htmlFor="goalFilter">
-              Goal / Subject{" "}
-              <span className="label-hint">(only students with this goal will appear)</span>
-            </label>
-            <select
-              id="goalFilter"
-              value={selectedGoalId}
-              onChange={(e) => {
-                setSelectedGoalId(e.target.value);
-                setSelectedStudentIds([]);
-              }}
-            >
-              <option value="">-- All goals --</option>
-              {uniqueGoalDescriptions.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.goal_description}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
- 
-        {selectedGoalId && (
-          <div className="info-banner">
-            <strong>Active goal:</strong> {selectedGoal?.goal_description}
-          </div>
-        )}
-      </section>
- 
-      {/* Step 2: Student multi-select */}
-      <section className="card">
-        <div className="card-header-row">
-          <h2>Step 2 — Select students</h2>
-          <div className="btn-row">
-            <button className="button button-sm button-outline" type="button" onClick={selectAll}>
-              Select all
-            </button>
-            <button className="button button-sm button-outline" type="button" onClick={clearAll}>
-              Clear
-            </button>
-          </div>
-        </div>
- 
-        {studentsWithGoal.length === 0 ? (
-          <p className="empty-state">
-            {selectedGoalId
-              ? "No students have this goal assigned."
-              : "No students found."}
-          </p>
-        ) : (
-          <div className="student-grid">
-            {studentsWithGoal.map((s) => {
-              const checked = selectedStudentIds.includes(s.id);
-              return (
-                <label
-                  key={s.id}
-                  className={`student-chip ${checked ? "student-chip--selected" : ""}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => toggleStudent(s.id)}
-                    style={{ display: "none" }}
-                  />
-                  <span className="chip-check">{checked ? "✓" : ""}</span>
-                  <span className="chip-name">{s.name}</span>
-                  <span className="chip-grade">Gr {s.grade_level}</span>
-                </label>
-              );
-            })}
-          </div>
-        )}
- 
-        {selectedStudentIds.length > 0 && (
-          <p className="selection-count">
-            {selectedStudentIds.length} student{selectedStudentIds.length > 1 ? "s" : ""} selected
-          </p>
-        )}
-      </section>
- 
-      {/* Step 3: Per-student notes */}
-      {selectedStudents.length > 0 && (
-        <section className="card">
-          <h2>Step 3 — Enter progress notes</h2>
-          <p style={{ color: "var(--muted)", marginTop: 0 }}>
-            Fill in notes for each selected student. Accommodations and review date are optional.
-          </p>
- 
-          {selectedStudents.map((s) => (
-            <div key={s.id} className="student-entry-block">
-              <div className="student-entry-header">
-                <span className="student-entry-name">{s.name}</span>
-                <span className="student-entry-grade">Grade {s.grade_level}</span>
-              </div>
- 
-              <div className="form-grid">
-                <div className="field full">
-                  <label>Progress notes *</label>
-                  <textarea
-                    value={notesMap[s.id] || ""}
-                    onChange={(e) =>
-                      setNotesMap((prev) => ({ ...prev, [s.id]: e.target.value }))
-                    }
-                    placeholder="Describe student's progress this week..."
-                  />
-                </div>
-                <div className="field full">
-                  <label>Accommodations used</label>
-                  <textarea
-                    style={{ minHeight: "70px" }}
-                    value={accommodationsMap[s.id] || ""}
-                    onChange={(e) =>
-                      setAccommodationsMap((prev) => ({ ...prev, [s.id]: e.target.value }))
-                    }
-                    placeholder="e.g. Extended time, graphic organizer..."
-                  />
-                </div>
-                <div className="field">
-                  <label>Next review date</label>
-                  <input
-                    type="date"
-                    value={reviewDateMap[s.id] || ""}
-                    onChange={(e) =>
-                      setReviewDateMap((prev) => ({ ...prev, [s.id]: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
- 
-          <div style={{ marginTop: "24px", display: "flex", gap: "12px", alignItems: "center" }}>
-            <button className="button" type="button" onClick={handleSave} disabled={loading}>
-              {loading ? "Saving..." : `Save ${selectedStudents.length} record${selectedStudents.length > 1 ? "s" : ""}`}
-            </button>
-            {error && <span className="form-error">{error}</span>}
-            {successMsg && <span className="form-success">{successMsg}</span>}
-          </div>
-        </section>
-      )}
-    </main>
-  );
-}
- 
