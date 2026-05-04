@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 type Student = {
   id: string;
@@ -15,8 +15,7 @@ type Props = {
 
 export default function MultiStudentPicker({ subject, onChange }: Props) {
   const [students, setStudents] = useState<Student[]>([]);
-  const supabase = getSupabase();
-
+ 
   useEffect(() => {
     if (!subject || !supabase) return;
 
