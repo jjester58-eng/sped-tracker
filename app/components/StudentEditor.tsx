@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSupabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 type Student = {
   id: string;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export default function StudentEditor({ student }: Props) {
-  const supabase = getSupabase();
+  // ✅ DO NOT redeclare supabase
 
   const [name, setName] = useState(student.name);
   const [grade, setGrade] = useState(student.grade_level || "");
@@ -24,7 +24,7 @@ export default function StudentEditor({ student }: Props) {
       .from("students")
       .update({
         name,
-        grade_level: grade,
+        grade_level: grade || null, // small improvement
       })
       .eq("id", student.id);
 

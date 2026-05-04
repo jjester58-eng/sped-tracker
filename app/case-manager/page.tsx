@@ -159,7 +159,11 @@ export default function CaseManagerPage() {
     } else {
       const { error } = await supabase
         .from("goals")
-        .insert(payload);
+        .insert({
+  student_id: goalForm.student_id,
+  goal_description: goalForm.goal_description.trim(),
+  goal_number: 1, // ✅ REQUIRED (pick a default for now)
+});
 
       if (error) setError(error.message);
       else flash("Added goal");
