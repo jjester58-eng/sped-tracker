@@ -147,7 +147,7 @@ export default function CaseManagerPage() {
   const { error } = await supabase.from("goals").insert({
     student_id: selectedStudentId,
     goal_description: newGoalDesc.trim(),
-    goal_number: 1, // temporary fix
+    goal_number: 1,
   });
 
   if (error) {
@@ -158,22 +158,22 @@ export default function CaseManagerPage() {
   setNewGoalDesc("");
   loadData();
 }
-  async function deleteGoal(goalId: string) {
-    if (!confirm("Delete this goal?")) return;
 
-    const { error } = await supabase
-      .from("goals")
-      .delete()
-      .eq("id", goalId);
+async function deleteGoal(goalId: string) {
+  if (!confirm("Delete this goal?")) return;
 
-    if (error) {
-      setError(error.message);
-      return;
-    }
+  const { error } = await supabase
+    .from("goals")
+    .delete()
+    .eq("id", goalId);
 
-    loadData();
+  if (error) {
+    setError(error.message);
+    return;
   }
 
+  loadData();
+}
   /* ---------------- HELPERS ---------------- */
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId);
