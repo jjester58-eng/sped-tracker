@@ -10,23 +10,33 @@ type Student = {
 };
 
 type Props = {
-  mode: "edit";
-  onStudentSelected: (student: Student) => void;
+  value?: string;
+  onChange: (studentId: string) => void;
 };
 
-export default function StudentSelector({ mode, onStudentSelected }: Props) {
+export default function StudentSelector({ value = "", onChange }: Props) {
   const [students, setStudents] = useState<Student[]>([]);
-  
-  useEffect(() => {
-    if (!supabase) return;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
     async function load() {
-      const { data } = await supabase
+      setLoading(true);
+      setError(null);
+
+      const { data, error } = await supabase
         .from("students")
         .select("id, name, grade_level")
         .order("name");
 
-      if (data) setStudents(data as Student[]);
+      if (error) {
+        console.error(error);
+        setError("Failed to load students");
+      } else {
+        setStudents(data ?? []);
+      }
+
+      setLoading(false);
     }
 
     load();
@@ -36,14 +46,18 @@ export default function StudentSelector({ mode, onStudentSelected }: Props) {
     <div className="space-y-2">
       <label className="font-semibold">Students</label>
 
+      {error && <p className="text-red-600 text-sm">{error}</p>}
+
       <select
         className="border p-2 w-full"
-        onChange={(e) => {
-          const student = students.find((s) => s.id === e.target.value);
-          if (student) onStudentSelected(student);
-        }}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={loading}
       >
-        <option value="">Select a student</option>
+        <option value="">
+          {loading ? "Loading..." : "Select a student"}
+        </option>
+
         {students.map((s) => (
           <option key={s.id} value={s.id}>
             {s.name} — Grade {s.grade_level || "N/A"}

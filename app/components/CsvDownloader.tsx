@@ -2,27 +2,47 @@
 
 import Papa from "papaparse";
 
-type CsvDownloaderProps = {
-  students: any[]; // you can replace with your Student type if needed
+type Student = {
+  id: string;
+  name: string;
+  grade_level?: string | null;
 };
 
-export default function CsvDownloader({ students }: CsvDownloaderProps) {
+type CsvDownloaderProps = {
+  students: Student[];
+  filename?: string;
+};
+
+export default function CsvDownloader({
+  students,
+  filename = "students.csv",
+}: CsvDownloaderProps) {
   function download() {
-    if (!students || students.length === 0) {
+    if (!students?.length) {
       alert("No student data available to download.");
       return;
     }
 
-    const csv = Papa.unparse(students);
-    const blob = new Blob([csv], { type: "text/csv" });
+    // ONLY export what you want
+    const cleanData = students.map((s) => ({
+      id: s.id,
+      name: s.name,
+      grade_level: s.grade_level ?? "",
+    }));
+
+    const csv = Papa.unparse(cleanData);
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
-    a.download = "students.csv";
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
 
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   return (

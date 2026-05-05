@@ -8,50 +8,64 @@ type Student = {
   name: string;
 };
 
+type Goal = {
+  student_id: string;
+  goal_description: string;
+};
+
 type Props = {
   subject: string;
+  value: Student[];
   onChange: React.Dispatch<React.SetStateAction<Student[]>>;
 };
 
-export default function MultiStudentPicker({ subject, onChange }: Props) {
+export default function MultiStudentPicker({
+  subject,
+  value,
+  onChange,
+}: Props) {
   const [students, setStudents] = useState<Student[]>([]);
- 
+
   useEffect(() => {
-    if (!subject || !supabase) return;
+    if (!subject) {
+      setStudents([]);
+      return;
+    }
 
     async function loadStudents() {
       const { data: goals, error } = await supabase
         .from("goals")
-        .select("student_id, goal_description")
-        .ilike("goal_description", `%${subject}%`);
+        .select("student_id, goal_description");
 
       if (error) {
-        console.error("Goals fetch error:", error);
+        console.error(error);
         setStudents([]);
         return;
       }
 
-      const studentIds = (goals || [])
-        .map((g: any) => g.student_id)
-        .filter(Boolean);
+      const filteredIds = (goals ?? [])
+        .filter((g) =>
+          g.goal_description?.toLowerCase().includes(subject.toLowerCase())
+        )
+        .map((g) => g.student_id);
 
-      if (studentIds.length === 0) {
+      if (filteredIds.length === 0) {
         setStudents([]);
         return;
       }
 
-      const { data: filteredStudents, error: studentError } = await supabase
+      const { data, error: studentError } = await supabase
         .from("students")
         .select("id, name")
-        .in("id", studentIds);
+        .in("id", filteredIds);
 
       if (studentError) {
-        console.error("Students fetch error:", studentError);
+        console.error(studentError);
         setStudents([]);
         return;
       }
 
-      setStudents((filteredStudents || []) as Student[]);
+      setStudents(data ?? []);
     }
 
     loadStudents();
@@ -73,12 +87,20 @@ export default function MultiStudentPicker({ subject, onChange }: Props) {
         {students.length === 0 ? (
           <p className="text-sm text-gray-500">No students found</p>
         ) : (
-          students.map((s) => (
-            <div key={s.id} className="flex items-center">
-              <input type="checkbox" onChange={() => toggle(s)} />
-              <span className="ml-2">{s.name}</span>
-            </div>
-          ))
+          students.map((s) => {
+            const checked = value.some((v) => v.id === s.id);
+
+            return (
+              <div key={s.id} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggle(s)}
+                />
+                <span className="ml-2">{s.name}</span>
+              </div>
+            );
+          })
         )}
       </div>
     </div>

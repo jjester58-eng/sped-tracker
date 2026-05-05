@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type Student = {
@@ -11,34 +11,54 @@ type Student = {
 
 type Props = {
   student: Student;
+  onSaved?: () => void; // optional refresh hook
 };
 
-export default function StudentEditor({ student }: Props) {
-  // ✅ DO NOT redeclare supabase
-
+export default function StudentEditor({ student, onSaved }: Props) {
   const [name, setName] = useState(student.name);
   const [grade, setGrade] = useState(student.grade_level || "");
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  // ✅ FIX: keep form in sync with selected student
+  useEffect(() => {
+    setName(student.name);
+    setGrade(student.grade_level || "");
+  }, [student]);
 
   async function save() {
+    if (!name.trim()) {
+      setMessage("Name is required");
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
     const { error } = await supabase
       .from("students")
       .update({
-        name,
-        grade_level: grade || null, // small improvement
+        name: name.trim(),
+        grade_level: grade || null,
       })
       .eq("id", student.id);
 
     if (error) {
-      console.error("Update error:", error);
-      alert("Error saving student");
+      console.error(error);
+      setMessage("Error saving student");
     } else {
-      alert("Student updated");
+      setMessage("Student updated");
+      onSaved?.(); // optional parent refresh
     }
+
+    setLoading(false);
   }
 
   return (
     <div className="border p-4 rounded space-y-4">
       <h2 className="text-xl font-semibold">Edit Student</h2>
+
+      {message && <p className="text-sm">{message}</p>}
 
       <div>
         <label className="font-semibold">Name</label>
@@ -56,13 +76,15 @@ export default function StudentEditor({ student }: Props) {
           value={grade}
           onChange={(e) => setGrade(e.target.value)}
         />
+        {/* 🔥 Replace this with your GradeLevelSelector later */}
       </div>
 
       <button
         onClick={save}
+        disabled={loading}
         className="bg-blue-600 text-white px-4 py-2 rounded"
       >
-        Save
+        {loading ? "Saving..." : "Save"}
       </button>
     </div>
   );
