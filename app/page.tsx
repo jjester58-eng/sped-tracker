@@ -1,45 +1,30 @@
-"use client";
+import Link from "next/link";
 
-import { useState } from "react";
-import TeacherPage from "./teacher/page";
-import CaseManagerPage from "./case-manager/page";
-
-export default function Home() {
-  const [tab, setTab] = useState<"teacher" | "case">("teacher");
-
+export default function HomePage() {
   return (
-    <main className="p-6 max-w-6xl mx-auto">
-      {/* HEADER */}
-      <h1 className="text-3xl font-bold mb-6">SPED Tracker</h1>
+    <main className="p-8 max-w-4xl mx-auto text-center">
+      <h1 className="text-4xl font-bold mb-2">SPED Tracker</h1>
 
-      {/* TABS */}
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setTab("teacher")}
-          className={`px-4 py-2 rounded ${
-            tab === "teacher"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200"
-          }`}
+      <p className="text-gray-600 mb-10">
+        Choose your workspace
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <Link
+          href="/teacher"
+          className="border p-6 rounded hover:bg-gray-50 block"
         >
-          Teacher Input
-        </button>
+          <h2 className="text-2xl font-semibold">Teacher Input</h2>
+          <p className="text-gray-500">Enter weekly progress</p>
+        </Link>
 
-        <button
-          onClick={() => setTab("case")}
-          className={`px-4 py-2 rounded ${
-            tab === "case"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200"
-          }`}
+        <Link
+          href="/case-manager"
+          className="border p-6 rounded hover:bg-gray-50 block"
         >
-          Case Manager
-        </button>
-      </div>
-
-      {/* CONTENT */}
-      <div className="border rounded p-4 bg-white">
-        {tab === "teacher" ? <TeacherPage /> : <CaseManagerPage />}
+          <h2 className="text-2xl font-semibold">Case Manager</h2>
+          <p className="text-gray-500">Manage students & IEP goals</p>
+        </Link>
       </div>
     </main>
   );
