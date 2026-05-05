@@ -139,25 +139,25 @@ export default function CaseManagerPage() {
   /* ---------------- GOALS ---------------- */
 
   async function addGoal() {
-    if (!selectedStudentId || !newGoalDesc.trim()) {
-      setError("Select a student and enter a goal");
-      return;
-    }
-
-    const { error } = await supabase.from("goals").insert({
-      student_id: selectedStudentId,
-      goal_description: newGoalDesc.trim(),
-    });
-
-    if (error) {
-      setError(error.message);
-      return;
-    }
-
-    setNewGoalDesc("");
-    loadData();
+  if (!selectedStudentId || !newGoalDesc.trim()) {
+    setError("Select a student and enter a goal");
+    return;
   }
 
+  const { error } = await supabase.from("goals").insert({
+    student_id: selectedStudentId,
+    goal_description: newGoalDesc.trim(),
+    goal_number: 1, // temporary fix
+  });
+
+  if (error) {
+    setError(error.message);
+    return;
+  }
+
+  setNewGoalDesc("");
+  loadData();
+}
   async function deleteGoal(goalId: string) {
     if (!confirm("Delete this goal?")) return;
 
