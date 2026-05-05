@@ -52,10 +52,11 @@ export default function TeacherPage() {
 
       <SubjectSelector onChange={setSubject} />
 
-      <MultiStudentPicker
-        subject={subject}
-        onChange={setSelectedStudents}
-      />
+      <MultiStudentPicker 
+  subject={subject}
+  value={selectedStudents} // Add this line
+  onChange={setSelectedStudents}
+/>
 
       <GoalSelector
         subject={subject}
