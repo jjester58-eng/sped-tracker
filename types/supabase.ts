@@ -38,7 +38,7 @@ export type Database = {
           student_id: string;
           goal_description: string;
           goal_number: number;
-          class_id?: string | null;
+          class_id: string | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -91,8 +91,8 @@ export type Database = {
         };
       };
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Views: {};
+    Functions: {};
+    Enums: {};
   };
 };
