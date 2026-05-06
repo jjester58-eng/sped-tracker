@@ -3,16 +3,9 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
 
-// Inside component:
-const supabase = useSupabase();
 type Student = {
   id: string;
   name: string;
-};
-
-type Goal = {
-  student_id: string;
-  goal_description: string;
 };
 
 type Props = {
@@ -21,11 +14,8 @@ type Props = {
   onChange: React.Dispatch<React.SetStateAction<Student[]>>;
 };
 
-export default function MultiStudentPicker({
-  subject,
-  value,
-  onChange,
-}: Props) {
+export default function MultiStudentPicker({ subject, value, onChange }: Props) {
+  const supabase = useSupabase();
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
@@ -46,9 +36,7 @@ export default function MultiStudentPicker({
       }
 
       const filteredIds = (goals ?? [])
-        .filter((g) =>
-          g.goal_description?.toLowerCase().includes(subject.toLowerCase())
-        )
+        .filter((g) => g.goal_description?.toLowerCase().includes(subject.toLowerCase()))
         .map((g) => g.student_id);
 
       if (filteredIds.length === 0) {
@@ -71,7 +59,7 @@ export default function MultiStudentPicker({
     }
 
     loadStudents();
-  }, [subject]);
+  }, [subject, supabase]);
 
   function toggle(student: Student) {
     onChange((prev) =>
@@ -84,21 +72,15 @@ export default function MultiStudentPicker({
   return (
     <div>
       <label className="font-semibold">Select Students</label>
-
       <div className="space-y-2 mt-2">
         {students.length === 0 ? (
           <p className="text-sm text-gray-500">No students found</p>
         ) : (
           students.map((s) => {
             const checked = value.some((v) => v.id === s.id);
-
             return (
               <div key={s.id} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggle(s)}
-                />
+                <input type="checkbox" checked={checked} onChange={() => toggle(s)} />
                 <span className="ml-2">{s.name}</span>
               </div>
             );

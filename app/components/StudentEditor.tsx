@@ -3,8 +3,6 @@ export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
 
-// Inside component:
-const supabase = useSupabase();
 type Student = {
   id: string;
   name: string;
@@ -13,16 +11,16 @@ type Student = {
 
 type Props = {
   student: Student;
-  onSaved?: () => void; // optional refresh hook
+  onSaved?: () => void;
 };
 
 export default function StudentEditor({ student, onSaved }: Props) {
+  const supabase = useSupabase();
   const [name, setName] = useState(student.name);
   const [grade, setGrade] = useState(student.grade_level || "");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // ✅ FIX: keep form in sync with selected student
   useEffect(() => {
     setName(student.name);
     setGrade(student.grade_level || "");
@@ -33,10 +31,8 @@ export default function StudentEditor({ student, onSaved }: Props) {
       setMessage("Name is required");
       return;
     }
-
     setLoading(true);
     setMessage(null);
-
     const { error } = await supabase
       .from("students")
       .update({
@@ -44,48 +40,29 @@ export default function StudentEditor({ student, onSaved }: Props) {
         grade_level: grade || null,
       })
       .eq("id", student.id);
-
     if (error) {
       console.error(error);
       setMessage("Error saving student");
     } else {
       setMessage("Student updated");
-      onSaved?.(); // optional parent refresh
+      onSaved?.();
     }
-
     setLoading(false);
   }
 
   return (
     <div className="border p-4 rounded space-y-4">
       <h2 className="text-xl font-semibold">Edit Student</h2>
-
       {message && <p className="text-sm">{message}</p>}
-
       <div>
         <label className="font-semibold">Name</label>
-        <input
-          className="border p-2 w-full"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+        <input className="border p-2 w-full" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
-
       <div>
         <label className="font-semibold">Grade Level</label>
-        <input
-          className="border p-2 w-full"
-          value={grade}
-          onChange={(e) => setGrade(e.target.value)}
-        />
-        {/* 🔥 Replace this with your GradeLevelSelector later */}
+        <input className="border p-2 w-full" value={grade} onChange={(e) => setGrade(e.target.value)} />
       </div>
-
-      <button
-        onClick={save}
-        disabled={loading}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
+      <button onClick={save} disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded">
         {loading ? "Saving..." : "Save"}
       </button>
     </div>
