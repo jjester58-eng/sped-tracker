@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 type GradeLevelSelectorProps = {
   value?: string;
   onChange: (value: string) => void;

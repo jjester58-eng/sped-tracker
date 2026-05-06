@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import Papa from "papaparse";
 import { useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";

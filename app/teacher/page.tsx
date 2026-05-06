@@ -1,12 +1,13 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import { useState } from "react";
 import MultiStudentPicker from "../components/MultiStudentPicker";
 import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
 import GradeLevelSelector from "../components/GradeLevelSelector";
 import { useSupabase } from "@/lib/useSupabase";
-
 // Inside component:
 const supabase = useSupabase();
 type Student = {
