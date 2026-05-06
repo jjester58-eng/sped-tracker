@@ -1,1 +1,98 @@
-{"types":"export type Json =\n  | string\n  | number\n  | boolean\n  | null\n  | { [key: string]: Json | undefined }\n  | Json[]\n\nexport type Database = {\n  // Allows to automatically instantiate createClient with right options\n  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)\n  __InternalSupabase: {\n    PostgrestVersion: \"14.5\"\n  }\n  public: {\n    Tables: {\n      case_managers: {\n        Row: {\n          created_at: string | null\n          email: string\n          id: string\n          name: string\n          user_id: string | null\n        }\n        Insert: {\n          created_at?: string | null\n          email: string\n          id?: string\n          name: string\n          user_id?: string | null\n        }\n        Update: {\n          created_at?: string | null\n          email?: string\n          id?: string\n          name?: string\n          user_id?: string | null\n        }\n        Relationships: []\n      }\n      classes: {\n        Row: {\n          class_name: string\n          created_at: string | null\n          data_entry_person_id: string\n          id: string\n        }\n        Insert: {\n          class_name: string\n          created_at?: string | null\n          data_entry_person_id: string\n          id?: string\n        }\n        Update: {\n          class_name?: string\n          created_at?: string | null\n          data_entry_person_id?: string\n          id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"classes_data_entry_person_id_fkey\"\n            columns: [\"data_entry_person_id\"]\n            isOneToOne: false\n            referencedRelation: \"data_entry_people\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      data_entry_assignments: {\n        Row: {\n          class_id: string\n          created_at: string | null\n          data_entry_person_id: string\n          id: string\n        }\n        Insert: {\n          class_id: string\n          created_at?: string | null\n          data_entry_person_id: string\n          id?: string\n        }\n        Update: {\n          class_id?: string\n          created_at?: string | null\n          data_entry_person_id?: string\n          id?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"data_entry_assignments_class_id_fkey\"\n            columns: [\"class_id\"]\n            isOneToOne: false\n            referencedRelation: \"classes\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"data_entry_assignments_data_entry_person_id_fkey\"\n            columns: [\"data_entry_person_id\"]\n            isOneToOne: false\n            referencedRelation: \"data_entry_people\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      data_entry_people: {\n        Row: {\n          created_at: string | null\n          email: string\n          id: string\n          name: string\n          user_id: string\n        }\n        Insert: {\n          created_at?: string | null\n          email: string\n          id?: string\n          name: string\n          user_id: string\n        }\n        Update: {\n          created_at?: string | null\n          email?: string\n          id?: string\n          name?: string\n          user_id?: string\n        }\n        Relationships: []\n      }\n      goals: {\n        Row: {\n          class_id: string | null\n          created_at: string | null\n          goal_description: string\n          goal_number: number | null\n          id: string\n          student_id: string\n          updated_at: string | null\n        }\n        Insert: {\n          class_id?: string | null\n          created_at?: string | null\n          goal_description: string\n          goal_number?: number | null\n          id?: string\n          student_id: string\n          updated_at?: string | null\n        }\n        Update: {\n          class_id?: string | null\n          created_at?: string | null\n          goal_description?: string\n          goal_number?: number | null\n          id?: string\n          student_id?: string\n          updated_at?: string | null\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"goals_class_id_fkey\"\n            columns: [\"class_id\"]\n            isOneToOne: false\n            referencedRelation: \"classes\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n      students: {\n        Row: {\n          created_at: string | null\n          grade_level: string | null\n          id: string\n          name: string\n        }\n        Insert: {\n          created_at?: string | null\n          grade_level?: string | null\n          id?: string\n          name: string\n        }\n        Update: {\n          created_at?: string | null\n          grade_level?: string | null\n          id?: string\n          name?: string\n        }\n        Relationships: []\n      }\n      weekly_progress: {\n        Row: {\n          accommodations_used: string | null\n          case_manager_id: string | null\n          created_at: string | null\n          entered_by_id: string\n          goal_id: string\n          id: string\n          notes: string | null\n          progress_notes: string | null\n          review_date: string | null\n          student_id: string\n          updated_at: string | null\n          week_of: string\n        }\n        Insert: {\n          accommodations_used?: string | null\n          case_manager_id?: string | null\n          created_at?: string | null\n          entered_by_id: string\n          goal_id: string\n          id?: string\n          notes?: string | null\n          progress_notes?: string | null\n          review_date?: string | null\n          student_id: string\n          updated_at?: string | null\n          week_of: string\n        }\n        Update: {\n          accommodations_used?: string | null\n          case_manager_id?: string | null\n          created_at?: string | null\n          entered_by_id?: string\n          goal_id?: string\n          id?: string\n          notes?: string | null\n          progress_notes?: string | null\n          review_date?: string | null\n          student_id?: string\n          updated_at?: string | null\n          week_of?: string\n        }\n        Relationships: [\n          {\n            foreignKeyName: \"weekly_progress_case_manager_id_fkey\"\n            columns: [\"case_manager_id\"]\n            isOneToOne: false\n            referencedRelation: \"case_managers\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"weekly_progress_entered_by_id_fkey\"\n            columns: [\"entered_by_id\"]\n            isOneToOne: false\n            referencedRelation: \"data_entry_people\"\n            referencedColumns: [\"id\"]\n          },\n          {\n            foreignKeyName: \"weekly_progress_goal_id_fkey\"\n            columns: [\"goal_id\"]\n            isOneToOne: false\n            referencedRelation: \"goals\"\n            referencedColumns: [\"id\"]\n          },\n        ]\n      }\n    }\n    Views: {\n      [_ in never]: never\n    }\n    Functions: {\n      [_ in never]: never\n    }\n    Enums: {\n      [_ in never]: never\n    }\n    CompositeTypes: {\n      [_ in never]: never\n    }\n  }\n}\n\ntype DatabaseWithoutInternals = Omit<Database, \"__InternalSupabase\">\n\ntype DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, \"public\">]\n\nexport type Tables<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof (DefaultSchema[\"Tables\"] & DefaultSchema[\"Views\"])\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"] &\n        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Views\"])\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"] &\n      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Views\"])[TableName] extends {\n      Row: infer R\n    }\n    ? R\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema[\"Tables\"] &\n        DefaultSchema[\"Views\"])\n    ? (DefaultSchema[\"Tables\"] &\n        DefaultSchema[\"Views\"])[DefaultSchemaTableNameOrOptions] extends {\n        Row: infer R\n      }\n      ? R\n      : never\n    : never\n\nexport type TablesInsert<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof DefaultSchema[\"Tables\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"]\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"][TableName] extends {\n      Insert: infer I\n    }\n    ? I\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema[\"Tables\"]\n    ? DefaultSchema[\"Tables\"][DefaultSchemaTableNameOrOptions] extends {\n        Insert: infer I\n      }\n      ? I\n      : never\n    : never\n\nexport type TablesUpdate<\n  DefaultSchemaTableNameOrOptions extends\n    | keyof DefaultSchema[\"Tables\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  TableName extends DefaultSchemaTableNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"]\n    : never = never,\n> = DefaultSchemaTableNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions[\"schema\"]][\"Tables\"][TableName] extends {\n      Update: infer U\n    }\n    ? U\n    : never\n  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema[\"Tables\"]\n    ? DefaultSchema[\"Tables\"][DefaultSchemaTableNameOrOptions] extends {\n        Update: infer U\n      }\n      ? U\n      : never\n    : never\n\nexport type Enums<\n  DefaultSchemaEnumNameOrOptions extends\n    | keyof DefaultSchema[\"Enums\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  EnumName extends DefaultSchemaEnumNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions[\"schema\"]][\"Enums\"]\n    : never = never,\n> = DefaultSchemaEnumNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions[\"schema\"]][\"Enums\"][EnumName]\n  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema[\"Enums\"]\n    ? DefaultSchema[\"Enums\"][DefaultSchemaEnumNameOrOptions]\n    : never\n\nexport type CompositeTypes<\n  PublicCompositeTypeNameOrOptions extends\n    | keyof DefaultSchema[\"CompositeTypes\"]\n    | { schema: keyof DatabaseWithoutInternals },\n  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {\n    schema: keyof DatabaseWithoutInternals\n  }\n    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions[\"schema\"]][\"CompositeTypes\"]\n    : never = never,\n> = PublicCompositeTypeNameOrOptions extends {\n  schema: keyof DatabaseWithoutInternals\n}\n  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions[\"schema\"]][\"CompositeTypes\"][CompositeTypeName]\n  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema[\"CompositeTypes\"]\n    ? DefaultSchema[\"CompositeTypes\"][PublicCompositeTypeNameOrOptions]\n    : never\n\nexport const Constants = {\n  public: {\n    Enums: {},\n  },\n} as const\n"}
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export type Database = {
+  public: {
+    Tables: {
+      students: {
+        Row: {
+          id: string;
+          name: string;
+          grade_level: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          grade_level?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          grade_level?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      goals: {
+        Row: {
+          id: string;
+          student_id: string;
+          goal_description: string;
+          goal_number: number;
+          class_id?: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          goal_description: string;
+          goal_number?: number;
+          class_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          goal_description?: string;
+          goal_number?: number;
+          class_id?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+      weekly_progress: {
+        Row: {
+          id: string;
+          student_id: string;
+          goal_id: string;
+          progress_notes: string;
+          review_date: string;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          goal_id: string;
+          progress_notes: string;
+          review_date: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          goal_id?: string;
+          progress_notes?: string;
+          review_date?: string;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+  };
+};
