@@ -12,4 +12,5 @@ export const getSupabaseClient = () => {
   }
 
   return createClient<Database>(url, key);
+
 };
