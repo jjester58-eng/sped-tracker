@@ -1,8 +1,11 @@
 "use client";
 
 import Papa from "papaparse";
-import { supabase } from "@/lib/supabaseClient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSupabase } from "@/lib/useSupabase";
+
+// Inside component:
+const supabase = useSupabase();
 
 type CsvRow = {
   name: string;

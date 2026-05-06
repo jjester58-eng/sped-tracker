@@ -5,8 +5,10 @@ import MultiStudentPicker from "../components/MultiStudentPicker";
 import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
 import GradeLevelSelector from "../components/GradeLevelSelector";
-import { supabase } from "@/lib/supabaseClient";
+import { useSupabase } from "@/lib/useSupabase";
 
+// Inside component:
+const supabase = useSupabase();
 type Student = {
   id: string;
   name: string;

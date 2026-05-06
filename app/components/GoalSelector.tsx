@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
+import { useSupabase } from "@/lib/useSupabase";
 
+// Inside component:
+const supabase = useSupabase();
 type Student = {
   id: string;
   name: string;
