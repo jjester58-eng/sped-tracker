@@ -8,19 +8,19 @@ import SubjectSelector from "../components/SubjectSelector";
 import GoalSelector from "../components/GoalSelector";
 import GradeLevelSelector from "../components/GradeLevelSelector";
 import { useSupabase } from "@/lib/useSupabase";
-// Inside component:
-const supabase = useSupabase();
+
 type Student = {
   id: string;
   name: string;
 };
 
 export default function TeacherPage() {
+  const supabase = useSupabase(); // ✅ MOVED HERE - Inside the component
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [subject, setSubject] = useState("");
   const [goal, setGoal] = useState("");
   const [notes, setNotes] = useState("");
-  const [gradeLevel, setGradeLevel] = useState(""); // ✅ FIXED
+  const [gradeLevel, setGradeLevel] = useState("");
 
   async function saveProgress() {
     if (!goal || selectedStudents.length === 0) return;
@@ -33,8 +33,6 @@ export default function TeacherPage() {
           goal_id: goal,
           progress_notes: notes,
           review_date: new Date().toISOString(),
-
-          // REQUIRED FIELDS
           entered_by_id: "teacher-id",
           week_of: new Date().toISOString(),
         });
@@ -56,10 +54,10 @@ export default function TeacherPage() {
       <SubjectSelector onChange={setSubject} />
 
       <MultiStudentPicker 
-  subject={subject}
-  value={selectedStudents} // Add this line
-  onChange={setSelectedStudents}
-/>
+        subject={subject}
+        value={selectedStudents}
+        onChange={setSelectedStudents}
+      />
 
       <GoalSelector
         subject={subject}
