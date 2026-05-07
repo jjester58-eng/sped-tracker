@@ -64,7 +64,6 @@ export default function CaseManagerPage() {
     }
 
     try {
-      // 1. Create Student
       const { data: student, error: studentError } = await supabase
         .from("students")
         .insert({ name: newStudentName.trim(), grade_level: newStudentGrade || null })
@@ -73,7 +72,6 @@ export default function CaseManagerPage() {
 
       if (studentError) throw studentError;
 
-      // 2. Insert Goals (if any)
       const goalsToInsert = newGoals
         .filter(g => g.goal_description.trim())
         .map(g => ({
@@ -88,15 +86,15 @@ export default function CaseManagerPage() {
         if (goalsError) throw goalsError;
       }
 
-      // Reset form and close modal
+      // Reset & close
       setNewStudentName("");
       setNewStudentGrade("");
       setSelectedClassIds([]);
       setNewGoals([{ goal_number: 1, goal_description: "", class_id: null }]);
       setShowAddStudentModal(false);
-      
+
       await loadData();
-      setSelectedStudentId(student.id); // Auto-select the new student
+      setSelectedStudentId(student.id);
     } catch (err: any) {
       setError(err.message);
     }
@@ -108,72 +106,86 @@ export default function CaseManagerPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-5xl mx-auto px-6">   {/* Narrower & centered */}
+      <div className="max-w-4xl mx-auto px-6">
+        {/* Big centered white card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10">
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-10">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900">Case Manager</h1>
-            <p className="text-gray-600 mt-1">Student cases and goal tracking</p>
-          </div>
-          <CsvUploader onUploadSuccess={loadData} />
-        </div>
-
-        {error && <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-2xl mb-6">{error}</div>}
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Students Sidebar */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-3xl shadow border border-gray-100 p-6 sticky top-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold">Students</h2>
-                <button
-                  onClick={() => setShowAddStudentModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-medium"
-                >
-                  + Add Student
-                </button>
-              </div>
-
-              <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
-                {students.map((student) => (
-                  <button
-                    key={student.id}
-                    onClick={() => setSelectedStudentId(student.id)}
-                    className={`w-full text-left p-5 rounded-2xl border transition-all ${
-                      selectedStudentId === student.id
-                        ? "border-blue-600 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
-                    }`}
-                  >
-                    <div className="font-semibold">{student.name}</div>
-                    {student.grade_level && (
-                      <div className="text-sm text-gray-500">Grade {student.grade_level}</div>
-                    )}
-                  </button>
-                ))}
-              </div>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">Case Manager</h1>
+              <p className="text-gray-600 mt-1">Student cases and goal tracking</p>
             </div>
+            <CsvUploader onUploadSuccess={loadData} />
           </div>
 
-          {/* Main Content Area */}
-          <div className="lg:col-span-3">
-            {!selectedStudentId ? (
-              <div className="bg-white rounded-3xl shadow border border-gray-100 h-full min-h-[500px] flex items-center justify-center text-center">
-                <div>
-                  <p className="text-6xl mb-4">👨‍🎓</p>
-                  <h3 className="text-2xl font-medium text-gray-700">Select a student</h3>
-                  <p className="text-gray-500 mt-2">to view details and manage goals</p>
+          {error && (
+            <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-2xl mb-6">
+              {error}
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+            {/* Students Sidebar */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-3xl shadow border border-gray-100 p-6 sticky top-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-semibold">Students</h2>
+                  <button
+                    onClick={() => setShowAddStudentModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-medium"
+                  >
+                    + Add Student
+                  </button>
+                </div>
+
+                <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                  {students.length === 0 ? (
+                    <p className="text-gray-500 py-8 text-center">No students yet</p>
+                  ) : (
+                    students.map((student) => (
+                      <button
+                        key={student.id}
+                        onClick={() => setSelectedStudentId(student.id)}
+                        className={`w-full text-left p-5 rounded-2xl border transition-all ${
+                          selectedStudentId === student.id
+                            ? "border-blue-600 bg-blue-50"
+                            : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                        }`}
+                      >
+                        <div className="font-semibold">{student.name}</div>
+                        {student.grade_level && (
+                          <div className="text-sm text-gray-500">Grade {student.grade_level}</div>
+                        )}
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
-            ) : (
-              <StudentEditor student={students.find(s => s.id === selectedStudentId)!} onSaved={loadData} />
-            )}
+            </div>
+
+            {/* Main Content Area */}
+            <div className="lg:col-span-3">
+              {!selectedStudentId ? (
+                <div className="bg-white rounded-3xl shadow border border-gray-100 h-full min-h-[500px] flex items-center justify-center text-center">
+                  <div>
+                    <p className="text-6xl mb-4">👨‍🎓</p>
+                    <h3 className="text-2xl font-medium text-gray-700">Select a student</h3>
+                    <p className="text-gray-500 mt-2">to view details and manage goals</p>
+                  </div>
+                </div>
+              ) : (
+                <StudentEditor 
+                  student={students.find(s => s.id === selectedStudentId)!} 
+                  onSaved={loadData} 
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ====================== ADD STUDENT MODAL ====================== */}
+      {/* Add Student Modal */}
       {showAddStudentModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
@@ -225,7 +237,7 @@ export default function CaseManagerPage() {
                   </div>
                 </div>
 
-                {/* Goals Section */}
+                {/* Goals */}
                 <div>
                   <div className="flex justify-between items-center mb-3">
                     <label className="block text-sm font-medium">Initial Goals</label>
@@ -249,7 +261,7 @@ export default function CaseManagerPage() {
                           updated[index].goal_description = e.target.value;
                           setNewGoals(updated);
                         }}
-                        className="w-full border rounded-xl px-4 py-3 mb-3"
+                        className="w-full border rounded-xl px-4 py-3"
                       />
                     </div>
                   ))}
