@@ -4,9 +4,7 @@ export const dynamic = "force-dynamic";
 import { useCallback, useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
 import CsvUploader from "../components/CsvUploader";
-import StudentEditor from "../components/StudentEditor";   // ← Import here
-
-/* ============ TYPES ============ */
+import StudentEditor from "../components/StudentEditor";
 
 type Student = {
   id: string;
@@ -14,29 +12,9 @@ type Student = {
   grade_level: string | null;
 };
 
-type Class = {
-  id: string;
-  class_name: string;
-  data_entry_person_id: string | null;
-};
-
-type Goal = {
-  id: string;
-  student_id: string;
-  class_id: string | null;
-  goal_number: number;
-  goal_description: string;
-};
-
-type ProgressEntry = {
-  id: string;
-  student_id: string;
-  goal_id: string;
-  progress_notes: string;
-  review_date: string;
-};
-
-/* ============ COMPONENT ============ */
+type Class = { id: string; class_name: string; data_entry_person_id: string | null; };
+type Goal = { id: string; student_id: string; class_id: string | null; goal_number: number; goal_description: string; };
+type ProgressEntry = { id: string; student_id: string; goal_id: string; progress_notes: string; review_date: string; };
 
 export default function CaseManagerPage() {
   const supabase = useSupabase();
@@ -44,22 +22,20 @@ export default function CaseManagerPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<Class[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [progressHistory, setProgressHistory] = useState<ProgressEntry[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Modals
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [showAddGoalModal, setShowAddGoalModal] = useState(false);
 
-  // Form states (kept for modals)
-  const [newStudentName, setNewStudentName] = useState("");
-  const [newStudentGrade, setNewStudentGrade] = useState("");
-  const [newGoalClassId, setNewGoalClassId] = useState<string | null>(null);
-  const [newGoalNumber, setNewGoalNumber] = useState("1");
-  const [newGoalDesc, setNewGoalDesc] = useState("");
+  // ... keep your existing form states and functions (addStudent, deleteStudent, etc.) ...
+
+  const selectedStudent = students.find((s) => s.id === selectedStudentId);
+  const studentGoals = selectedStudentId
+    ? goals.filter((g) => g.student_id === selectedStudentId)
+    : [];
 
   /* ============ LOAD DATA ============ */
   const loadData = useCallback(async () => {
@@ -87,128 +63,117 @@ export default function CaseManagerPage() {
     loadData();
   }, [loadData]);
 
-  // ... keep your loadProgressHistory function and useEffect ...
-
-  /* ============ STUDENT OPERATIONS ============ */
-  const deleteStudent = useCallback(async (studentId: string) => {
-    if (!confirm("Delete this student and all related data?")) return;
-
-    try {
-      const { error } = await supabase.from("students").delete().eq("id", studentId);
-      if (error) throw error;
-
-      setSelectedStudentId(null);
-      await loadData();
-    } catch (err: any) {
-      setError(err.message);
-    }
-  }, [supabase, loadData]);
-
-  // ... keep your addStudentWithGoal and addGoal functions ...
-
-  const selectedStudent = students.find((s) => s.id === selectedStudentId);
-  const studentGoals = selectedStudentId
-    ? goals.filter((g) => g.student_id === selectedStudentId)
-    : [];
-
-  /* ============ RENDER ============ */
   return (
-    <main className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Case Manager</h1>
-          <p className="text-gray-600">Manage students, goals, and progress</p>
-        </div>
-        <CsvUploader onUploadSuccess={loadData} />
-      </div>
-
-      {error && <div className="bg-red-100 text-red-700 p-3 rounded mb-4">{error}</div>}
-
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* LEFT PANEL - Students List */}
-        <div className="border p-4 rounded bg-gray-50">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-bold">Students</h2>
-            <button
-              onClick={() => setShowAddStudentModal(true)}
-              className="bg-green-600 text-white px-4 py-1.5 rounded text-sm hover:bg-green-700"
-            >
-              + Add Student
-            </button>
+    <main className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">Case Manager</h1>
+            <p className="text-gray-600 mt-1">Manage students, goals, and progress tracking</p>
           </div>
-
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {students.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSelectedStudentId(s.id)}
-                className={`w-full text-left p-3 border rounded transition-colors ${
-                  selectedStudentId === s.id ? "bg-blue-600 text-white" : "hover:bg-gray-100"
-                }`}
-              >
-                <div className="font-medium">{s.name}</div>
-                {s.grade_level && <div className="text-xs opacity-75">Grade {s.grade_level}</div>}
-              </button>
-            ))}
-          </div>
+          <CsvUploader onUploadSuccess={loadData} />
         </div>
 
-        {/* RIGHT PANEL - Student Details + Editor */}
-        <div className="md:col-span-2 space-y-6">
-          {!selectedStudentId ? (
-            <p className="text-gray-600 py-12 text-center">Select a student to view and edit details</p>
-          ) : (
-            <>
-              {/* Student Editor */}
-              <StudentEditor 
-                student={selectedStudent!} 
-                onSaved={loadData} 
-              />
+        {error && (
+          <div className="bg-red-100 text-red-700 p-4 rounded-xl mb-6">{error}</div>
+        )}
 
-              {/* Goals Section */}
-              <div className="border p-5 rounded-lg bg-white">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold">Goals by Subject</h3>
-                  <button
-                    onClick={() => setShowAddGoalModal(true)}
-                    className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700"
-                  >
-                    + Add Goal
-                  </button>
-                </div>
+        <div className="grid lg:grid-cols-12 gap-8">
+          {/* Students Card Grid */}
+          <div className="lg:col-span-5 xl:col-span-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-900">Students</h2>
+                <button
+                  onClick={() => setShowAddStudentModal(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition"
+                >
+                  + Add Student
+                </button>
+              </div>
 
-                {/* ... existing goals rendering code ... */}
-                {studentGoals.length === 0 ? (
-                  <p className="text-gray-500 bg-gray-50 p-6 rounded text-center">No goals yet for this student.</p>
+              <div className="grid gap-3 max-h-[75vh] overflow-y-auto pr-2 custom-scrollbar">
+                {students.length === 0 ? (
+                  <p className="text-gray-500 py-8 text-center">No students yet</p>
                 ) : (
-                  // Your existing goals grouped by class...
-                  <div className="space-y-4">
-                    {classes.map((cls) => {
-                      const classGoals = studentGoals.filter((g) => g.class_id === cls.id);
-                      if (classGoals.length === 0) return null;
-                      return (
-                        <div key={cls.id} className="border p-4 rounded bg-blue-50">
-                          <h4 className="font-semibold mb-3">{cls.class_name}</h4>
-                          {/* goal cards */}
+                  students.map((student) => (
+                    <button
+                      key={student.id}
+                      onClick={() => setSelectedStudentId(student.id)}
+                      className={`w-full text-left p-5 rounded-2xl border transition-all duration-200 group
+                        ${
+                          selectedStudentId === student.id
+                            ? "border-blue-600 bg-blue-50 shadow-sm"
+                            : "border-gray-200 hover:border-gray-300 hover:shadow hover:-translate-y-0.5"
+                        }`}
+                    >
+                      <div className="font-semibold text-lg text-gray-900 group-hover:text-blue-700 transition">
+                        {student.name}
+                      </div>
+                      {student.grade_level && (
+                        <div className="text-sm text-gray-500 mt-1">
+                          Grade {student.grade_level}
                         </div>
-                      );
-                    })}
-                  </div>
+                      )}
+                    </button>
+                  ))
                 )}
               </div>
+            </div>
+          </div>
 
-              {/* Progress History */}
-              <div className="border p-5 rounded-lg bg-white">
-                <h3 className="text-lg font-bold mb-4">Progress History</h3>
-                {/* ... your existing progress history code ... */}
+          {/* Student Details Area */}
+          <div className="lg:col-span-7 xl:col-span-8">
+            {!selectedStudentId ? (
+              <div className="bg-white rounded-3xl shadow-sm border border-gray-100 h-full min-h-[500px] flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">👨‍🎓</div>
+                  <h3 className="text-xl font-medium text-gray-700">Select a student</h3>
+                  <p className="text-gray-500 mt-2">to view and manage their case</p>
+                </div>
               </div>
-            </>
-          )}
+            ) : (
+              <div className="space-y-8">
+                <StudentEditor 
+                  student={selectedStudent!} 
+                  onSaved={loadData} 
+                />
+
+                {/* Goals Section */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-semibold">Goals</h3>
+                    <button
+                      onClick={() => setShowAddGoalModal(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2"
+                    >
+                      + Add Goal
+                    </button>
+                  </div>
+
+                  {/* Your existing goals rendering code goes here */}
+                  {studentGoals.length === 0 ? (
+                    <p className="text-gray-500 bg-gray-50 p-12 rounded-2xl text-center">
+                      No goals yet for this student.
+                    </p>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* ... your class/goal cards ... */}
+                    </div>
+                  )}
+                </div>
+
+                {/* Progress History */}
+                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                  <h3 className="text-2xl font-semibold mb-6">Progress History</h3>
+                  {/* ... your progress history code ... */}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Add Student & Add Goal Modals (keep your existing modals) */}
-      {/* ... your modals code ... */}
     </main>
   );
 }
