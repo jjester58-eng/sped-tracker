@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { useCallback, useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
+import CsvUploader from "../components/CsvUploader";
 
 /* ============ TYPES ============ */
 
@@ -244,27 +245,36 @@ export default function CaseManagerPage() {
         <div className="border p-4 rounded bg-gray-50">
           <h2 className="font-bold mb-3">Students</h2>
 
-          <input
-            className="w-full border p-2 mb-2"
-            placeholder="Student name"
-            value={newStudentName}
-            onChange={(e) => setNewStudentName(e.target.value)}
-          />
+          <div className="mb-4 pb-4 border-b">
+            <h3 className="text-sm font-semibold mb-2">Add Student</h3>
+            <input
+              className="w-full border p-2 mb-2 rounded"
+              placeholder="Student name"
+              value={newStudentName}
+              onChange={(e) => setNewStudentName(e.target.value)}
+            />
 
-          <input
-            className="w-full border p-2 mb-3"
-            placeholder="Grade (optional)"
-            value={newStudentGrade}
-            onChange={(e) => setNewStudentGrade(e.target.value)}
-          />
+            <input
+              className="w-full border p-2 mb-3 rounded"
+              placeholder="Grade (optional)"
+              value={newStudentGrade}
+              onChange={(e) => setNewStudentGrade(e.target.value)}
+            />
 
-          <button
-            onClick={addStudent}
-            className="bg-blue-600 text-white w-full p-2 rounded mb-4 hover:bg-blue-700"
-          >
-            Add Student
-          </button>
+            <button
+              onClick={addStudent}
+              className="bg-blue-600 text-white w-full p-2 rounded mb-4 hover:bg-blue-700"
+            >
+              Add Student
+            </button>
+          </div>
 
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold mb-2">Bulk Import</h3>
+            <CsvUploader onUploadSuccess={loadData} />
+          </div>
+
+          <h3 className="text-sm font-semibold mb-3">All Students</h3>
           <div className="space-y-2">
             {students.map((s) => (
               <button
