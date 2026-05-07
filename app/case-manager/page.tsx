@@ -105,57 +105,132 @@ export default function CaseManagerPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 py-10">
-      <div className="max-w-4xl mx-auto px-6">
+    <main style={{ minHeight: "100vh", backgroundColor: "#f9fafb", padding: "2.5rem 1.5rem", fontFamily: "sans-serif" }}>
+      <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "0 1.5rem" }}>
         {/* Big centered white card */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-10">
+        <div style={{ 
+          backgroundColor: "white", 
+          borderRadius: "1.5rem",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          border: "1px solid #f3f4f6",
+          padding: "2rem"
+        }}>
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: "1rem",
+            marginBottom: "2.5rem"
+          }}>
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">Case Manager</h1>
-              <p className="text-gray-600 mt-1">Student cases and goal tracking</p>
+              <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#111827", margin: "0 0 0.25rem" }}>Case Manager</h1>
+              <p style={{ color: "#4b5563", marginTop: "0.25rem", margin: "0" }}>Student cases and goal tracking</p>
             </div>
             <CsvUploader onUploadSuccess={loadData} />
           </div>
 
           {error && (
-            <div className="bg-red-100 border border-red-300 text-red-700 p-4 rounded-2xl mb-6">
+            <div style={{
+              backgroundColor: "#fee2e2",
+              border: "1px solid #fca5a5",
+              color: "#b91c1c",
+              padding: "1rem",
+              borderRadius: "1rem",
+              marginBottom: "1.5rem"
+            }}>
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-            {/* Students Sidebar */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-3xl shadow border border-gray-100 p-6 sticky top-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-semibold">Students</h2>
+          <div style={{ 
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr",
+            gap: "2rem"
+          }}>
+            {/* Students Sidebar - spans 2 cols */}
+            <div style={{ gridColumn: "span 2" }}>
+              <div style={{
+                backgroundColor: "white",
+                borderRadius: "1.5rem",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                border: "1px solid #f3f4f6",
+                padding: "1.5rem",
+                position: "sticky",
+                top: "1.5rem"
+              }}>
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "1.5rem"
+                }}>
+                  <h2 style={{ fontSize: "1.5rem", fontWeight: "600", margin: "0" }}>Students</h2>
                   <button
                     onClick={() => setShowAddStudentModal(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 font-medium"
+                    style={{
+                      backgroundColor: "#16a34a",
+                      color: "white",
+                      padding: "0.625rem 1.25rem",
+                      borderRadius: "1rem",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#15803d")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#16a34a")}
                   >
                     + Add Student
                   </button>
                 </div>
 
-                <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-2">
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                  maxHeight: "70vh",
+                  overflowY: "auto",
+                  paddingRight: "0.5rem"
+                }}>
                   {students.length === 0 ? (
-                    <p className="text-gray-500 py-8 text-center">No students yet</p>
+                    <p style={{ color: "#9ca3af", textAlign: "center", paddingTop: "2rem", paddingBottom: "2rem", margin: "0" }}>No students yet</p>
                   ) : (
                     students.map((student) => (
                       <button
                         key={student.id}
                         onClick={() => setSelectedStudentId(student.id)}
-                        className={`w-full text-left p-5 rounded-2xl border transition-all ${
-                          selectedStudentId === student.id
-                            ? "border-blue-600 bg-blue-50"
-                            : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
-                        }`}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "1.25rem",
+                          borderRadius: "1rem",
+                          border: selectedStudentId === student.id ? "2px solid #2563eb" : "1px solid #e5e7eb",
+                          backgroundColor: selectedStudentId === student.id ? "#eff6ff" : "transparent",
+                          cursor: "pointer",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedStudentId !== student.id) {
+                            e.currentTarget.style.borderColor = "#d1d5db";
+                            e.currentTarget.style.boxShadow = "0 1px 2px rgba(0,0,0,0.05)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedStudentId !== student.id) {
+                            e.currentTarget.style.borderColor = "#e5e7eb";
+                            e.currentTarget.style.boxShadow = "none";
+                          }
+                        }}
                       >
-                        <div className="font-semibold">{student.name}</div>
+                        <div style={{ fontWeight: "600", margin: "0" }}>{student.name}</div>
                         {student.grade_level && (
-                          <div className="text-sm text-gray-500">Grade {student.grade_level}</div>
+                          <div style={{ fontSize: "0.875rem", color: "#6b7280", margin: "0" }}>Grade {student.grade_level}</div>
                         )}
                       </button>
                     ))
@@ -164,14 +239,24 @@ export default function CaseManagerPage() {
               </div>
             </div>
 
-            {/* Main Content Area */}
-            <div className="lg:col-span-3">
+            {/* Main Content Area - spans 3 cols */}
+            <div style={{ gridColumn: "span 3" }}>
               {!selectedStudentId ? (
-                <div className="bg-white rounded-3xl shadow border border-gray-100 h-full min-h-[500px] flex items-center justify-center text-center">
+                <div style={{
+                  backgroundColor: "white",
+                  borderRadius: "1.5rem",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  border: "1px solid #f3f4f6",
+                  minHeight: "500px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  textAlign: "center"
+                }}>
                   <div>
-                    <p className="text-6xl mb-4">👨‍🎓</p>
-                    <h3 className="text-2xl font-medium text-gray-700">Select a student</h3>
-                    <p className="text-gray-500 mt-2">to view details and manage goals</p>
+                    <p style={{ fontSize: "3rem", marginBottom: "1rem", margin: "0 0 1rem" }}>👨‍🎓</p>
+                    <h3 style={{ fontSize: "1.5rem", fontWeight: "500", color: "#374151", margin: "0 0 0.5rem" }}>Select a student</h3>
+                    <p style={{ color: "#6b7280", marginTop: "0.5rem", margin: "0" }}>to view details and manage goals</p>
                   </div>
                 </div>
               ) : (
@@ -187,39 +272,76 @@ export default function CaseManagerPage() {
 
       {/* Add Student Modal */}
       {showAddStudentModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-8">
-              <h2 className="text-3xl font-bold mb-6">Add New Student</h2>
+        <div style={{
+          position: "fixed",
+          inset: "0",
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: "50",
+          padding: "1rem"
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: "1.5rem",
+            maxWidth: "32rem",
+            width: "100%",
+            maxHeight: "90vh",
+            overflowY: "auto"
+          }}>
+            <div style={{ padding: "2rem" }}>
+              <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "1.5rem", margin: "0 0 1.5rem" }}>Add New Student</h2>
 
-              <div className="space-y-6">
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Student Name</label>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.25rem" }}>Student Name</label>
                   <input
                     type="text"
                     value={newStudentName}
                     onChange={(e) => setNewStudentName(e.target.value)}
-                    className="w-full border rounded-2xl px-4 py-3"
+                    style={{
+                      width: "100%",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "1rem",
+                      padding: "0.75rem 1rem",
+                      boxSizing: "border-box"
+                    }}
                     placeholder="John Smith"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1">Grade Level</label>
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.25rem" }}>Grade Level</label>
                   <input
                     type="text"
                     value={newStudentGrade}
                     onChange={(e) => setNewStudentGrade(e.target.value)}
-                    className="w-full border rounded-2xl px-4 py-3"
+                    style={{
+                      width: "100%",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "1rem",
+                      padding: "0.75rem 1rem",
+                      boxSizing: "border-box"
+                    }}
                     placeholder="5"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Class(es)</label>
-                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border rounded-2xl p-3">
+                  <label style={{ display: "block", fontSize: "0.875rem", fontWeight: "500", marginBottom: "0.5rem" }}>Class(es)</label>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "0.5rem",
+                    maxHeight: "12rem",
+                    overflowY: "auto",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "1rem",
+                    padding: "0.75rem"
+                  }}>
                     {classes.map((cls) => (
-                      <label key={cls.id} className="flex items-center gap-2 cursor-pointer">
+                      <label key={cls.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
                         <input
                           type="checkbox"
                           checked={selectedClassIds.includes(cls.id)}
@@ -239,19 +361,40 @@ export default function CaseManagerPage() {
 
                 {/* Goals */}
                 <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="block text-sm font-medium">Initial Goals</label>
+                  <div style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "0.75rem"
+                  }}>
+                    <label style={{ fontSize: "0.875rem", fontWeight: "500", margin: "0" }}>Initial Goals</label>
                     <button
                       type="button"
                       onClick={addNewGoalField}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      style={{
+                        color: "#2563eb",
+                        fontSize: "0.875rem",
+                        fontWeight: "500",
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: "0"
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = "#1d4ed8")}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = "#2563eb")}
                     >
                       + Add another goal
                     </button>
                   </div>
 
                   {newGoals.map((goal, index) => (
-                    <div key={index} className="border rounded-2xl p-4 mb-4 bg-gray-50">
+                    <div key={index} style={{
+                      border: "1px solid #d1d5db",
+                      borderRadius: "1rem",
+                      padding: "1rem",
+                      marginBottom: "1rem",
+                      backgroundColor: "#f9fafb"
+                    }}>
                       <input
                         type="text"
                         placeholder="Goal description"
@@ -261,23 +404,55 @@ export default function CaseManagerPage() {
                           updated[index].goal_description = e.target.value;
                           setNewGoals(updated);
                         }}
-                        className="w-full border rounded-xl px-4 py-3"
+                        style={{
+                          width: "100%",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "0.75rem",
+                          padding: "0.75rem 1rem",
+                          boxSizing: "border-box"
+                        }}
                       />
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-8">
+              <div style={{
+                display: "flex",
+                gap: "0.75rem",
+                marginTop: "2rem"
+              }}>
                 <button
                   onClick={() => setShowAddStudentModal(false)}
-                  className="flex-1 py-3.5 border rounded-2xl font-medium"
+                  style={{
+                    flex: "1",
+                    padding: "0.875rem 1rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "1rem",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    color: "#111827"
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f9fafb")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={addStudentWithGoals}
-                  className="flex-1 py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-medium"
+                  style={{
+                    flex: "1",
+                    padding: "0.875rem 1rem",
+                    backgroundColor: "#16a34a",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "1rem",
+                    fontWeight: "500",
+                    cursor: "pointer"
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#15803d")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#16a34a")}
                 >
                   Create Student
                 </button>
