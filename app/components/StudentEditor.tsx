@@ -8,6 +8,7 @@ type Student = {
   id: string;
   name: string;
   grade_level: string | null;
+  case_manager?: string | null;
 };
 
 type Class = { id: string; class_name: string };
@@ -15,9 +16,12 @@ type Class = { id: string; class_name: string };
 type Goal = {
   id: string;
   student_id: string;
-  class_id: string | null;
+  class_id?: string | null;
   goal_number: number;
   goal_description: string;
+  subject?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 };
 
 type Props = {
@@ -48,11 +52,15 @@ export default function StudentEditor({ student, onSaved }: Props) {
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
   const [editDescription, setEditDescription] = useState("");
   const [editClassId, setEditClassId] = useState<string | null>(null);
+  const [editSubject, setEditSubject] = useState("");
 
   // Add new goal state
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [newGoalDescription, setNewGoalDescription] = useState("");
   const [newGoalClassId, setNewGoalClassId] = useState<string | null>(null);
+  const [newGoalSubject, setNewGoalSubject] = useState("English");
+
+  const subjects = ["English", "Math", "Reading", "Writing", "Behavior", "Science", "History", "Social Studies"];
 
   /* ============ SYNC STUDENT STATE ============ */
   useEffect(() => {
@@ -74,7 +82,14 @@ export default function StudentEditor({ student, onSaved }: Props) {
         supabase.from("classes").select("*").order("class_name"),
       ]);
 
-      setGoals(goalsRes.error ? [] : (goalsRes.data ?? []));
+      setGoals(
+        goalsRes.error
+          ? []
+          : (goalsRes.data ?? []).map((goal: any) => ({
+              ...goal,
+              subject: goal.subject || null,
+            }))
+      );
       setClasses(classesRes.error ? [] : (classesRes.data ?? []));
       setGoalsError(null);
     } catch (err: any) {
@@ -114,6 +129,25 @@ export default function StudentEditor({ student, onSaved }: Props) {
     setLoading(false);
   }
 
+  /* ============ DELETE STUDENT ============ */
+  const deleteStudent = async () => {
+    if (!confirm(`Delete student "${student.name}" and ALL their goals? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await supabase.from("goals").delete().eq("student_id", student.id);
+      const { error } = await supabase.from("students").delete().eq("id", student.id);
+
+      if (error) throw error;
+
+      onSaved?.(); // Refresh parent list
+      alert("Student deleted successfully.");
+    } catch (err: any) {
+      setMessage(`Error deleting student: ${err.message}`);
+    }
+  };
+
   /* ============ ADD GOAL ============ */
   const addGoal = async () => {
     if (!newGoalDescription.trim()) {
@@ -129,6 +163,7 @@ export default function StudentEditor({ student, onSaved }: Props) {
         class_id: newGoalClassId,
         goal_number: nextGoalNumber,
         goal_description: newGoalDescription.trim(),
+        subject: newGoalSubject as string,
       });
 
       if (insertError) throw insertError;
@@ -136,6 +171,7 @@ export default function StudentEditor({ student, onSaved }: Props) {
       setGoalsSuccess("Goal added successfully!");
       setNewGoalDescription("");
       setNewGoalClassId(null);
+      setNewGoalSubject("English");
       setShowAddGoal(false);
       await loadGoalsAndClasses();
       setTimeout(() => setGoalsSuccess(null), 3000);
@@ -157,6 +193,7 @@ export default function StudentEditor({ student, onSaved }: Props) {
         .update({
           goal_description: editDescription.trim(),
           class_id: editClassId,
+          subject: editSubject as string,
         })
         .eq("id", goalId);
 
@@ -195,13 +232,15 @@ export default function StudentEditor({ student, onSaved }: Props) {
   const startEdit = (goal: Goal) => {
     setEditingGoalId(goal.id);
     setEditDescription(goal.goal_description);
-    setEditClassId(goal.class_id);
+    setEditClassId(goal.class_id ?? null);
+    setEditSubject(goal.subject || "English");
   };
 
   const cancelEdit = () => {
     setEditingGoalId(null);
     setEditDescription("");
     setEditClassId(null);
+    setEditSubject("");
   };
 
   return (
@@ -215,9 +254,35 @@ export default function StudentEditor({ student, onSaved }: Props) {
           backgroundColor: "#f9fafb",
         }}
       >
-        <h2 style={{ fontSize: "1.25rem", fontWeight: "600", margin: "0 0 1.5rem" }}>
-          Edit Student Info
-        </h2>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <h2 style={{ fontSize: "1.25rem", fontWeight: "600", margin: "0" }}>
+            Edit Student Info
+          </h2>
+          <button
+            onClick={deleteStudent}
+            style={{
+              color: "#dc2626",
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontWeight: "500",
+              fontSize: "0.875rem",
+              padding: "0.5rem 1rem",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#991b1b")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "#dc2626")}
+          >
+            🗑 Delete Student
+          </button>
+        </div>
+
         {message && (
           <div
             style={{
@@ -435,6 +500,39 @@ export default function StudentEditor({ student, onSaved }: Props) {
                           marginBottom: "0.5rem",
                         }}
                       >
+                        Subject
+                      </label>
+                      <select
+                        value={editSubject}
+                        onChange={(e) => setEditSubject(e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "0.75rem 1rem",
+                          borderRadius: "0.5rem",
+                          border: "1px solid #d1d5db",
+                          fontSize: "0.875rem",
+                          backgroundColor: "white",
+                          cursor: "pointer",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        {subjects.map((sub) => (
+                          <option key={sub} value={sub}>
+                            {sub}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: "0.875rem",
+                          fontWeight: "500",
+                          marginBottom: "0.5rem",
+                        }}
+                      >
                         Goal Description
                       </label>
                       <textarea
@@ -562,6 +660,18 @@ export default function StudentEditor({ student, onSaved }: Props) {
                         >
                           {goal.goal_number}
                         </span>
+                        <span
+                          style={{
+                            backgroundColor: "#fef3c7",
+                            color: "#92400e",
+                            padding: "0.25rem 0.75rem",
+                            borderRadius: "0.25rem",
+                            fontSize: "0.75rem",
+                            fontWeight: "500",
+                          }}
+                        >
+                          {goal.subject || "No Subject"}
+                        </span>
                         {goal.class_id && (
                           <span
                             style={{
@@ -673,6 +783,39 @@ export default function StudentEditor({ student, onSaved }: Props) {
                     marginBottom: "0.5rem",
                   }}
                 >
+                  Subject
+                </label>
+                <select
+                  value={newGoalSubject}
+                  onChange={(e) => setNewGoalSubject(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "0.75rem 1rem",
+                    borderRadius: "0.5rem",
+                    border: "1px solid #d1d5db",
+                    fontSize: "0.875rem",
+                    backgroundColor: "white",
+                    cursor: "pointer",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {subjects.map((sub) => (
+                    <option key={sub} value={sub}>
+                      {sub}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "0.875rem",
+                    fontWeight: "500",
+                    marginBottom: "0.5rem",
+                  }}
+                >
                   Goal Description
                 </label>
                 <textarea
@@ -747,6 +890,7 @@ export default function StudentEditor({ student, onSaved }: Props) {
                 </button>
                 <button
                   onClick={addGoal}
+                  disabled={!newGoalDescription.trim()}
                   style={{
                     flex: "1",
                     padding: "0.75rem 1rem",
@@ -754,11 +898,16 @@ export default function StudentEditor({ student, onSaved }: Props) {
                     color: "white",
                     border: "none",
                     borderRadius: "0.5rem",
-                    cursor: "pointer",
+                    cursor: !newGoalDescription.trim() ? "not-allowed" : "pointer",
                     fontWeight: "500",
+                    opacity: !newGoalDescription.trim() ? 0.6 : 1,
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#1d4ed8")}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
+                  onMouseEnter={(e) => {
+                    if (newGoalDescription.trim()) e.currentTarget.style.backgroundColor = "#1d4ed8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#2563eb";
+                  }}
                 >
                   Add Goal
                 </button>
