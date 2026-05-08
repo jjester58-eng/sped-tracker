@@ -2,12 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useSupabase } from "@/lib/useSupabase";
-
-type Student = {
-  id: string;
-  name: string;
-  grade_level: string | null;
-};
+import type { Student } from "./index";   // ← Shared type
 
 type Props = {
   value: Student[];
@@ -25,7 +20,6 @@ export default function MultiStudentPicker({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Load all students from Supabase
   useEffect(() => {
     async function loadStudents() {
       setLoading(true);
@@ -34,11 +28,9 @@ export default function MultiStudentPicker({
         .select("id, name, grade_level")
         .order("name");
 
-      if (error) {
-        console.error("Error loading students:", error);
-      } else {
-        setStudents(data ?? []);
-      }
+      if (error) console.error("Error loading students:", error);
+      else setStudents(data ?? []);
+
       setLoading(false);
     }
 
@@ -63,8 +55,6 @@ export default function MultiStudentPicker({
     );
   };
 
-  const clearAll = () => onChange([]);
-
   return (
     <div className="space-y-4">
       <div>
@@ -78,7 +68,6 @@ export default function MultiStudentPicker({
         />
       </div>
 
-      {/* Selected Students Chips */}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {value.map((student) => (
@@ -89,37 +78,35 @@ export default function MultiStudentPicker({
               {student.name}
               <button
                 onClick={() => onChange((prev) => prev.filter((s) => s.id !== student.id))}
-                className="text-blue-600 hover:text-red-600 font-bold ml-1"
+                className="text-blue-600 hover:text-red-600 font-bold"
               >
                 ✕
               </button>
             </div>
           ))}
           <button
-            onClick={clearAll}
-            className="text-red-600 text-sm hover:underline ml-2"
+            onClick={() => onChange([])}
+            className="text-red-600 text-sm hover:underline"
           >
             Clear all
           </button>
         </div>
       )}
 
-      {/* Students List */}
       <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-xl p-2 bg-white">
         {loading ? (
           <p className="p-8 text-center text-gray-500">Loading students...</p>
         ) : filteredStudents.length === 0 ? (
-          <p className="p-8 text-center text-gray-500">
-            {searchTerm ? "No matching students" : "No students found"}
-          </p>
+          <p className="p-8 text-center text-gray-500">No students found</p>
         ) : (
           filteredStudents.map((student) => {
             const isSelected = value.some((s) => s.id === student.id);
             return (
               <label
                 key={student.id}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all
-                  ${isSelected ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"}`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all ${
+                  isSelected ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"
+                }`}
               >
                 <input
                   type="checkbox"
