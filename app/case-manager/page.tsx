@@ -6,7 +6,13 @@ import { useSupabase } from "@/lib/useSupabase";
 import CsvUploader from "../components/CsvUploader";
 import StudentEditor from "../components/StudentEditor";
 
-type Student = { id: string; name: string; grade_level: string | null };
+type Student = { 
+  id: string; 
+  name: string; 
+  grade_level: string | null;
+  case_manager?: string | null;
+};
+
 type Class = { id: string; class_name: string };
 
 type Goal = {
@@ -33,8 +39,10 @@ export default function CaseManagerPage() {
 
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
 
+  // Add Student Form State
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("");
+  const [newCaseManager, setNewCaseManager] = useState("");
   const [selectedClassIds, setSelectedClassIds] = useState<string[]>([]);
   const [studentSearchQuery, setStudentSearchQuery] = useState("");
 
@@ -82,11 +90,23 @@ export default function CaseManagerPage() {
     loadData();
   }, [loadData]);
 
-  const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(studentSearchQuery.toLowerCase())
-  );
+  /* ============ DELETE STUDENT ============ */
+  const deleteStudent = async (studentId: string, studentName: string) => {
+    if (!confirm(`Delete "${studentName}" and all their data?`)) return;
 
-  /* ============ ADD STUDENT WITH GOALS ============ */
+    try {
+      await supabase.from("goals").delete().eq("student_id", studentId);
+      const { error } = await supabase.from("students").delete().eq("id", studentId);
+      if (error) throw error;
+
+      await loadData();
+      if (selectedStudentId === studentId) setSelectedStudentId(null);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  /* ============ ADD STUDENT ============ */
   const addStudentWithGoals = async () => {
     if (!newStudentName.trim()) {
       setError("Student name is required");
@@ -96,7 +116,11 @@ export default function CaseManagerPage() {
     try {
       const { data: student, error: studentError } = await supabase
         .from("students")
-        .insert({ name: newStudentName.trim(), grade_level: newStudentGrade || null })
+        .insert({ 
+          name: newStudentName.trim(), 
+          grade_level: newStudentGrade || null,
+          case_manager: newCaseManager.trim() || null 
+        })
         .select()
         .single();
 
@@ -113,19 +137,14 @@ export default function CaseManagerPage() {
         }));
 
       if (goalsToInsert.length > 0) {
-        // Clean type assertion (better than `as any`)
         const { error: goalsError } = await supabase
           .from("goals")
-          .insert(goalsToInsert as any[]);   // Only casting the array
+          .insert(goalsToInsert as any);   // Temporary fix until column is in DB types
 
         if (goalsError) throw goalsError;
       }
 
-      // Reset
-      setNewStudentName("");
-      setNewStudentGrade("");
-      setSelectedClassIds([]);
-      setNewGoals([{ goal_number: 1, goal_description: "", subject: "Math", class_id: null }]);
+      resetAddForm();
       setShowAddStudentModal(false);
 
       await loadData();
@@ -133,6 +152,14 @@ export default function CaseManagerPage() {
     } catch (err: any) {
       setError(err.message);
     }
+  };
+
+  const resetAddForm = () => {
+    setNewStudentName("");
+    setNewStudentGrade("");
+    setNewCaseManager("");
+    setSelectedClassIds([]);
+    setNewGoals([{ goal_number: 1, goal_description: "", subject: "Math", class_id: null }]);
   };
 
   const addNewGoalField = () => {
@@ -146,7 +173,7 @@ export default function CaseManagerPage() {
 
   return (
     <main style={{ minHeight: "100vh", backgroundColor: "#f9fafb", padding: "2.5rem 1.5rem", fontFamily: "sans-serif" }}>
-      <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "0 1.5rem" }}>
+      <div style={{ maxWidth: "56rem", margin: "0 auto" }}>
         <div style={{ 
           backgroundColor: "white", 
           borderRadius: "1.5rem",
@@ -155,119 +182,82 @@ export default function CaseManagerPage() {
           padding: "2rem"
         }}>
 
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            gap: "1rem",
-            marginBottom: "2.5rem"
-          }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "2.5rem" }}>
             <div>
-              <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#111827", margin: "0 0 0.25rem" }}>Case Manager</h1>
-              <p style={{ color: "#4b5563", marginTop: "0.25rem", margin: "0" }}>Student cases and goal tracking</p>
+              <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#111827" }}>Case Manager</h1>
+              <p style={{ color: "#4b5563" }}>Student cases and goal tracking</p>
             </div>
             <CsvUploader onUploadSuccess={loadData} />
           </div>
 
           {error && (
-            <div style={{
-              backgroundColor: "#fee2e2",
-              border: "1px solid #fca5a5",
-              color: "#b91c1c",
-              padding: "1rem",
-              borderRadius: "1rem",
-              marginBottom: "1.5rem"
-            }}>
+            <div style={{ backgroundColor: "#fee2e2", border: "1px solid #fca5a5", color: "#b91c1c", padding: "1rem", borderRadius: "1rem", marginBottom: "1.5rem" }}>
               {error}
             </div>
           )}
 
-          <div style={{ 
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr 1fr 1fr",
-            gap: "2rem"
-          }}>
-            {/* Students Sidebar - spans 2 cols */}
-            <div style={{ gridColumn: "span 2" }}>
-              {/* ... same as before ... */}
-              <div style={{
-                backgroundColor: "white",
-                borderRadius: "1.5rem",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                border: "1px solid #f3f4f6",
-                padding: "1.5rem",
-                position: "sticky",
-                top: "1.5rem"
-              }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
-                  <h2 style={{ fontSize: "1.5rem", fontWeight: "600", margin: "0" }}>Students</h2>
-                  <button onClick={() => setShowAddStudentModal(true)} style={{
-                    backgroundColor: "#16a34a", color: "white", padding: "0.625rem 1.25rem", borderRadius: "1rem",
-                    border: "none", fontWeight: "500", cursor: "pointer"
-                  }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 3fr", gap: "2rem" }}>
+            {/* Students List */}
+            <div>
+              <div style={{ backgroundColor: "white", borderRadius: "1.5rem", padding: "1.5rem", border: "1px solid #f3f4f6" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+                  <h2 style={{ fontSize: "1.5rem", fontWeight: "600" }}>Students</h2>
+                  <button 
+                    onClick={() => setShowAddStudentModal(true)}
+                    style={{ backgroundColor: "#16a34a", color: "white", padding: "0.625rem 1.25rem", borderRadius: "1rem", border: "none", cursor: "pointer" }}
+                  >
                     + Add Student
                   </button>
                 </div>
 
-                <div style={{ marginBottom: "1rem" }}>
-                  <input
-                    type="text"
-                    placeholder="Search students..."
-                    value={studentSearchQuery}
-                    onChange={(e) => setStudentSearchQuery(e.target.value)}
-                    style={{ width: "100%", border: "1px solid #d1d5db", borderRadius: "1rem", padding: "0.75rem 1rem" }}
-                  />
-                </div>
+                <input
+                  type="text"
+                  placeholder="Search students..."
+                  value={studentSearchQuery}
+                  onChange={(e) => setStudentSearchQuery(e.target.value)}
+                  style={{ width: "100%", padding: "0.75rem", borderRadius: "1rem", border: "1px solid #d1d5db", marginBottom: "1rem" }}
+                />
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", maxHeight: "70vh", overflowY: "auto" }}>
+                <div style={{ maxHeight: "70vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                   {filteredStudents.length === 0 ? (
-                    <p style={{ color: "#9ca3af", textAlign: "center", padding: "3rem 1rem" }}>
-                      {studentSearchQuery ? "No students found" : "No students yet"}
-                    </p>
+                    <p style={{ textAlign: "center", color: "#9ca3af", padding: "2rem 0" }}>No students found</p>
                   ) : (
-                    filteredStudents.map((student) => (
-                      <button
-                        key={student.id}
-                        onClick={() => setSelectedStudentId(student.id)}
-                        style={{
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "1.25rem",
-                          borderRadius: "1rem",
-                          border: selectedStudentId === student.id ? "2px solid #2563eb" : "1px solid #e5e7eb",
-                          backgroundColor: selectedStudentId === student.id ? "#eff6ff" : "transparent",
-                          cursor: "pointer"
-                        }}
-                      >
-                        <div style={{ fontWeight: "600" }}>{student.name}</div>
-                        {student.grade_level && <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>Grade {student.grade_level}</div>}
-                      </button>
+                    filteredStudents.map(student => (
+                      <div key={student.id} style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          onClick={() => setSelectedStudentId(student.id)}
+                          style={{
+                            flex: 1,
+                            textAlign: "left",
+                            padding: "1rem",
+                            borderRadius: "1rem",
+                            border: selectedStudentId === student.id ? "2px solid #2563eb" : "1px solid #e5e7eb",
+                            backgroundColor: selectedStudentId === student.id ? "#eff6ff" : "transparent",
+                          }}
+                        >
+                          <div style={{ fontWeight: "600" }}>{student.name}</div>
+                          {student.grade_level && <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>Grade {student.grade_level}</div>}
+                          {student.case_manager && <div style={{ fontSize: "0.8rem", color: "#2563eb" }}>📋 {student.case_manager}</div>}
+                        </button>
+                        <button
+                          onClick={() => deleteStudent(student.id, student.name)}
+                          style={{ color: "#ef4444", padding: "0.75rem", background: "none", border: "none", cursor: "pointer" }}
+                        >
+                          🗑
+                        </button>
+                      </div>
                     ))
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Main Content */}
-            <div style={{ gridColumn: "span 3" }}>
+            {/* Student Editor Area */}
+            <div>
               {!selectedStudentId ? (
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "1.5rem",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-                  border: "1px solid #f3f4f6",
-                  minHeight: "500px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textAlign: "center"
-                }}>
-                  <div>
-                    <p style={{ fontSize: "3rem", marginBottom: "1rem" }}>👨‍🎓</p>
-                    <h3 style={{ fontSize: "1.5rem", fontWeight: "500", color: "#374151" }}>Select a student</h3>
-                    <p style={{ color: "#6b7280" }}>to view details and manage goals</p>
-                  </div>
+                <div style={{ backgroundColor: "white", borderRadius: "1.5rem", padding: "4rem 2rem", textAlign: "center", border: "1px solid #f3f4f6" }}>
+                  <p style={{ fontSize: "4rem", margin: "0 0 1rem" }}>👨‍🎓</p>
+                  <h3>Select a student</h3>
                 </div>
               ) : (
                 <StudentEditor 
@@ -280,21 +270,44 @@ export default function CaseManagerPage() {
         </div>
       </div>
 
-      {/* Add Student Modal - (same as your previous version) */}
+      {/* Add Student Modal */}
       {showAddStudentModal && (
-        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: "1rem" }}>
-          <div style={{ backgroundColor: "white", borderRadius: "1.5rem", maxWidth: "32rem", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ position: "fixed", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ backgroundColor: "white", borderRadius: "1.5rem", maxWidth: "36rem", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ padding: "2rem" }}>
-              <h2 style={{ fontSize: "1.875rem", fontWeight: "bold", marginBottom: "1.5rem" }}>Add New Student</h2>
+              <h2 style={{ fontSize: "1.9rem", fontWeight: "bold", marginBottom: "1.5rem" }}>Add New Student</h2>
 
-              {/* Form fields - abbreviated for space, copy from your last working version if needed */}
-              {/* Name, Grade, Classes, Goals sections... */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.4rem" }}>
+                <div>
+                  <label style={{ display: "block", fontWeight: "500", marginBottom: "0.4rem" }}>Student Name *</label>
+                  <input type="text" value={newStudentName} onChange={e => setNewStudentName(e.target.value)} placeholder="John Smith" style={{ width: "100%", padding: "0.8rem", borderRadius: "1rem", border: "1px solid #d1d5db" }} />
+                </div>
 
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "2rem" }}>
-                <button onClick={() => setShowAddStudentModal(false)} style={{ flex: 1, padding: "0.875rem", border: "1px solid #d1d5db", borderRadius: "1rem" }}>
+                <div>
+                  <label style={{ display: "block", fontWeight: "500", marginBottom: "0.4rem" }}>Grade Level</label>
+                  <input type="text" value={newStudentGrade} onChange={e => setNewStudentGrade(e.target.value)} placeholder="5" style={{ width: "100%", padding: "0.8rem", borderRadius: "1rem", border: "1px solid #d1d5db" }} />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontWeight: "500", marginBottom: "0.4rem" }}>Case Manager</label>
+                  <input 
+                    type="text" 
+                    value={newCaseManager} 
+                    onChange={e => setNewCaseManager(e.target.value)} 
+                    placeholder="Jane Cooper" 
+                    style={{ width: "100%", padding: "0.8rem", borderRadius: "1rem", border: "1px solid #d1d5db" }} 
+                  />
+                </div>
+
+                {/* Add your Classes and Goals sections here (same as before) */}
+
+              </div>
+
+              <div style={{ display: "flex", gap: "1rem", marginTop: "2.5rem" }}>
+                <button onClick={() => { resetAddForm(); setShowAddStudentModal(false); }} style={{ flex: 1, padding: "1rem", border: "1px solid #d1d5db", borderRadius: "1rem" }}>
                   Cancel
                 </button>
-                <button onClick={addStudentWithGoals} style={{ flex: 1, padding: "0.875rem", backgroundColor: "#16a34a", color: "white", border: "none", borderRadius: "1rem" }}>
+                <button onClick={addStudentWithGoals} style={{ flex: 1, padding: "1rem", backgroundColor: "#16a34a", color: "white", border: "none", borderRadius: "1rem" }}>
                   Create Student
                 </button>
               </div>
