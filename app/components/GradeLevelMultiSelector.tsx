@@ -21,6 +21,7 @@ export default function GradeLevelMultiSelector({ value, onChange }: Props) {
   return (
     <div>
       <label className="font-semibold block mb-3">Grade Level(s)</label>
+      
       <div className="flex flex-wrap gap-2">
         {GRADE_LEVELS.map((grade) => {
           const isSelected = value.includes(grade);
@@ -28,10 +29,10 @@ export default function GradeLevelMultiSelector({ value, onChange }: Props) {
             <button
               key={grade}
               onClick={() => toggleGrade(grade)}
-              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition-all border
+              className={`px-5 py-2.5 rounded-2xl text-sm font-medium transition-all border min-w-[110px]
                 ${isSelected 
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm" 
-                  : "bg-white border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md" 
+                  : "bg-white border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-700"
                 }`}
             >
               {grade === "K" ? "Kindergarten" : `Grade ${grade}`}
@@ -39,11 +40,16 @@ export default function GradeLevelMultiSelector({ value, onChange }: Props) {
           );
         })}
       </div>
-      
+
+      {/* Selected Summary */}
       {value.length > 0 && (
-        <p className="text-sm text-gray-500 mt-3">
-          Selected: {value.map(g => g === "K" ? "K" : g).join(", ")}
-        </p>
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-2xl">
+          <p className="text-sm text-blue-700 font-medium">
+            Selected: {value
+              .map(g => g === "K" ? "Kindergarten" : `Grade ${g}`)
+              .join(", ")}
+          </p>
+        </div>
       )}
     </div>
   );
