@@ -3,9 +3,9 @@
 import { useState, useMemo } from 'react';
 import MultiStudentPicker from '@/app/components/MultiStudentPicker';
 import SubjectSelector from '@/app/components/SubjectSelector';
-import GradeLevelSelector from '@/app/components/GradeLevelSelector'; // We'll create this
+import GradeLevelMultiSelector from '@/app/components/GradeLevelMultiSelector';
 import GoalSelector from '@/app/components/GoalSelector';
-import type { Student } from '@/app/components/types';
+import type { Student } from '@/app/components/index';
 
 export default function TeacherPage() {
   const [subject, setSubject] = useState<string>("");
