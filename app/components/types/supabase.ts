@@ -31,6 +31,7 @@ export type Database = {
           created_at?: string | null;
           updated_at?: string | null;
         };
+        Relationships: [];
       };
       goals: {
         Row: {
@@ -39,6 +40,7 @@ export type Database = {
           goal_description: string;
           goal_number: number;
           class_id: string | null;
+          subject: string | null;
           created_at: string | null;
           updated_at: string | null;
         };
@@ -48,6 +50,7 @@ export type Database = {
           goal_description: string;
           goal_number?: number;
           class_id?: string | null;
+          subject?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
@@ -57,9 +60,11 @@ export type Database = {
           goal_description?: string;
           goal_number?: number;
           class_id?: string | null;
+          subject?: string | null;
           created_at?: string | null;
           updated_at?: string | null;
         };
+        Relationships: [];
       };
       weekly_progress: {
         Row: {
@@ -89,10 +94,11 @@ export type Database = {
           created_at?: string | null;
           updated_at?: string | null;
         };
+        Relationships: [];
       };
     };
-    Views: {};
-    Functions: {};
-    Enums: {};
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
   };
 };

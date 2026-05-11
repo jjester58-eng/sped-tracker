@@ -50,15 +50,15 @@ export default function StudentEditor({ student, onSaved }: Props) {
 
   // Edit state
   const [editingGoalId, setEditingGoalId] = useState<string | null>(null);
-  const [editDescription, setEditDescription] = useState("");
+  const [editDescription, setEditDescription] = useState<string>("");
   const [editClassId, setEditClassId] = useState<string | null>(null);
-  const [editSubject, setEditSubject] = useState("");
+  const [editSubject, setEditSubject] = useState<string>("");
 
   // Add new goal state
-  const [showAddGoal, setShowAddGoal] = useState(false);
-  const [newGoalDescription, setNewGoalDescription] = useState("");
+  const [showAddGoal, setShowAddGoal] = useState<boolean>(false);
+  const [newGoalDescription, setNewGoalDescription] = useState<string>("");
   const [newGoalClassId, setNewGoalClassId] = useState<string | null>(null);
-  const [newGoalSubject, setNewGoalSubject] = useState("English");
+  const [newGoalSubject, setNewGoalSubject] = useState<string>("English");
 
   const subjects = ["English", "Math", "Reading", "Writing", "Behavior", "Science", "History", "Social Studies"];
 
@@ -163,7 +163,7 @@ export default function StudentEditor({ student, onSaved }: Props) {
         class_id: newGoalClassId,
         goal_number: nextGoalNumber,
         goal_description: newGoalDescription.trim(),
-        subject: newGoalSubject as string,
+        subject: newGoalSubject,
       });
 
       if (insertError) throw insertError;
@@ -193,7 +193,7 @@ export default function StudentEditor({ student, onSaved }: Props) {
         .update({
           goal_description: editDescription.trim(),
           class_id: editClassId,
-          subject: editSubject as string,
+          subject: editSubject,
         })
         .eq("id", goalId);
 
