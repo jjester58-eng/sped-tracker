@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import MultiStudentPicker from '@/app/components/MultiStudentPicker';
 import SubjectSelector from '@/app/components/SubjectSelector';
 import GradeLevelMultiSelector from '@/app/components/GradeLevelMultiSelector';
@@ -16,6 +16,16 @@ export default function TeacherPage() {
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState('');
   const [notes, setNotes] = useState('');
+
+  /**
+   * IMPORTANT:
+   * This assumes MultiStudentPicker either:
+   *  - fetches students internally, OR
+   *  - accepts filters and returns filtered results
+   *
+   * We are enforcing UI gating here (not showing until ready)
+   */
+  const canLoadStudents = subject.length > 0 && selectedGradeLevels.length > 0;
 
   const handleSave = () => {
     if (selectedStudents.length === 0 || !notes.trim()) {
@@ -39,13 +49,15 @@ export default function TeacherPage() {
 
       {/* HEADER */}
       <div className="mb-8">
-        <h1 className="text-3xl font-semibold mb-2">Teacher Input</h1>
+        <h1 className="text-3xl font-semibold mb-2 text-gray-900">
+          Teacher Input
+        </h1>
         <p className="text-gray-600">
-          Log progress notes by subject and grade level
+          Select subject → grade level → students → enter notes
         </p>
       </div>
 
-      {/* TOP FILTER BAR */}
+      {/* FILTERS */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
@@ -70,6 +82,13 @@ export default function TeacherPage() {
           />
 
         </div>
+
+        {/* hint state */}
+        {(!subject || selectedGradeLevels.length === 0) && (
+          <p className="text-sm text-gray-500 mt-4">
+            Select a subject and grade level to load students.
+          </p>
+        )}
       </div>
 
       {/* MAIN GRID */}
@@ -77,13 +96,23 @@ export default function TeacherPage() {
 
         {/* STUDENTS */}
         <div className="lg:col-span-5">
-          <MultiStudentPicker
-            value={selectedStudents}
-            onChange={setSelectedStudents}
-            subject={subject}
-            gradeLevels={selectedGradeLevels}
-            searchPlaceholder="Search filtered students..."
-          />
+
+          {!canLoadStudents ? (
+            <div className="h-[420px] flex items-center justify-center border border-dashed rounded-2xl bg-white">
+              <p className="text-gray-500 text-center px-6">
+                Choose subject and grade level to view students
+              </p>
+            </div>
+          ) : (
+            <MultiStudentPicker
+              value={selectedStudents}
+              onChange={setSelectedStudents}
+              subject={subject}
+              gradeLevels={selectedGradeLevels}
+              searchPlaceholder="Search students..."
+            />
+          )}
+
         </div>
 
         {/* NOTES */}
@@ -97,7 +126,7 @@ export default function TeacherPage() {
                 {selectedStudents.map((s) => (
                   <div
                     key={s.id}
-                    className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm flex items-center gap-2"
+                    className="bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm flex items-center gap-2"
                   >
                     {s.name}
                     <button
@@ -124,7 +153,7 @@ export default function TeacherPage() {
 
               {/* notes */}
               <div className="mt-6">
-                <label className="font-semibold block mb-2">
+                <label className="font-semibold block mb-2 text-gray-900">
                   Progress Notes
                 </label>
 
@@ -132,7 +161,7 @@ export default function TeacherPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   className="w-full h-72 p-4 border rounded-xl"
-                  placeholder="Write observations..."
+                  placeholder="Write observations, progress, behaviors, accommodations..."
                 />
               </div>
 
@@ -159,8 +188,10 @@ export default function TeacherPage() {
 
             </div>
           ) : (
-            <div className="h-[500px] flex items-center justify-center border border-dashed rounded-2xl">
-              Select subject, grade, and students
+            <div className="h-[420px] flex items-center justify-center border border-dashed rounded-2xl bg-white">
+              <p className="text-gray-500">
+                Select students to begin data entry
+              </p>
             </div>
           )}
 
