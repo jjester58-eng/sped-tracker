@@ -1,135 +1,113 @@
-'use client';
+import Link from "next/link";
 
-import { useState } from 'react';
-
-// Try these imports first (most common fix)
-import MultiStudentPicker from '../app/components/MultiStudentPicker';
-import SubjectSelector from '../app/components/SubjectSelector';
-import GoalSelector from '../app/components/GoalSelector';
-
-type Student = {
-  id: string;
-  name: string;
-  grade_level: string | null;
-};
-
-export default function TeacherPage() {
-  const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
-  const [subject, setSubject] = useState<string>("");
-  const [selectedGoalId, setSelectedGoalId] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
-
-  const handleSave = () => {
-    if (selectedStudents.length === 0 || !notes.trim()) {
-      alert("Please select at least one student and write notes.");
-      return;
-    }
-
-    console.log("Saving notes:", {
-      students: selectedStudents.map(s => s.name),
-      subject,
-      goal_id: selectedGoalId,
-      notes,
-    });
-
-    alert("✅ Notes saved successfully!");
-  };
-
+export default function HomePage() {
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-      <div className="mb-10">
-        <h1 className="text-3xl font-semibold mb-2">Teacher Input</h1>
-        <p className="text-gray-600">
-          Log weekly progress notes for one or multiple students
+    <main style={{ fontFamily: "sans-serif" }}>
+      
+      {/* HERO */}
+      <section style={{ textAlign: "center", padding: "3rem 1.5rem 2rem" }}>
+        <div
+          style={{
+            display: "inline-block",
+            fontSize: "12px",
+            padding: "6px 12px",
+            borderRadius: "8px",
+            background: "#eef6ff",
+            color: "#2563eb",
+            marginBottom: "16px",
+            fontWeight: 500,
+          }}
+        >
+          ✨ Special Education Tracker
+        </div>
+
+        <h1 style={{ fontSize: "34px", marginBottom: "10px" }}>
+          SPED Tracker
+        </h1>
+
+        <p style={{ maxWidth: "520px", margin: "0 auto", color: "#555" }}>
+          Track student progress, manage IEP goals, and log weekly notes in one simple system built for teachers.
         </p>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Student Selection */}
-        <div className="lg:col-span-5">
-          <MultiStudentPicker
-            value={selectedStudents}
-            onChange={setSelectedStudents}
-          />
+      {/* CARDS */}
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+          gap: "16px",
+          maxWidth: "800px",
+          margin: "0 auto",
+          padding: "0 1.5rem 2rem",
+        }}
+      >
+        {/* TEACHER */}
+        <Link
+          href="/teacher"
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "12px",
+            padding: "20px",
+            textDecoration: "none",
+            color: "inherit",
+            background: "white",
+          }}
+        >
+          <div style={{ fontSize: "28px" }}>✏️</div>
+          <h3>Teacher Input</h3>
+          <p style={{ fontSize: "14px", color: "#666" }}>
+            Log progress notes and track student goals.
+          </p>
+          <div style={{ marginTop: "10px", color: "#2563eb" }}>
+            Open →
+          </div>
+        </Link>
+
+        {/* CASE MANAGER */}
+        <Link
+          href="/case-manager"
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: "12px",
+            padding: "20px",
+            textDecoration: "none",
+            color: "inherit",
+            background: "white",
+          }}
+        >
+          <div style={{ fontSize: "28px" }}>👥</div>
+          <h3>Case Manager</h3>
+          <p style={{ fontSize: "14px", color: "#666" }}>
+            Manage students, IEPs, and long-term progress.
+          </p>
+          <div style={{ marginTop: "10px", color: "#16a34a" }}>
+            Open →
+          </div>
+        </Link>
+      </section>
+
+      {/* FEATURES */}
+      <section style={{ maxWidth: "800px", margin: "0 auto", padding: "0 1.5rem 3rem" }}>
+        <h4 style={{ fontSize: "14px", color: "#666", marginBottom: "12px" }}>
+          KEY FEATURES
+        </h4>
+
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          <div style={box}>📋 IEP Goal Tracking</div>
+          <div style={box}>📈 Progress Monitoring</div>
+          <div style={box}>📝 Teacher Notes</div>
         </div>
-
-        {/* Form Area */}
-        <div className="lg:col-span-7">
-          {selectedStudents.length > 0 ? (
-            <div className="bg-white border border-gray-200 rounded-2xl p-8">
-              
-              <div className="flex flex-wrap gap-2 mb-8">
-                {selectedStudents.map((student) => (
-                  <div
-                    key={student.id}
-                    className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm"
-                  >
-                    {student.name}
-                    <button
-                      onClick={() => setSelectedStudents(prev => 
-                        prev.filter(s => s.id !== student.id)
-                      )}
-                      className="text-blue-500 hover:text-red-600"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-8">
-                <SubjectSelector value={subject} onChange={setSubject} />
-
-                {subject && (
-                  <GoalSelector
-                    subject={subject}
-                    students={selectedStudents}
-                    onChange={setSelectedGoalId}
-                  />
-                )}
-
-                <div>
-                  <label className="font-semibold block mb-3">Progress Notes</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Write your observations, progress, concerns..."
-                    className="w-full h-64 p-5 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4 mt-10">
-                <button
-                  onClick={handleSave}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-4 rounded-2xl transition"
-                >
-                  Save Notes
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedStudents([]);
-                    setSubject("");
-                    setSelectedGoalId("");
-                    setNotes("");
-                  }}
-                  className="px-8 border border-gray-300 hover:bg-gray-50 rounded-2xl"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="h-[500px] flex items-center justify-center border border-dashed border-gray-300 rounded-3xl bg-white">
-              <div className="text-center">
-                <div className="text-6xl mb-4">👥</div>
-                <p className="text-gray-500">Select students on the left to begin</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
+
+const box = {
+  flex: "1",
+  minWidth: "180px",
+  padding: "14px",
+  border: "1px solid #eee",
+  borderRadius: "10px",
+  fontSize: "13px",
+  color: "#555",
+};
