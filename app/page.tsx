@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main style={{ fontFamily: "sans-serif", background: "#fafafa", minHeight: "100vh" }}>
+    <main style={{ fontFamily: "sans-serif", background: "#f3f4f6", minHeight: "100vh" }}>
 
       {/* HERO */}
       <section style={{ textAlign: "center", padding: "3rem 1.5rem 2rem" }}>
@@ -11,24 +11,35 @@ export default function HomePage() {
           fontSize: "12px",
           padding: "6px 12px",
           borderRadius: "999px",
-          background: "#eef6ff",
-          color: "#2563eb",
+          background: "#dbeafe",
+          color: "#1d4ed8",
           marginBottom: "14px",
           fontWeight: 600,
         }}>
           Special Education Platform
         </div>
 
-        <h1 style={{ fontSize: "36px", margin: "0 0 10px" }}>
+        <h1 style={{
+          fontSize: "38px",
+          margin: "0 0 10px",
+          fontWeight: 700,
+          color: "#111827",
+        }}>
           SPED Tracker
         </h1>
 
-        <p style={{ maxWidth: "520px", margin: "0 auto", color: "#666", lineHeight: 1.5 }}>
+        <p style={{
+          maxWidth: "520px",
+          margin: "0 auto",
+          color: "#374151",
+          lineHeight: 1.6,
+          fontSize: "15px",
+        }}>
           Track student progress, manage IEP goals, and log weekly notes in one simple system built for teachers and case managers.
         </p>
       </section>
 
-      {/* MAIN CARDS */}
+      {/* CARDS */}
       <section style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
@@ -78,7 +89,7 @@ export default function HomePage() {
 /* ---------- STYLES ---------- */
 
 const cardStyle: React.CSSProperties = {
-  background: "white",
+  background: "#ffffff",
   border: "1px solid #e5e7eb",
   borderRadius: "16px",
   padding: "20px",
@@ -87,7 +98,7 @@ const cardStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: "12px",
-  transition: "0.2s",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
 };
 
 const iconStyle = (color: string): React.CSSProperties => ({
@@ -103,14 +114,15 @@ const iconStyle = (color: string): React.CSSProperties => ({
 });
 
 const titleStyle: React.CSSProperties = {
-  fontSize: "17px",
-  fontWeight: 600,
+  fontSize: "18px",
+  fontWeight: 700,
   margin: "0 0 4px",
+  color: "#111827", // FIX: strong contrast
 };
 
 const descStyle: React.CSSProperties = {
   fontSize: "14px",
-  color: "#6b7280",
+  color: "#4b5563", // FIX: darker gray
   lineHeight: 1.5,
   margin: 0,
 };
