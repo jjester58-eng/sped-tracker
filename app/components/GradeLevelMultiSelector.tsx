@@ -23,7 +23,6 @@ const commonGradeLevels = [
   "10",
   "11",
   "12",
-  "Post-Secondary",
 ];
 
 export default function GradeLevelMultiSelector({ value, onChange }: Props) {
