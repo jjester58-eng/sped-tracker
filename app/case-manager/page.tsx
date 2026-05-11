@@ -136,8 +136,21 @@ export default function CaseManagerPage() {
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "2rem" }}>
             <div>
-              <h1 style={{ fontSize: "2rem", fontWeight: "bold" }}>Case Manager</h1>
-              <p style={{ color: "#4b5563" }}>Manage students and IEP goals</p>
+             <h1 style={{ 
+  fontSize: "2rem", 
+  fontWeight: 800,
+  color: "#111827"   // FIX: strong black
+}}>
+  Case Manager
+</h1>
+
+<p style={{ 
+  color: "#374151",  // FIX: darker gray
+  fontSize: "0.95rem",
+  marginTop: "4px"
+}}>
+  Manage students and IEP goals
+</p>
             </div>
             <div style={{ display: "flex", gap: "1rem" }}>
               <CsvUploader onUploadSuccess={loadData} />
