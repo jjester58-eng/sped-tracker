@@ -5,7 +5,7 @@ import MultiStudentPicker from '@/app/components/MultiStudentPicker';
 import SubjectSelector from '@/app/components/SubjectSelector';
 import GradeLevelMultiSelector from '@/app/components/GradeLevelMultiSelector';
 import GoalSelector from '@/app/components/GoalSelector';
-import { useClassesAsSubjects } from '@useClassesAsSubjects/app/hooks/useClassesAsSubjects';
+import { useClassesAsSubjects } from '@/app/hooks/useClassesAsSubjects';
 import type { Student } from '@/app/components/index';
 
 export default function TeacherPage() {
