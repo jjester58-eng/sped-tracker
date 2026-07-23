@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
-import type { Student } from "./index";   // ← Shared type
+import type { Student } from "./index";
 
 type Goal = {
   id: string;
@@ -12,19 +12,22 @@ type Goal = {
 
 type Props = {
   subject: string;
-  students: Student[];           // ← Now using shared type
+  students: Student[];
   onChange: (goalId: string) => void;
 };
 
 export default function GoalSelector({ subject, students, onChange }: Props) {
   const supabase = useSupabase();
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [selectedGoalId, setSelectedGoalId] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!students.length) {
       setGoals([]);
+      setSelectedGoalId("");
+      onChange("");
       return;
     }
 
@@ -33,29 +36,38 @@ export default function GoalSelector({ subject, students, onChange }: Props) {
       setError(null);
 
       const studentIds = students.map((s) => s.id);
-      let query = supabase
+      const { data, error } = await supabase
         .from("goals")
         .select("id, goal_description, student_id")
-        .in("student_id", studentIds);
-
-      if (subject?.trim()) {
-        query = query.ilike("goal_description", `%${subject}%`);
-      }
-
-      const { data, error } = await query;
+        .in("student_id", studentIds)
+        .order("goal_description");
 
       if (error) {
         console.error(error);
         setError("Failed to load goals");
         setGoals([]);
+        setSelectedGoalId("");
+        onChange("");
       } else {
-        setGoals(data ?? []);
+        const allGoals = (data ?? []) as Goal[];
+        const normalizedSubject = subject?.trim().toLowerCase();
+
+        const filteredGoals = normalizedSubject
+          ? allGoals.filter((goal) =>
+              goal.goal_description.toLowerCase().includes(normalizedSubject)
+            )
+          : allGoals;
+
+        setGoals(filteredGoals.length > 0 ? filteredGoals : allGoals);
+        setSelectedGoalId("");
+        onChange("");
       }
+
       setLoading(false);
     }
 
     load();
-  }, [subject, students, supabase]);
+  }, [subject, students, supabase, onChange]);
 
   return (
     <div className="space-y-2">
@@ -63,7 +75,12 @@ export default function GoalSelector({ subject, students, onChange }: Props) {
       {error && <p className="text-red-600 text-sm">{error}</p>}
       <select
         className="border p-2 w-full rounded-xl"
-        onChange={(e) => onChange(e.target.value)}
+        value={selectedGoalId}
+        onChange={(e) => {
+          const nextValue = e.target.value;
+          setSelectedGoalId(nextValue);
+          onChange(nextValue);
+        }}
         disabled={loading}
       >
         <option value="">{loading ? "Loading..." : "Select goal"}</option>
@@ -73,6 +90,11 @@ export default function GoalSelector({ subject, students, onChange }: Props) {
           </option>
         ))}
       </select>
+      {!loading && goals.length === 0 && (
+        <p className="text-sm text-gray-500">
+          No goals found for the selected students yet.
+        </p>
+      )}
     </div>
   );
 }

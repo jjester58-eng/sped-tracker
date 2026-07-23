@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import MultiStudentPicker from '@/app/components/MultiStudentPicker';
 import SubjectSelector from '@/app/components/SubjectSelector';
 import GradeLevelMultiSelector from '@/app/components/GradeLevelMultiSelector';
 import GoalSelector from '@/app/components/GoalSelector';
 import { useClassesAsSubjects } from '@/app/hooks/useClassesAsSubjects';
+import { useSupabase } from '@/lib/useSupabase';
 import type { Student } from '@/app/components/index';
 
 export default function TeacherPage() {
+  const supabase = useSupabase();
   const { subjects, loading: subjectsLoading } = useClassesAsSubjects();
 
   const [subject, setSubject] = useState('');
@@ -16,6 +18,7 @@ export default function TeacherPage() {
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState('');
   const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
 
   /**
    * IMPORTANT:
@@ -27,21 +30,41 @@ export default function TeacherPage() {
    */
   const canLoadStudents = subject.length > 0 && selectedGradeLevels.length > 0;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedStudents.length === 0 || !notes.trim()) {
       alert('Please select students and write notes.');
       return;
     }
 
-    console.log({
-      subject,
-      gradeLevels: selectedGradeLevels,
-      students: selectedStudents.map(s => s.name),
-      goal_id: selectedGoalId,
-      notes
-    });
+    if (!selectedGoalId) {
+      alert('Please select a goal before saving.');
+      return;
+    }
 
-    alert('Saved!');
+    setSaving(true);
+
+    try {
+      const payload = selectedStudents.map((student) => ({
+        student_id: student.id,
+        goal_id: selectedGoalId,
+        progress_notes: notes.trim(),
+        review_date: new Date().toISOString().split('T')[0],
+      }));
+
+      const { error } = await supabase.from('weekly_progress').insert(payload as any);
+
+      if (error) throw error;
+
+      setNotes('');
+      setSelectedStudents([]);
+      setSelectedGoalId('');
+      alert('Notes saved successfully.');
+    } catch (error) {
+      console.error(error);
+      alert('Unable to save notes right now.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -106,7 +129,10 @@ export default function TeacherPage() {
           ) : (
             <MultiStudentPicker
               value={selectedStudents}
-              onChange={setSelectedStudents}
+              onChange={(nextStudents) => {
+                setSelectedStudents(nextStudents);
+                setSelectedGoalId('');
+              }}
               subject={subject}
               gradeLevels={selectedGradeLevels}
               searchPlaceholder="Search students..."
@@ -169,9 +195,10 @@ export default function TeacherPage() {
               <div className="flex gap-4 mt-6">
                 <button
                   onClick={handleSave}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl"
+                  disabled={saving}
+                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl disabled:opacity-60"
                 >
-                  Save Notes
+                  {saving ? 'Saving...' : 'Save Notes'}
                 </button>
 
                 <button
