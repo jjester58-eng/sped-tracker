@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
 import CsvUploader from "../components/CsvUploader";
 import StudentEditor from "../components/StudentEditor";
+import Link from "next/link";
 
 type Student = { 
   id: string; 
@@ -152,8 +153,14 @@ export default function CaseManagerPage() {
   Manage students and IEP goals
 </p>
             </div>
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
               <CsvUploader onUploadSuccess={loadData} />
+              <Link
+                href="/teacher"
+                style={{ backgroundColor: "#2563eb", color: "white", padding: "0.75rem 1.5rem", borderRadius: "1rem", border: "none", cursor: "pointer", textDecoration: "none", display: "inline-flex", alignItems: "center" }}
+              >
+                View Teacher Reports
+              </Link>
               <button 
                 onClick={() => setShowAddStudentModal(true)}
                 style={{ backgroundColor: "#16a34a", color: "white", padding: "0.75rem 1.5rem", borderRadius: "1rem", border: "none", cursor: "pointer" }}
