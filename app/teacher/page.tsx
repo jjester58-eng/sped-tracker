@@ -19,6 +19,25 @@ type ReportEntry = {
   goal_description: string;
 };
 
+const NOTE_TEMPLATES = [
+  {
+    title: 'Progress made',
+    text: 'Student demonstrated steady progress toward the goal today. Continued support and positive reinforcement were effective.',
+  },
+  {
+    title: 'Needs prompting',
+    text: 'Student required frequent prompting to stay on task today. Continued reminders and visual supports would be beneficial.',
+  },
+  {
+    title: 'Independent work',
+    text: 'Student completed the assigned task with increasing independence today and showed strong engagement.',
+  },
+  {
+    title: 'Communication growth',
+    text: 'Student showed growth in communication and participation today. Continued opportunities for practice are recommended.',
+  },
+];
+
 export default function TeacherPage() {
   const supabase = useSupabase();
   const { subjects, loading: subjectsLoading } = useClassesAsSubjects();
@@ -29,8 +48,10 @@ export default function TeacherPage() {
   const [selectedGoalId, setSelectedGoalId] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [reportEntries, setReportEntries] = useState<ReportEntry[]>([]);
   const [reportLoading, setReportLoading] = useState(false);
+  const [todaySummary, setTodaySummary] = useState<string>('');
 
   /**
    * IMPORTANT:
@@ -101,6 +122,16 @@ export default function TeacherPage() {
         });
 
       setReportEntries(mappedEntries);
+      const todayEntries = mappedEntries.filter((entry) => entry.review_date === new Date().toISOString().split('T')[0]);
+      if (todayEntries.length > 0) {
+        const summary = todayEntries
+          .slice(0, 3)
+          .map((entry) => `${entry.student_name}: ${entry.progress_notes}`)
+          .join(' • ');
+        setTodaySummary(summary);
+      } else {
+        setTodaySummary('');
+      }
     } catch (error) {
       console.error(error);
       setReportEntries([]);
@@ -115,16 +146,17 @@ export default function TeacherPage() {
 
   const handleSave = async () => {
     if (selectedStudents.length === 0 || !notes.trim()) {
-      alert('Please select students and write notes.');
+      setSaveFeedback({ type: 'error', message: 'Select students and add a note before saving.' });
       return;
     }
 
     if (!selectedGoalId) {
-      alert('Please select a goal before saving.');
+      setSaveFeedback({ type: 'error', message: 'Choose a goal before saving your notes.' });
       return;
     }
 
     setSaving(true);
+    setSaveFeedback(null);
 
     try {
       const payload = selectedStudents.map((student) => ({
@@ -141,219 +173,274 @@ export default function TeacherPage() {
       setNotes('');
       setSelectedGoalId('');
       await loadReportEntries();
-      alert('Notes saved successfully.');
+      setSaveFeedback({ type: 'success', message: 'Notes saved successfully.' });
     } catch (error) {
       console.error(error);
-      alert('Unable to save notes right now.');
+      setSaveFeedback({ type: 'error', message: 'Unable to save notes right now. Please try again.' });
     } finally {
       setSaving(false);
+      window.setTimeout(() => setSaveFeedback(null), 3200);
     }
   };
 
+  const draftWordCount = notes.trim().split(/\s+/).filter(Boolean).length;
+
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
-
-      {/* HEADER */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold mb-2 text-gray-900">
-          Teacher Input
-        </h1>
-        <p className="text-gray-600">
-          Select subject → grade level → students → enter notes
-        </p>
-      </div>
-
-      {/* FILTERS */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <SubjectSelector
-            value={subject}
-            onChange={(val) => {
-              setSubject(val);
-              setSelectedStudents([]);
-              setSelectedGoalId('');
-            }}
-            subjects={subjects}
-            loading={subjectsLoading}
-          />
-
-          <GradeLevelMultiSelector
-            value={selectedGradeLevels}
-            onChange={(val) => {
-              setSelectedGradeLevels(val);
-              setSelectedStudents([]);
-              setSelectedGoalId('');
-            }}
-          />
-
-        </div>
-
-        {/* hint state */}
-        {(!subject || selectedGradeLevels.length === 0) && (
-          <p className="text-sm text-gray-500 mt-4">
-            Select a subject and grade level to load students.
-          </p>
-        )}
-      </div>
-
-      {/* MAIN GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-        {/* STUDENTS */}
-        <div className="lg:col-span-5">
-
-          {!canLoadStudents ? (
-            <div className="h-[420px] flex items-center justify-center border border-dashed rounded-2xl bg-white">
-              <p className="text-gray-500 text-center px-6">
-                Choose subject and grade level to view students
+    <div className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-gradient-to-br from-blue-600 via-indigo-600 to-slate-900 p-8 text-white shadow-[0_20px_60px_-20px_rgba(15,23,42,0.55)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-sm font-medium backdrop-blur">
+                Teacher workspace
+              </div>
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                Capture student progress with clarity
+              </h1>
+              <p className="mt-3 text-sm text-blue-50 sm:text-base">
+                Choose a subject, narrow by grade level, select students, and log meaningful notes in one streamlined flow.
               </p>
             </div>
-          ) : (
-            <MultiStudentPicker
-              value={selectedStudents}
-              onChange={(nextStudents) => {
-                setSelectedStudents(nextStudents);
-                setSelectedGoalId('');
-              }}
-              subject={subject}
-              gradeLevels={selectedGradeLevels}
-              searchPlaceholder="Search students..."
-            />
-          )}
-
+            <div className="rounded-2xl border border-white/20 bg-white/10 px-4 py-3 backdrop-blur">
+              <div className="text-sm text-blue-100">Current selection</div>
+              <div className="mt-1 text-lg font-semibold">
+                {selectedStudents.length} student{selectedStudents.length === 1 ? '' : 's'} selected
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* NOTES */}
-        <div className="lg:col-span-7">
-
-          {selectedStudents.length > 0 ? (
-            <div className="bg-white border border-gray-200 rounded-2xl p-8">
-
-              {/* selected students */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {selectedStudents.map((s) => (
-                  <div
-                    key={s.id}
-                    className="bg-blue-50 text-blue-800 px-4 py-2 rounded-full text-sm flex items-center gap-2"
-                  >
-                    {s.name}
-                    <button
-                      onClick={() =>
-                        setSelectedStudents(prev =>
-                          prev.filter(x => x.id !== s.id)
-                        )
-                      }
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-6">
+            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Filters</h2>
+                  <p className="text-sm text-slate-500">Start by narrowing the student list.</p>
+                </div>
+                <div className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+                  {subject ? subject : 'No subject'}
+                </div>
               </div>
-
-              {/* goals */}
-              {subject && (
-                <GoalSelector
-                  subject={subject}
-                  students={selectedStudents}
-                  onChange={setSelectedGoalId}
-                />
-              )}
-
-              {/* notes */}
-              <div className="mt-6">
-                <label className="font-semibold block mb-2 text-gray-900">
-                  Progress Notes
-                </label>
-
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full h-72 p-4 border rounded-xl"
-                  placeholder="Write observations, progress, behaviors, accommodations..."
-                />
-              </div>
-
-              {/* actions */}
-              <div className="flex gap-4 mt-6">
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 bg-blue-600 text-white py-3 rounded-xl disabled:opacity-60"
-                >
-                  {saving ? 'Saving...' : 'Save Notes'}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setNotes('');
+              <div className="grid gap-6 md:grid-cols-2">
+                <SubjectSelector
+                  value={subject}
+                  onChange={(val) => {
+                    setSubject(val);
+                    setSelectedStudents([]);
                     setSelectedGoalId('');
                   }}
-                  className="px-6 border rounded-xl"
-                >
-                  Clear
-                </button>
+                  subjects={subjects}
+                  loading={subjectsLoading}
+                />
+
+                <GradeLevelMultiSelector
+                  value={selectedGradeLevels}
+                  onChange={(val) => {
+                    setSelectedGradeLevels(val);
+                    setSelectedStudents([]);
+                    setSelectedGoalId('');
+                  }}
+                />
               </div>
 
+              {(!subject || selectedGradeLevels.length === 0) && (
+                <div className="mt-5 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  Select a subject and at least one grade level to load students.
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="h-[420px] flex items-center justify-center border border-dashed rounded-2xl bg-white">
-              <p className="text-gray-500">
-                Select students to begin data entry
-              </p>
+
+            <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+              {!canLoadStudents ? (
+                <div className="flex h-[360px] flex-col items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
+                  <div className="mb-3 text-4xl">👩‍🏫</div>
+                  <h3 className="text-lg font-semibold text-slate-900">Choose your filters</h3>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Once a subject and grade level are selected, the student roster will appear here.
+                  </p>
+                </div>
+              ) : (
+                <MultiStudentPicker
+                  value={selectedStudents}
+                  onChange={(nextStudents) => {
+                    setSelectedStudents(nextStudents);
+                    setSelectedGoalId('');
+                  }}
+                  subject={subject}
+                  gradeLevels={selectedGradeLevels}
+                  searchPlaceholder="Search students..."
+                />
+              )}
             </div>
-          )}
+          </div>
 
+          <div className="space-y-6">
+            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+              {selectedStudents.length > 0 ? (
+                <>
+                  <div className="mb-6 flex flex-wrap items-center gap-2">
+                    {selectedStudents.map((s) => (
+                      <div
+                        key={s.id}
+                        className="flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700"
+                      >
+                        <span>{s.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStudents((prev) => prev.filter((x) => x.id !== s.id))}
+                          className="rounded-full p-1 text-blue-600 transition hover:bg-blue-100 hover:text-blue-800"
+                          aria-label={`Remove ${s.name}`}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    {subject && (
+                      <GoalSelector
+                        subject={subject}
+                        students={selectedStudents}
+                        onChange={setSelectedGoalId}
+                      />
+                    )}
+                  </div>
+
+                  <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-slate-900">Quick note templates</div>
+                        <div className="text-xs text-slate-500">Pick a starter and tweak it for the student.</div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {NOTE_TEMPLATES.map((template) => (
+                        <button
+                          key={template.title}
+                          type="button"
+                          onClick={() => setNotes((prev) => prev ? `${prev}\n\n${template.text}` : template.text)}
+                          className="rounded-full border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                        >
+                          {template.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <div className="mb-2 flex items-center justify-between">
+                      <label className="block text-sm font-semibold text-slate-900">
+                        Progress notes
+                      </label>
+                      <div className="text-xs font-medium text-slate-500">
+                        {draftWordCount} word{draftWordCount === 1 ? '' : 's'}
+                      </div>
+                    </div>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="min-h-[240px] w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                      placeholder="Write observations, progress, behaviors, accommodations, and next steps..."
+                    />
+                  </div>
+
+                  {saveFeedback && (
+                    <div
+                      className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${saveFeedback.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-rose-200 bg-rose-50 text-rose-700'}`}
+                    >
+                      {saveFeedback.message}
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="text-sm text-slate-500">
+                      {notes.trim() ? 'Draft is ready to save.' : 'Start typing to build your note.'}
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {saving ? 'Saving...' : 'Save notes'}
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setNotes('');
+                          setSelectedGoalId('');
+                          setSaveFeedback(null);
+                        }}
+                        className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Clear draft
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex h-[420px] flex-col items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-6 text-center">
+                  <div className="mb-3 text-4xl">📝</div>
+                  <h3 className="text-lg font-semibold text-slate-900">Start your entry</h3>
+                  <p className="mt-2 text-sm text-slate-500">
+                    Select one or more students to begin writing progress notes.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-[24px] border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="mb-4 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Today&apos;s notes</h2>
+                  <p className="text-sm text-slate-500">A compact summary of the latest teacher input for today.</p>
+                </div>
+                <div className="rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
+                  {reportEntries.length} entr{reportEntries.length === 1 ? 'y' : 'ies'}
+                </div>
+              </div>
+
+              {todaySummary ? (
+                <div className="mb-4 rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                  {todaySummary}
+                </div>
+              ) : (
+                <div className="mb-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+                  No notes saved for today yet.
+                </div>
+              )}
+
+              {!selectedStudents.length ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                  Select students to view their teacher input history.
+                </div>
+              ) : reportLoading ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                  Loading report...
+                </div>
+              ) : reportEntries.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                  No teacher entries found for the selected students yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {reportEntries.map((entry) => (
+                    <div key={entry.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                        <div className="font-semibold text-slate-900">{entry.student_name}</div>
+                        <div className="text-sm text-slate-500">{entry.review_date}</div>
+                      </div>
+                      <div className="mb-2 text-sm font-medium text-blue-700">{entry.goal_description}</div>
+                      <div className="whitespace-pre-wrap text-sm leading-6 text-slate-600">{entry.progress_notes}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="mt-8 bg-white border border-gray-200 rounded-2xl p-6">
-        <div className="flex items-center justify-between gap-4 mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">Teacher Entry Report</h2>
-            <p className="text-sm text-gray-600">
-              Review prior notes entered for the selected students.
-            </p>
-          </div>
-          <div className="text-sm text-gray-500">
-            {reportEntries.length} entr{reportEntries.length === 1 ? 'y' : 'ies'}
-          </div>
-        </div>
-
-        {!selectedStudents.length ? (
-          <p className="text-gray-500">
-            Select students to view their teacher input history.
-          </p>
-        ) : reportLoading ? (
-          <p className="text-gray-500">Loading report...</p>
-        ) : reportEntries.length === 0 ? (
-          <p className="text-gray-500">
-            No teacher entries found for the selected students yet.
-          </p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 text-left text-gray-600">
-                  <th className="py-3 pr-4 font-medium">Student</th>
-                  <th className="py-3 pr-4 font-medium">Goal</th>
-                  <th className="py-3 pr-4 font-medium">Review date</th>
-                  <th className="py-3 font-medium">Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reportEntries.map((entry) => (
-                  <tr key={entry.id} className="border-b border-gray-100 align-top">
-                    <td className="py-3 pr-4 font-medium text-gray-900">{entry.student_name}</td>
-                    <td className="py-3 pr-4 text-gray-700">{entry.goal_description}</td>
-                    <td className="py-3 pr-4 text-gray-600">{entry.review_date}</td>
-                    <td className="py-3 text-gray-700 whitespace-pre-wrap">{entry.progress_notes}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   );
