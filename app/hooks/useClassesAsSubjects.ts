@@ -22,7 +22,7 @@ export function useClassesAsSubjects() {
 
       if (!error && data) {
         setSubjects(
-          data.map((c) => ({
+          data.map((c: { id: string; class_name: string }) => ({
             id: c.id,
             name: c.class_name,
           }))

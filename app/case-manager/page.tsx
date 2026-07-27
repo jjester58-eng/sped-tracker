@@ -5,13 +5,22 @@ import { useCallback, useEffect, useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
 import CsvUploader from "../components/CsvUploader";
 import StudentEditor from "../components/StudentEditor";
-import Link from "next/link";
 
 type Student = { 
   id: string; 
   name: string; 
   grade_level: string | null;
   case_manager?: string | null;
+};
+
+type ReportEntry = {
+  id: string;
+  student_id: string;
+  goal_id: string;
+  progress_notes: string;
+  review_date: string;
+  goal_description: string;
+  goal_subject: string | null;
 };
 
 export default function CaseManagerPage() {
@@ -24,6 +33,10 @@ export default function CaseManagerPage() {
 
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [studentSearchQuery, setStudentSearchQuery] = useState("");
+  const [reports, setReports] = useState<ReportEntry[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
+  const [reportsError, setReportsError] = useState<string | null>(null);
+  const [showReports, setShowReports] = useState(false);
 
   // Add Student Form
   const [newStudentName, setNewStudentName] = useState("");
@@ -56,6 +69,65 @@ export default function CaseManagerPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  const loadReportsForStudent = useCallback(async (studentId: string | null) => {
+    if (!studentId) {
+      setReports([]);
+      setReportsError(null);
+      setShowReports(false);
+      return;
+    }
+
+    setReportsLoading(true);
+    setReportsError(null);
+    try {
+      const { data, error } = await supabase
+        .from("weekly_progress")
+        .select("id, student_id, goal_id, progress_notes, review_date")
+        .eq("student_id", studentId)
+        .order("review_date", { ascending: false });
+
+      if (error) throw error;
+
+      const entries = (data ?? []) as Array<{
+        id: string;
+        student_id: string;
+        goal_id: string;
+        progress_notes: string;
+        review_date: string;
+      }>;
+
+      const goalIds = Array.from(new Set(entries.map((entry) => entry.goal_id).filter(Boolean)));
+      const { data: goalsData, error: goalsError } = goalIds.length > 0
+        ? await supabase.from("goals").select("id, goal_description, subject").in("id", goalIds)
+        : { data: [], error: null };
+
+      if (goalsError) throw goalsError;
+
+      const goalMap = new Map(
+        (goalsData ?? []).map((goal: { id: string; goal_description: string; subject: string | null }) => [goal.id, goal])
+      );
+
+      const mappedReports = entries.map((entry) => {
+        const goal = goalMap.get(entry.goal_id) as { goal_description?: string; subject?: string | null } | undefined;
+        return {
+          ...entry,
+          goal_description: goal?.goal_description ?? "Unknown goal",
+          goal_subject: goal?.subject ?? null,
+        };
+      });
+
+      setReports(mappedReports);
+      setShowReports(true);
+    } catch (err: any) {
+      console.error(err);
+      setReports([]);
+      setReportsError(err?.message || "Unable to load teacher reports from Supabase.");
+      setShowReports(true);
+    } finally {
+      setReportsLoading(false);
+    }
+  }, [supabase]);
 
   const filteredStudents = students.filter(student =>
     student.name.toLowerCase().includes(studentSearchQuery.toLowerCase())
@@ -155,12 +227,6 @@ export default function CaseManagerPage() {
             </div>
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", justifyContent: "flex-end" }}>
               <CsvUploader onUploadSuccess={loadData} />
-              <Link
-                href="/teacher"
-                style={{ backgroundColor: "#2563eb", color: "white", padding: "0.75rem 1.5rem", borderRadius: "1rem", border: "none", cursor: "pointer", textDecoration: "none", display: "inline-flex", alignItems: "center" }}
-              >
-                View Teacher Reports
-              </Link>
               <button 
                 onClick={() => setShowAddStudentModal(true)}
                 style={{ backgroundColor: "#16a34a", color: "white", padding: "0.75rem 1.5rem", borderRadius: "1rem", border: "none", cursor: "pointer" }}
@@ -194,7 +260,11 @@ export default function CaseManagerPage() {
                   filteredStudents.map((student) => (
                     <button
                       key={student.id}
-                      onClick={() => setSelectedStudentId(student.id)}
+                      onClick={() => {
+                        setSelectedStudentId(student.id);
+                        setReports([]);
+                        setShowReports(false);
+                      }}
                       style={{
                         textAlign: "left",
                         padding: "1.1rem",
@@ -219,10 +289,64 @@ export default function CaseManagerPage() {
                   <h3>Select a student to view/edit</h3>
                 </div>
               ) : (
-                <StudentEditor 
-                  student={students.find(s => s.id === selectedStudentId)!} 
-                  onSaved={loadData} 
-                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 700 }}>Student Details</h3>
+                      <p style={{ margin: "0.25rem 0 0", color: "#6b7280" }}>Choose a student to view their information and reports.</p>
+                    </div>
+                    <button
+                      onClick={() => loadReportsForStudent(selectedStudentId)}
+                      disabled={reportsLoading}
+                      style={{
+                        backgroundColor: "#2563eb",
+                        color: "white",
+                        padding: "0.75rem 1.25rem",
+                        borderRadius: "0.9rem",
+                        border: "none",
+                        cursor: reportsLoading ? "not-allowed" : "pointer",
+                        opacity: reportsLoading ? 0.7 : 1,
+                      }}
+                    >
+                      {reportsLoading ? "Loading..." : "View Teacher Reports"}
+                    </button>
+                  </div>
+
+                  <StudentEditor 
+                    student={students.find(s => s.id === selectedStudentId)!} 
+                    onSaved={loadData} 
+                  />
+
+                  {showReports && (
+                    <div style={{ border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "1.25rem", backgroundColor: "#f9fafb" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                        <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 700 }}>Teacher Reports</h3>
+                        <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>{reports.length} entr{reports.length === 1 ? "y" : "ies"}</span>
+                      </div>
+
+                      {reportsError ? (
+                        <p style={{ margin: 0, color: "#b91c1c" }}>{reportsError}</p>
+                      ) : reports.length === 0 ? (
+                        <p style={{ margin: 0, color: "#6b7280" }}>No teacher input has been saved for this student yet.</p>
+                      ) : (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem" }}>
+                          {reports.map((report) => (
+                            <div key={report.id} style={{ backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "0.9rem", padding: "1rem" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: "1rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+                                <strong style={{ color: "#111827" }}>{report.goal_description}</strong>
+                                <span style={{ color: "#6b7280", fontSize: "0.9rem" }}>{report.review_date}</span>
+                              </div>
+                              {report.goal_subject && (
+                                <div style={{ color: "#4b5563", fontSize: "0.9rem", marginBottom: "0.5rem" }}>Subject: {report.goal_subject}</div>
+                              )}
+                              <div style={{ whiteSpace: "pre-wrap", color: "#374151", lineHeight: 1.5 }}>{report.progress_notes}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

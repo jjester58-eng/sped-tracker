@@ -85,11 +85,15 @@ export default function TeacherPage() {
       const studentMap = new Map((studentsResult.data ?? []).map((student: { id: string; name: string }) => [student.id, student.name]));
 
       const normalizedSubject = subject.trim().toLowerCase();
-      const mappedEntries = entries
+      const mappedEntries: ReportEntry[] = entries
         .map((entry) => ({
-          ...entry,
-          student_name: studentMap.get(entry.student_id) ?? 'Unknown student',
-          goal_description: goalMap.get(entry.goal_id) ?? 'Unknown goal',
+          id: entry.id,
+          student_id: entry.student_id,
+          goal_id: entry.goal_id,
+          progress_notes: entry.progress_notes,
+          review_date: entry.review_date,
+          student_name: String(studentMap.get(entry.student_id) ?? 'Unknown student'),
+          goal_description: String(goalMap.get(entry.goal_id) ?? 'Unknown goal'),
         }))
         .filter((entry) => {
           if (!normalizedSubject) return true;
