@@ -184,7 +184,11 @@ export default function TeacherPage() {
       if (!enteredById) {
         const { data: insertedPerson, error: insertPersonError } = await supabase
           .from('data_entry_people')
-          .insert({ name: enteredByName })
+          .insert({
+            name: enteredByName,
+            email: '',
+            user_id: enteredByName,
+          })
           .select('id')
           .single();
 
