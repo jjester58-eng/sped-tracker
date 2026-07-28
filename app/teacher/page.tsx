@@ -167,24 +167,12 @@ export default function TeacherPage() {
     }
 
     try {
+      const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
       const { data: { user } } = await supabase.auth.getUser();
       console.log('Current user:', user);
 
       if (!user) {
         alert('Must be logged in to save notes.');
-        return;
-      }
-
-      const { data: personData, error: personError } = await supabase
-        .from('data_entry_people')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      console.log('Person data:', personData, 'Error:', personError);
-
-      if (personError || !personData) {
-        alert('User not found in data_entry_people table. Contact admin.');
         return;
       }
 
@@ -198,7 +186,7 @@ export default function TeacherPage() {
         week_of: weekOf,
         notes: notes.trim(),
         progress_notes: notes.trim(),
-        entered_by_id: personData.id,
+        entered_by_id: enteredById,
         case_manager_id: null,
       }));
 
