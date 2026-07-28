@@ -47,6 +47,7 @@ export default function TeacherPage() {
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState('');
   const [providerName, setProviderName] = useState('');
+  const [providerUserId, setProviderUserId] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -146,12 +147,16 @@ export default function TeacherPage() {
   }, [selectedStudents, subject, supabase]);
 
   useEffect(() => {
-    const savedProviderName = typeof window !== 'undefined'
-      ? window.localStorage.getItem('teacherProviderName') ?? ''
-      : '';
+    if (typeof window !== 'undefined') {
+      const savedProviderName = window.localStorage.getItem('teacherProviderName') ?? '';
+      const savedProviderUserId = window.localStorage.getItem('teacherProviderUserId') ?? '';
 
-    if (savedProviderName.trim()) {
-      setProviderName(savedProviderName);
+      if (savedProviderName.trim()) {
+        setProviderName(savedProviderName);
+      }
+      if (savedProviderUserId.trim()) {
+        setProviderUserId(savedProviderUserId);
+      }
     }
   }, []);
 
@@ -172,27 +177,88 @@ export default function TeacherPage() {
       const enteredByName = providerName.trim();
       window.localStorage.setItem('teacherProviderName', enteredByName);
 
+      let authUser = (await supabase.auth.getUser()).data.user;
+      const storedEmail = typeof window !== 'undefined'
+        ? window.localStorage.getItem('teacherProviderEmail') ?? ''
+        : '';
+      const storedPassword = typeof window !== 'undefined'
+        ? window.localStorage.getItem('teacherProviderPassword') ?? ''
+        : '';
+
+      const email = storedEmail || `${enteredByName.toLowerCase().replace(/\s+/g, '_')}@spedtracker.local`;
+      let password = storedPassword;
+
+      if (!authUser) {
+        if (!password) {
+          password = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : `pwd-${Math.random().toString(36).slice(2)}`;
+        }
+
+        if (storedEmail && storedPassword) {
+          const signInResult = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (signInResult.error && signInResult.error?.message?.includes('Invalid login credentials')) {
+            const signUpResult = await supabase.auth.signUp({ email, password });
+            if (signUpResult.error) throw signUpResult.error;
+            authUser = signUpResult.data.user ?? null;
+          } else if (signInResult.error) {
+            throw signInResult.error;
+          } else {
+            authUser = signInResult.data.user ?? null;
+          }
+        } else {
+          const signUpResult = await supabase.auth.signUp({ email, password });
+          if (signUpResult.error) {
+            if (signUpResult.error.message?.includes('User already registered')) {
+              const signInResult = await supabase.auth.signInWithPassword({ email, password });
+              if (signInResult.error) throw signInResult.error;
+              authUser = signInResult.data.user ?? null;
+            } else {
+              throw signUpResult.error;
+            }
+          } else {
+            authUser = signUpResult.data.user ?? null;
+          }
+        }
+
+        if (!authUser) {
+          const userResult = await supabase.auth.getUser();
+          authUser = userResult.data.user;
+        }
+
+        if (!authUser) {
+          throw new Error('Unable to create or retrieve auth user for provider.');
+        }
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('teacherProviderEmail', email);
+          window.localStorage.setItem('teacherProviderPassword', password);
+          window.localStorage.setItem('teacherProviderUserId', authUser.id);
+          setProviderUserId(authUser.id);
+        }
+      }
+
+      const userId = authUser.id;
       const { data: existingPerson, error: existingPersonError } = await supabase
         .from('data_entry_people')
-        .select('id, user_id')
-        .eq('name', enteredByName)
+        .select('id')
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (existingPersonError) throw existingPersonError;
 
       let enteredById = existingPerson?.id;
-      let providerId = existingPerson?.user_id ?? '';
       if (!enteredById) {
-        providerId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-          ? crypto.randomUUID()
-          : '00000000-0000-0000-0000-000000000000';
-
         const { data: insertedPerson, error: insertPersonError } = await supabase
           .from('data_entry_people')
           .insert({
             name: enteredByName,
-            email: '',
-            user_id: providerId,
+            email,
+            user_id: userId,
           })
           .select('id')
           .single();
