@@ -144,14 +144,55 @@ export default function TeacherPage() {
     void loadReportEntries();
   }, [selectedStudents, subject, supabase]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedStudents.length === 0 || !notes.trim()) {
       alert('Please select students and write notes.');
       return;
     }
 
-    console.log('Saving:', { subject, gradeLevels: selectedGradeLevels, students: selectedStudents.map((s) => s.name), goal_id: selectedGoalId, notes });
-    alert('✅ Notes saved successfully!');
+    try {
+      const { useSupabase } = await import('@/lib/useSupabase');
+      const supabaseClient = useSupabase();
+
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      if (!user) {
+        alert('Must be logged in to save notes.');
+        return;
+      }
+
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekOf = new Date(today.setDate(diff)).toISOString().split('T')[0];
+
+      const records = selectedStudents.map((student) => ({
+        student_id: student.id,
+        week_of: weekOf,
+        notes: notes.trim(),
+        progress_notes: notes.trim(),
+        entered_by_id: user.id,
+        case_manager_id: student.case_manager || null,
+      }));
+
+      console.log('Inserting records:', records);
+
+      const { data, error } = await supabaseClient
+        .from('weekly_progress')
+        .insert(records);
+
+      console.log('Insert response:', { data, error });
+
+      if (error) throw error;
+
+      alert('✅ Notes saved successfully!');
+      setNotes('');
+      setSelectedStudents([]);
+      setSelectedGoalId('');
+      setSubject('');
+    } catch (err: any) {
+      console.error('Full error:', err);
+      alert(`Error: ${err.message}`);
+    }
   };
 
   const draftWordCount = notes.trim().split(/\s+/).filter(Boolean).length;
