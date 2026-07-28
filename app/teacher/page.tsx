@@ -168,14 +168,6 @@ export default function TeacherPage() {
 
     try {
       const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current user:', user);
-
-      if (!user) {
-        alert('Must be logged in to save notes.');
-        return;
-      }
-
       const today = new Date();
       const dayOfWeek = today.getDay();
       const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
@@ -192,16 +184,13 @@ export default function TeacherPage() {
 
       console.log('Records to insert:', records);
 
-      const { data: insertData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('weekly_progress')
         .insert(records);
 
-      console.log('Insert result - Data:', insertData, 'Error:', insertError);
+      console.log('Insert error:', insertError);
 
-      if (insertError) {
-        console.error('Insert error details:', insertError);
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
       alert('✅ Notes saved successfully!');
       setNotes('');
@@ -209,7 +198,7 @@ export default function TeacherPage() {
       setSelectedGoalId('');
       setSubject('');
     } catch (err: any) {
-      console.error('Full error:', err);
+      console.error('Error:', err);
       alert(`Error: ${err.message}`);
     }
   };
