@@ -175,96 +175,8 @@ export default function TeacherPage() {
 
     try {
       const enteredByName = providerName.trim();
-      window.localStorage.setItem('teacherProviderName', enteredByName);
-
-      let authUser = (await supabase.auth.getUser()).data.user;
-      const storedEmail = typeof window !== 'undefined'
-        ? window.localStorage.getItem('teacherProviderEmail') ?? ''
-        : '';
-      const storedPassword = typeof window !== 'undefined'
-        ? window.localStorage.getItem('teacherProviderPassword') ?? ''
-        : '';
-
-      const email = storedEmail || `${enteredByName.toLowerCase().replace(/\s+/g, '_')}@spedtracker.local`;
-      let password = storedPassword;
-
-      if (!authUser) {
-        if (!password) {
-          password = typeof crypto !== 'undefined' && 'randomUUID' in crypto
-            ? crypto.randomUUID()
-            : `pwd-${Math.random().toString(36).slice(2)}`;
-        }
-
-        if (storedEmail && storedPassword) {
-          const signInResult = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (signInResult.error && signInResult.error?.message?.includes('Invalid login credentials')) {
-            const signUpResult = await supabase.auth.signUp({ email, password });
-            if (signUpResult.error) throw signUpResult.error;
-            authUser = signUpResult.data.user ?? null;
-          } else if (signInResult.error) {
-            throw signInResult.error;
-          } else {
-            authUser = signInResult.data.user ?? null;
-          }
-        } else {
-          const signUpResult = await supabase.auth.signUp({ email, password });
-          if (signUpResult.error) {
-            if (signUpResult.error.message?.includes('User already registered')) {
-              const signInResult = await supabase.auth.signInWithPassword({ email, password });
-              if (signInResult.error) throw signInResult.error;
-              authUser = signInResult.data.user ?? null;
-            } else {
-              throw signUpResult.error;
-            }
-          } else {
-            authUser = signUpResult.data.user ?? null;
-          }
-        }
-
-        if (!authUser) {
-          const userResult = await supabase.auth.getUser();
-          authUser = userResult.data.user;
-        }
-
-        if (!authUser) {
-          throw new Error('Unable to create or retrieve auth user for provider.');
-        }
-
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('teacherProviderEmail', email);
-          window.localStorage.setItem('teacherProviderPassword', password);
-          window.localStorage.setItem('teacherProviderUserId', authUser.id);
-          setProviderUserId(authUser.id);
-        }
-      }
-
-      const userId = authUser.id;
-      const { data: existingPerson, error: existingPersonError } = await supabase
-        .from('data_entry_people')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (existingPersonError) throw existingPersonError;
-
-      let enteredById = existingPerson?.id;
-      if (!enteredById) {
-        const { data: insertedPerson, error: insertPersonError } = await supabase
-          .from('data_entry_people')
-          .insert({
-            name: enteredByName,
-            email,
-            user_id: userId,
-          })
-          .select('id')
-          .single();
-
-        if (insertPersonError) throw insertPersonError;
-        enteredById = insertedPerson?.id;
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('teacherProviderName', enteredByName);
       }
 
       const today = new Date();
@@ -278,19 +190,23 @@ export default function TeacherPage() {
         week_of: weekOf,
         notes: notes.trim(),
         progress_notes: notes.trim(),
-        entered_by_id: enteredById,
+        entered_by_id: providerUserId || null,
         case_manager_id: null,
       }));
 
-      console.log('Inserting records:', records);
+      console.log('Prepared records for save:', { provider: enteredByName, records });
 
-      const { data, error } = await supabase
-        .from('weekly_progress')
-        .insert(records);
+      if (providerUserId) {
+        const { data, error } = await supabase
+          .from('weekly_progress')
+          .insert(records);
 
-      console.log('Insert response:', { data, error });
+        console.log('Insert response:', { data, error });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        console.warn('Skipping Supabase save because no provider user id is available.');
+      }
 
       alert('✅ Notes saved successfully!');
       setNotes('');
