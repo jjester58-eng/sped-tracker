@@ -208,7 +208,7 @@ export default function TeacherPage() {
         notes: notes.trim(),
         progress_notes: notes.trim(),
         entered_by_id: enteredById,
-        case_manager_id: student.case_manager || null,
+        case_manager_id: null,
       }));
 
       console.log('Inserting records:', records);
