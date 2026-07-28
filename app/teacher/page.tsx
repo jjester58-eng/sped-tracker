@@ -166,17 +166,26 @@ export default function TeacherPage() {
       return;
     }
 
-    if (!providerName.trim()) {
-      alert('Please enter your name before saving notes.');
-      return;
-    }
-
-    setSaving(true);
-
     try {
-      const enteredByName = providerName.trim();
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('teacherProviderName', enteredByName);
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+
+      if (!user) {
+        alert('Must be logged in to save notes.');
+        return;
+      }
+
+      const { data: personData, error: personError } = await supabase
+        .from('data_entry_people')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('Person data:', personData, 'Error:', personError);
+
+      if (personError || !personData) {
+        alert('User not found in data_entry_people table. Contact admin.');
+        return;
       }
 
       const today = new Date();
@@ -186,26 +195,24 @@ export default function TeacherPage() {
 
       const records = selectedStudents.map((student) => ({
         student_id: student.id,
-        goal_id: selectedGoalId || null,
         week_of: weekOf,
         notes: notes.trim(),
         progress_notes: notes.trim(),
-        entered_by_id: providerUserId || null,
+        entered_by_id: personData.id,
         case_manager_id: null,
       }));
 
-      console.log('Prepared records for save:', { provider: enteredByName, records });
+      console.log('Records to insert:', records);
 
-      if (providerUserId) {
-        const { data, error } = await supabase
-          .from('weekly_progress')
-          .insert(records);
+      const { data: insertData, error: insertError } = await supabase
+        .from('weekly_progress')
+        .insert(records);
 
-        console.log('Insert response:', { data, error });
+      console.log('Insert result - Data:', insertData, 'Error:', insertError);
 
-        if (error) throw error;
-      } else {
-        console.warn('Skipping Supabase save because no provider user id is available.');
+      if (insertError) {
+        console.error('Insert error details:', insertError);
+        throw insertError;
       }
 
       alert('✅ Notes saved successfully!');
@@ -216,8 +223,6 @@ export default function TeacherPage() {
     } catch (err: any) {
       console.error('Full error:', err);
       alert(`Error: ${err.message}`);
-    } finally {
-      setSaving(false);
     }
   };
 
