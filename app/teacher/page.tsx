@@ -137,6 +137,19 @@ export default function TeacherPage() {
     } catch (error) {
       console.error(error);
       setReportEntries([]);
+    }
+
+  const handleSave = async () => {
+    if (selectedStudents.length === 0 || !notes.trim()) {
+      alert('Please select students and write notes.');
+      return;
+    }
+
+    if (!selectedGoalId) {
+      alert('Please select a goal.');
+      return;
+    }
+
     try {
       const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
       const today = new Date();
@@ -221,19 +234,9 @@ export default function TeacherPage() {
       setSelectedGoalId('');
       setSubject('');
       loadReportEntries();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error:', err);
-      alert(`Error: ${err.message}`);
-    }
-
-      alert('✅ Notes saved successfully!');
-      setNotes('');
-      setSelectedStudents([]);
-      setSelectedGoalId('');
-      setSubject('');
-    } catch (err: any) {
-      console.error('Error:', err);
-      alert(`Error: ${err.message}`);
+      alert(`Error: ${err?.message ?? err}`);
     }
   };
 
