@@ -138,11 +138,18 @@ export default function TeacherPage() {
       console.error(error);
       setReportEntries([]);
     try {
+      const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      const weekOf = new Date(today.setDate(diff)).toISOString().split('T')[0];
+      const reviewDate = new Date().toISOString().split('T')[0];
+
       const studentIds = selectedStudents.map((s) => s.id);
 
       const { data: existing, error: fetchError } = await supabase
         .from('weekly_progress')
-        .select('student_id')
+        .select('id, student_id')
         .in('student_id', studentIds)
         .eq('goal_id', selectedGoalId)
         .eq('week_of', weekOf);
@@ -155,69 +162,69 @@ export default function TeacherPage() {
 
       const existingIds = new Set((existing || []).map((r: any) => r.student_id));
       const studentsToInsert = selectedStudents.filter((s) => !existingIds.has(s.id));
+      const studentsToUpdate = selectedStudents.filter((s) => existingIds.has(s.id));
 
-      if (studentsToInsert.length === 0) {
-        alert('Selected students already have records for this goal and week.');
+      let insertedCount = 0;
+      let updatedCount = 0;
+
+      if (studentsToInsert.length > 0) {
+        const records = studentsToInsert.map((student) => ({
+          student_id: student.id,
+          week_of: weekOf,
+          review_date: reviewDate,
+          notes: notes.trim() + (providerName ? `\n\nEntered by: ${providerName}` : ''),
+          progress_notes: notes.trim(),
+          entered_by_id: enteredById,
+          goal_id: selectedGoalId,
+          case_manager_id: null,
+        }));
+
+        const { data: insertData, error: insertError } = await supabase.from('weekly_progress').insert(records);
+        if (insertError) {
+          console.error('Insert error', insertError);
+          alert('Save failed: ' + insertError.message);
+          return;
+        }
+        insertedCount = (insertData || []).length;
+      }
+
+      if (studentsToUpdate.length > 0) {
+        const updatePromises = studentsToUpdate.map(async (student) => {
+          const updatedNotes = notes.trim() + (providerName ? `\n\nEntered by: ${providerName}` : '');
+          const { data: updData, error: updError } = await supabase
+            .from('weekly_progress')
+            .update({ notes: updatedNotes, progress_notes: notes.trim(), entered_by_id: enteredById, review_date: reviewDate })
+            .match({ student_id: student.id, goal_id: selectedGoalId, week_of: weekOf });
+          if (updError) throw updError;
+          return (updData || []).length;
+        });
+
+        const results = await Promise.allSettled(updatePromises);
+        for (const r of results) {
+          if (r.status === 'fulfilled') updatedCount += Number(r.value || 0);
+          else {
+            console.error('Update error', r);
+            alert('Update failed for one or more students: ' + String((r as any).reason?.message ?? r));
+            return;
+          }
+        }
+      }
+
+      if (insertedCount === 0 && updatedCount === 0) {
+        alert('No changes - selected students already have up-to-date records for this goal and week.');
         return;
       }
 
-      const records = studentsToInsert.map((student) => ({
-        student_id: student.id,
-        week_of: weekOf,
-        notes: notes.trim(),
-        progress_notes: notes.trim(),
-        entered_by_id: enteredById,
-        goal_id: selectedGoalId,
-        case_manager_id: null,
-      }));
-
-      const { data, error } = await supabase.from('weekly_progress').insert(records);
-
-      if (error) {
-        console.error('Insert error', error);
-        alert('Save failed: ' + error.message);
-        return;
-      }
-
-      alert('Saved ' + data.length + ' records.');
+      alert(`Saved ${insertedCount} inserted, ${updatedCount} updated.`);
       setNotes('');
+      setSelectedStudents([]);
+      setSelectedGoalId('');
+      setSubject('');
       loadReportEntries();
-    } catch (err) {
-      console.error(err);
-      alert('Unexpected error saving records');
+    } catch (err: any) {
+      console.error('Error:', err);
+      alert(`Error: ${err.message}`);
     }
-      return;
-    }
-    if (!selectedGoalId) {
-      alert('Please select a goal.');
-      return;
-    }
-    try {
-      const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-      const weekOf = new Date(today.setDate(diff)).toISOString().split('T')[0];
-
-      const records = selectedStudents.map((student) => ({
-        student_id: student.id,
-        week_of: weekOf,
-        notes: notes.trim(),
-        progress_notes: notes.trim(),
-        entered_by_id: enteredById,
-        goal_id: selectedGoalId,
-        case_manager_id: null,
-      }));
-
-      console.log('Records to insert:', records);
-
-      const { error: insertError } = await supabase
-        .from('weekly_progress')
-        .insert(records);
-
-      console.log('Insert error:', insertError);
-
-      if (insertError) throw insertError;
 
       alert('✅ Notes saved successfully!');
       setNotes('');
