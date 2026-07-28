@@ -137,32 +137,55 @@ export default function TeacherPage() {
     } catch (error) {
       console.error(error);
       setReportEntries([]);
-    } finally {
-      setReportLoading(false);
-    }
-  };
+    try {
+      const studentIds = selectedStudents.map((s) => s.id);
 
-  useEffect(() => {
-    void loadReportEntries();
-  }, [selectedStudents, subject, supabase]);
+      const { data: existing, error: fetchError } = await supabase
+        .from('weekly_progress')
+        .select('student_id')
+        .in('student_id', studentIds)
+        .eq('goal_id', selectedGoalId)
+        .eq('week_of', weekOf);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedProviderName = window.localStorage.getItem('teacherProviderName') ?? '';
-      const savedProviderUserId = window.localStorage.getItem('teacherProviderUserId') ?? '';
-
-      if (savedProviderName.trim()) {
-        setProviderName(savedProviderName);
+      if (fetchError) {
+        console.error('Error checking existing records', fetchError);
+        alert('Error checking existing records: ' + fetchError.message);
+        return;
       }
-      if (savedProviderUserId.trim()) {
-        setProviderUserId(savedProviderUserId);
-      }
-    }
-  }, []);
 
-  const handleSave = async () => {
-    if (selectedStudents.length === 0 || !notes.trim()) {
-      alert('Please select students and write notes.');
+      const existingIds = new Set((existing || []).map((r: any) => r.student_id));
+      const studentsToInsert = selectedStudents.filter((s) => !existingIds.has(s.id));
+
+      if (studentsToInsert.length === 0) {
+        alert('Selected students already have records for this goal and week.');
+        return;
+      }
+
+      const records = studentsToInsert.map((student) => ({
+        student_id: student.id,
+        week_of: weekOf,
+        notes: notes.trim(),
+        progress_notes: notes.trim(),
+        entered_by_id: enteredById,
+        goal_id: selectedGoalId,
+        case_manager_id: null,
+      }));
+
+      const { data, error } = await supabase.from('weekly_progress').insert(records);
+
+      if (error) {
+        console.error('Insert error', error);
+        alert('Save failed: ' + error.message);
+        return;
+      }
+
+      alert('Saved ' + data.length + ' records.');
+      setNotes('');
+      loadReportEntries();
+    } catch (err) {
+      console.error(err);
+      alert('Unexpected error saving records');
+    }
       return;
     }
     if (!selectedGoalId) {
