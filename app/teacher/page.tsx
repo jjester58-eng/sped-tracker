@@ -46,6 +46,7 @@ export default function TeacherPage() {
   const [selectedGradeLevels, setSelectedGradeLevels] = useState<string[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
   const [selectedGoalId, setSelectedGoalId] = useState('');
+  const [providerName, setProviderName] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -144,17 +145,51 @@ export default function TeacherPage() {
     void loadReportEntries();
   }, [selectedStudents, subject, supabase]);
 
+  useEffect(() => {
+    const savedProviderName = typeof window !== 'undefined'
+      ? window.localStorage.getItem('teacherProviderName') ?? ''
+      : '';
+
+    if (savedProviderName.trim()) {
+      setProviderName(savedProviderName);
+    }
+  }, []);
+
   const handleSave = async () => {
     if (selectedStudents.length === 0 || !notes.trim()) {
       alert('Please select students and write notes.');
       return;
     }
 
+    if (!providerName.trim()) {
+      alert('Please enter your name before saving notes.');
+      return;
+    }
+
+    setSaving(true);
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('Must be logged in to save notes.');
-        return;
+      const enteredByName = providerName.trim();
+      window.localStorage.setItem('teacherProviderName', enteredByName);
+
+      const { data: existingPerson, error: existingPersonError } = await supabase
+        .from('data_entry_people')
+        .select('id')
+        .eq('name', enteredByName)
+        .maybeSingle();
+
+      if (existingPersonError) throw existingPersonError;
+
+      let enteredById = existingPerson?.id;
+      if (!enteredById) {
+        const { data: insertedPerson, error: insertPersonError } = await supabase
+          .from('data_entry_people')
+          .insert({ name: enteredByName })
+          .select('id')
+          .single();
+
+        if (insertPersonError) throw insertPersonError;
+        enteredById = insertedPerson?.id;
       }
 
       const today = new Date();
@@ -164,10 +199,11 @@ export default function TeacherPage() {
 
       const records = selectedStudents.map((student) => ({
         student_id: student.id,
+        goal_id: selectedGoalId || null,
         week_of: weekOf,
         notes: notes.trim(),
         progress_notes: notes.trim(),
-        entered_by_id: user.id,
+        entered_by_id: enteredById,
         case_manager_id: student.case_manager || null,
       }));
 
@@ -189,6 +225,8 @@ export default function TeacherPage() {
     } catch (err: any) {
       console.error('Full error:', err);
       alert(`Error: ${err.message}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -323,6 +361,20 @@ export default function TeacherPage() {
                           onChange={setSelectedGoalId}
                         />
                       )}
+                    </div>
+
+                    <div style={{ marginTop: "1rem", backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "1rem" }}>
+                      <div style={{ marginBottom: "0.75rem", fontWeight: 700, color: "#111827" }}>Entered by</div>
+                      <input
+                        type="text"
+                        value={providerName}
+                        onChange={(e) => setProviderName(e.target.value)}
+                        placeholder="Enter your name"
+                        style={{ width: "100%", padding: "0.9rem 1rem", borderRadius: "1rem", border: "1px solid #d1d5db", backgroundColor: "#f9fafb", color: "#111827", boxSizing: "border-box" }}
+                      />
+                      <p style={{ marginTop: "0.65rem", color: "#6b7280", fontSize: "0.9rem" }}>
+                        Your name is remembered locally for the next save.
+                      </p>
                     </div>
 
                     <div style={{ marginTop: "1rem", backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "1rem" }}>
