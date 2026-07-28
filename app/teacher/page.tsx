@@ -137,7 +137,14 @@ export default function TeacherPage() {
     } catch (error) {
       console.error(error);
       setReportEntries([]);
+    } finally {
+      setReportLoading(false);
     }
+  };
+
+  useEffect(() => {
+    loadReportEntries();
+  }, [selectedStudents]);
 
   const handleSave = async () => {
     if (selectedStudents.length === 0 || !notes.trim()) {
@@ -149,6 +156,9 @@ export default function TeacherPage() {
       alert('Please select a goal.');
       return;
     }
+
+    setSaving(true);
+    setSaveFeedback(null);
 
     try {
       const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
@@ -169,7 +179,8 @@ export default function TeacherPage() {
 
       if (fetchError) {
         console.error('Error checking existing records', fetchError);
-        alert('Error checking existing records: ' + fetchError.message);
+        setSaveFeedback({ type: 'error', message: 'Error checking existing records: ' + fetchError.message });
+        setSaving(false);
         return;
       }
 
@@ -195,7 +206,8 @@ export default function TeacherPage() {
         const { data: insertData, error: insertError } = await supabase.from('weekly_progress').insert(records);
         if (insertError) {
           console.error('Insert error', insertError);
-          alert('Save failed: ' + insertError.message);
+          setSaveFeedback({ type: 'error', message: 'Save failed: ' + insertError.message });
+          setSaving(false);
           return;
         }
         insertedCount = (insertData || []).length;
@@ -217,26 +229,30 @@ export default function TeacherPage() {
           if (r.status === 'fulfilled') updatedCount += Number(r.value || 0);
           else {
             console.error('Update error', r);
-            alert('Update failed for one or more students: ' + String((r as any).reason?.message ?? r));
+            setSaveFeedback({ type: 'error', message: 'Update failed for one or more students: ' + String((r as any).reason?.message ?? r) });
+            setSaving(false);
             return;
           }
         }
       }
 
       if (insertedCount === 0 && updatedCount === 0) {
-        alert('No changes - selected students already have up-to-date records for this goal and week.');
+        setSaveFeedback({ type: 'error', message: 'No changes - selected students already have up-to-date records for this goal and week.' });
+        setSaving(false);
         return;
       }
 
-      alert(`Saved ${insertedCount} inserted, ${updatedCount} updated.`);
+      setSaveFeedback({ type: 'success', message: `Saved ${insertedCount} new, ${updatedCount} updated.` });
       setNotes('');
       setSelectedStudents([]);
       setSelectedGoalId('');
       setSubject('');
-      loadReportEntries();
+      await loadReportEntries();
     } catch (err) {
       console.error('Error:', err);
-      alert(`Error: ${err?.message ?? err}`);
+      setSaveFeedback({ type: 'error', message: `Error: ${err?.message ?? err}` });
+    } finally {
+      setSaving(false);
     }
   };
 
