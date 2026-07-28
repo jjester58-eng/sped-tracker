@@ -174,20 +174,25 @@ export default function TeacherPage() {
 
       const { data: existingPerson, error: existingPersonError } = await supabase
         .from('data_entry_people')
-        .select('id')
+        .select('id, user_id')
         .eq('name', enteredByName)
         .maybeSingle();
 
       if (existingPersonError) throw existingPersonError;
 
       let enteredById = existingPerson?.id;
+      let providerId = existingPerson?.user_id ?? '';
       if (!enteredById) {
+        providerId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : '00000000-0000-0000-0000-000000000000';
+
         const { data: insertedPerson, error: insertPersonError } = await supabase
           .from('data_entry_people')
           .insert({
             name: enteredByName,
             email: '',
-            user_id: enteredByName,
+            user_id: providerId,
           })
           .select('id')
           .single();
