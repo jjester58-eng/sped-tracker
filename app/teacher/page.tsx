@@ -165,7 +165,10 @@ export default function TeacherPage() {
       alert('Please select students and write notes.');
       return;
     }
-
+    if (!selectedGoalId) {
+      alert('Please select a goal.');
+      return;
+    }
     try {
       const enteredById = '72d1fa4c-0a5b-4cb3-83b1-292a212921e1';
       const today = new Date();
@@ -179,6 +182,7 @@ export default function TeacherPage() {
         notes: notes.trim(),
         progress_notes: notes.trim(),
         entered_by_id: enteredById,
+        goal_id: selectedGoalId,
         case_manager_id: null,
       }));
 
