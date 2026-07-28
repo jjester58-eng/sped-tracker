@@ -151,10 +151,7 @@ export default function TeacherPage() {
     }
 
     try {
-      const { useSupabase } = await import('@/lib/useSupabase');
-      const supabaseClient = useSupabase();
-
-      const { data: { user } } = await supabaseClient.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         alert('Must be logged in to save notes.');
         return;
@@ -176,7 +173,7 @@ export default function TeacherPage() {
 
       console.log('Inserting records:', records);
 
-      const { data, error } = await supabaseClient
+      const { data, error } = await supabase
         .from('weekly_progress')
         .insert(records);
 
