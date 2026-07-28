@@ -250,7 +250,7 @@ export default function TeacherPage() {
       await loadReportEntries();
     } catch (err) {
       console.error('Error:', err);
-      setSaveFeedback({ type: 'error', message: `Error: ${err?.message ?? err}` });
+     setSaveFeedback({ type: 'error', message: `Error: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setSaving(false);
     }
