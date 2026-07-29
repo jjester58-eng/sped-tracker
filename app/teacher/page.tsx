@@ -250,98 +250,239 @@ export default function TeacherPage() {
       await loadReportEntries();
     } catch (err) {
       console.error('Error:', err);
-     setSaveFeedback({ type: 'error', message: `Error: ${err instanceof Error ? err.message : String(err)}` });
+      setSaveFeedback({ type: 'error', message: `Error: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       setSaving(false);
     }
   };
 
   const draftWordCount = notes.trim().split(/\s+/).filter(Boolean).length;
-  const selectedSummaryLabel = selectedStudents.length === 0
-    ? 'No students selected'
-    : selectedStudents.length === 1
-      ? '1 student selected'
-      : `${selectedStudents.length} students selected`;
+  const selectedSummaryLabel =
+    selectedStudents.length === 0
+      ? 'No students selected'
+      : selectedStudents.length === 1
+        ? '1 student selected'
+        : `${selectedStudents.length} students selected`;
 
   return (
-    <main style={{ minHeight: "100vh", backgroundColor: "#f9fafb", padding: "2.5rem 1.5rem" }}>
-      <div style={{ maxWidth: "56rem", margin: "0 auto" }}>
-        <div style={{ backgroundColor: "white", borderRadius: "1.5rem", padding: "2rem", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.75rem", gap: "1rem", flexWrap: "wrap" }}>
+    <main style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '1.5rem 1rem' }}>
+      <div style={{ maxWidth: '56rem', margin: '0 auto' }}>
+        <div
+          style={{
+            backgroundColor: 'white',
+            borderRadius: '1.25rem',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+            border: '1px solid #e5e7eb',
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '1.5rem',
+              gap: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
             <div>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "0.4rem", backgroundColor: "#eff6ff", color: "#2563eb", padding: "0.35rem 0.7rem", borderRadius: "999px", fontSize: "0.78rem", fontWeight: 700, marginBottom: "0.6rem" }}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  backgroundColor: '#eff6ff',
+                  color: '#2563eb',
+                  padding: '0.3rem 0.65rem',
+                  borderRadius: '999px',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  marginBottom: '0.5rem',
+                }}
+              >
                 <span>📘</span>
                 <span>Teacher workflow</span>
               </div>
-              <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#111827" }}>
+              <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#111827', margin: 0 }}>
                 Teacher Input
               </h1>
-              <p style={{ color: "#374151", fontSize: "0.95rem", marginTop: "4px", maxWidth: "36rem" }}>
-                Capture progress updates, choose goals, and review recent teacher notes in one streamlined view.
+              <p style={{ color: '#6b7280', fontSize: '0.9rem', marginTop: '4px', maxWidth: '32rem' }}>
+                Filter students → pick goals → write progress notes
               </p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-              <div style={{ backgroundColor: "#f3f4f6", color: "#374151", padding: "0.7rem 1rem", borderRadius: "999px", fontWeight: 600, fontSize: "0.95rem" }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <div
+                style={{
+                  backgroundColor: selectedStudents.length ? '#eff6ff' : '#f3f4f6',
+                  color: selectedStudents.length ? '#2563eb' : '#6b7280',
+                  padding: '0.55rem 0.9rem',
+                  borderRadius: '999px',
+                  fontWeight: 600,
+                  fontSize: '0.85rem',
+                }}
+              >
                 {selectedSummaryLabel}
               </div>
-              <div style={{ backgroundColor: "#eff6ff", color: "#2563eb", padding: "0.7rem 1rem", borderRadius: "999px", fontWeight: 600, fontSize: "0.95rem" }}>
-                {draftWordCount} word{draftWordCount === 1 ? "" : "s"}
-              </div>
+              {draftWordCount > 0 && (
+                <div
+                  style={{
+                    backgroundColor: '#f0fdf4',
+                    color: '#166534',
+                    padding: '0.55rem 0.9rem',
+                    borderRadius: '999px',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {draftWordCount} word{draftWordCount === 1 ? '' : 's'}
+                </div>
+              )}
             </div>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "2rem" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              <div style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "1.25rem", padding: "1.25rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", gap: "0.75rem", flexWrap: "wrap" }}>
-                  <div>
-                    <h2 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#111827" }}>Student selection</h2>
-                    <p style={{ fontSize: "0.9rem", color: "#6b7280", marginTop: "2px" }}>Start by narrowing the roster and choosing the students you are documenting.</p>
-                  </div>
-                  <div style={{ backgroundColor: "#e5e7eb", color: "#374151", padding: "0.45rem 0.75rem", borderRadius: "999px", fontSize: "0.85rem", fontWeight: 600 }}>
-                    {subject ? subject : "No subject"}
-                  </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.05fr 0.95fr', gap: '1.5rem' }}>
+            {/* LEFT COLUMN */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* 1. Filters */}
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '1rem',
+                  padding: '1.1rem 1.25rem',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                }}
+              >
+                <div style={{ marginBottom: '0.85rem' }}>
+                  <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                    1. Filters
+                  </h2>
+                  <p style={{ fontSize: '0.82rem', color: '#9ca3af', marginTop: '2px' }}>
+                    Choose subject and grade levels to load the roster
+                  </p>
                 </div>
-                <div style={{ display: "grid", gap: "1rem", gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
-                  <SubjectSelector
-                    value={subject}
-                    onChange={(val) => {
-                      setSubject(val);
-                      setSelectedStudents([]);
-                      setSelectedGoalId('');
-                    }}
-                    subjects={subjects}
-                    loading={subjectsLoading}
-                  />
 
-                  <GradeLevelMultiSelector
-                    value={selectedGradeLevels}
-                    onChange={(val) => {
-                      setSelectedGradeLevels(val);
-                      setSelectedStudents([]);
-                      setSelectedGoalId('');
-                    }}
-                  />
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: '0.85rem',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  }}
+                >
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        color: '#6b7280',
+                        marginBottom: '0.35rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.03em',
+                      }}
+                    >
+                      Subject
+                    </label>
+                    <SubjectSelector
+                      value={subject}
+                      onChange={(val) => {
+                        setSubject(val);
+                        setSelectedStudents([]);
+                        setSelectedGoalId('');
+                      }}
+                      subjects={subjects}
+                      loading={subjectsLoading}
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        color: '#6b7280',
+                        marginBottom: '0.35rem',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.03em',
+                      }}
+                    >
+                      Grade levels
+                    </label>
+                    <GradeLevelMultiSelector
+                      value={selectedGradeLevels}
+                      onChange={(val) => {
+                        setSelectedGradeLevels(val);
+                        setSelectedStudents([]);
+                        setSelectedGoalId('');
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {(!subject || selectedGradeLevels.length === 0) && (
-                  <div style={{ marginTop: "1rem", border: "1px dashed #d1d5db", borderRadius: "1rem", padding: "0.85rem 1rem", color: "#6b7280", fontSize: "0.9rem", backgroundColor: "white" }}>
-                    Select a subject and at least one grade level to load students.
+                  <div
+                    style={{
+                      marginTop: '0.85rem',
+                      borderRadius: '0.75rem',
+                      padding: '0.7rem 0.9rem',
+                      backgroundColor: '#f8fafc',
+                      color: '#64748b',
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span>👆</span>
+                    <span>Select a subject and at least one grade to continue</span>
                   </div>
                 )}
               </div>
 
-              <div style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "1.25rem", padding: "1rem" }}>
-                <div style={{ marginBottom: "0.85rem" }}>
-                  <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#111827", margin: 0 }}>Student roster</h3>
-                  <p style={{ fontSize: "0.9rem", color: "#6b7280", marginTop: "2px" }}>Choose the students you want to document today.</p>
+              {/* 2. Students */}
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '1rem',
+                  padding: '1.1rem 1.25rem',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                  flex: 1,
+                }}
+              >
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                    2. Students
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: '#9ca3af', marginTop: '2px' }}>
+                    Select who you’re documenting today
+                  </p>
                 </div>
+
                 {!canLoadStudents ? (
-                  <div style={{ minHeight: "360px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px dashed #d1d5db", borderRadius: "1rem", backgroundColor: "white", padding: "2rem", textAlign: "center" }}>
-                    <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>👩‍🏫</div>
-                    <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#111827" }}>Choose your filters</h3>
-                    <p style={{ marginTop: "0.35rem", color: "#6b7280", fontSize: "0.92rem" }}>
-                      Once a subject and grade level are selected, the student roster will appear here.
+                  <div
+                    style={{
+                      minHeight: '320px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px dashed #e5e7eb',
+                      borderRadius: '0.85rem',
+                      backgroundColor: '#fafafa',
+                      padding: '2rem',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '1.75rem', marginBottom: '0.6rem', opacity: 0.7 }}>👩‍🏫</div>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#374151', margin: 0 }}>
+                      Waiting for filters
+                    </h3>
+                    <p style={{ marginTop: '0.3rem', color: '#9ca3af', fontSize: '0.85rem' }}>
+                      Subject + grade levels unlock the roster
                     </p>
                   </div>
                 ) : (
@@ -359,18 +500,58 @@ export default function TeacherPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-              <div style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "1.25rem", padding: "1.25rem" }}>
+            {/* RIGHT COLUMN */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* 3. Notes / entry */}
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '1rem',
+                  padding: '1.1rem 1.25rem',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                }}
+              >
                 {selectedStudents.length > 0 ? (
                   <>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.6rem", marginBottom: "1rem" }}>
+                    <div style={{ marginBottom: '0.85rem' }}>
+                      <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                        3. Progress notes
+                      </h2>
+                      <p style={{ fontSize: '0.82rem', color: '#9ca3af', marginTop: '2px' }}>
+                        Goal, templates, and notes for the selected students
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
                       {selectedStudents.map((s) => (
-                        <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.45rem", backgroundColor: "#eff6ff", color: "#2563eb", padding: "0.55rem 0.8rem", borderRadius: "999px", fontSize: "0.9rem", fontWeight: 600 }}>
+                        <div
+                          key={s.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            backgroundColor: '#eff6ff',
+                            color: '#2563eb',
+                            padding: '0.45rem 0.7rem',
+                            borderRadius: '999px',
+                            fontSize: '0.85rem',
+                            fontWeight: 600,
+                          }}
+                        >
                           <span>{s.name}</span>
                           <button
                             type="button"
                             onClick={() => setSelectedStudents((prev) => prev.filter((x) => x.id !== s.id))}
-                            style={{ background: "transparent", border: "none", color: "#2563eb", cursor: "pointer", fontSize: "0.85rem" }}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#2563eb',
+                              cursor: 'pointer',
+                              fontSize: '0.8rem',
+                              lineHeight: 1,
+                              padding: 0,
+                            }}
                             aria-label={`Remove ${s.name}`}
                           >
                             ✕
@@ -379,7 +560,15 @@ export default function TeacherPage() {
                       ))}
                     </div>
 
-                    <div style={{ backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "1rem" }}>
+                    <div
+                      style={{
+                        backgroundColor: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.85rem',
+                        padding: '0.9rem',
+                        marginBottom: '0.85rem',
+                      }}
+                    >
                       {subject && (
                         <GoalSelector
                           subject={subject}
@@ -389,32 +578,72 @@ export default function TeacherPage() {
                       )}
                     </div>
 
-                    <div style={{ marginTop: "1rem", backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "1rem" }}>
-                      <div style={{ marginBottom: "0.75rem", fontWeight: 700, color: "#111827" }}>Entered by</div>
+                    <div
+                      style={{
+                        backgroundColor: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.85rem',
+                        padding: '0.9rem',
+                        marginBottom: '0.85rem',
+                      }}
+                    >
+                      <div style={{ marginBottom: '0.5rem', fontWeight: 700, color: '#111827', fontSize: '0.9rem' }}>
+                        Entered by
+                      </div>
                       <input
                         type="text"
                         value={providerName}
                         onChange={(e) => setProviderName(e.target.value)}
                         placeholder="Enter your name"
-                        style={{ width: "100%", padding: "0.9rem 1rem", borderRadius: "1rem", border: "1px solid #d1d5db", backgroundColor: "#f9fafb", color: "#111827", boxSizing: "border-box" }}
+                        style={{
+                          width: '100%',
+                          padding: '0.75rem 0.9rem',
+                          borderRadius: '0.75rem',
+                          border: '1px solid #d1d5db',
+                          backgroundColor: 'white',
+                          color: '#111827',
+                          boxSizing: 'border-box',
+                          fontSize: '0.9rem',
+                        }}
                       />
-                      <p style={{ marginTop: "0.65rem", color: "#6b7280", fontSize: "0.9rem" }}>
+                      <p style={{ marginTop: '0.5rem', color: '#9ca3af', fontSize: '0.8rem' }}>
                         Your name is remembered locally for the next save.
                       </p>
                     </div>
 
-                    <div style={{ marginTop: "1rem", backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "1rem" }}>
-                      <div style={{ marginBottom: "0.8rem" }}>
-                        <div style={{ fontSize: "0.95rem", fontWeight: 700, color: "#111827" }}>Quick note templates</div>
-                        <div style={{ fontSize: "0.82rem", color: "#6b7280", marginTop: "2px" }}>Pick a starter and tailor it for the student or goal.</div>
+                    <div
+                      style={{
+                        backgroundColor: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.85rem',
+                        padding: '0.9rem',
+                        marginBottom: '0.85rem',
+                      }}
+                    >
+                      <div style={{ marginBottom: '0.6rem' }}>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#111827' }}>Quick note templates</div>
+                        <div style={{ fontSize: '0.78rem', color: '#9ca3af', marginTop: '2px' }}>
+                          Pick a starter and tailor it
+                        </div>
                       </div>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
                         {NOTE_TEMPLATES.map((template) => (
                           <button
                             key={template.title}
                             type="button"
-                            onClick={() => setNotes((prev) => prev ? `${prev}\n\n${template.text}` : template.text)}
-                            style={{ border: "1px solid #d1d5db", backgroundColor: "#fff", borderRadius: "999px", padding: "0.5rem 0.8rem", fontSize: "0.85rem", fontWeight: 600, color: "#374151", cursor: "pointer" }}
+                            onClick={() =>
+                              setNotes((prev) => (prev ? `${prev}\n\n${template.text}` : template.text))
+                            }
+                            style={{
+                              border: '1px solid #d1d5db',
+                              backgroundColor: 'white',
+                              borderRadius: '999px',
+                              padding: '0.4rem 0.7rem',
+                              fontSize: '0.8rem',
+                              fontWeight: 600,
+                              color: '#374151',
+                              cursor: 'pointer',
+                            }}
                           >
                             {template.title}
                           </button>
@@ -422,36 +651,99 @@ export default function TeacherPage() {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: "1rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                        <label style={{ display: "block", fontWeight: 700, color: "#111827", fontSize: "0.95rem" }}>Progress notes</label>
-                        <div style={{ fontSize: "0.8rem", color: "#6b7280" }}>{draftWordCount} word{draftWordCount === 1 ? "" : "s"}</div>
+                    <div style={{ marginBottom: '0.85rem' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          marginBottom: '0.4rem',
+                        }}
+                      >
+                        <label
+                          style={{
+                            display: 'block',
+                            fontWeight: 700,
+                            color: '#111827',
+                            fontSize: '0.9rem',
+                          }}
+                        >
+                          Progress notes
+                        </label>
+                        <div style={{ fontSize: '0.78rem', color: '#9ca3af' }}>
+                          {draftWordCount} word{draftWordCount === 1 ? '' : 's'}
+                        </div>
                       </div>
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        style={{ width: "100%", minHeight: "240px", padding: "0.9rem 1rem", borderRadius: "1rem", border: "1px solid #d1d5db", resize: "vertical", backgroundColor: "white", color: "#374151", boxSizing: "border-box" }}
+                        style={{
+                          width: '100%',
+                          minHeight: '200px',
+                          padding: '0.85rem 0.9rem',
+                          borderRadius: '0.85rem',
+                          border: '1px solid #d1d5db',
+                          resize: 'vertical',
+                          backgroundColor: 'white',
+                          color: '#374151',
+                          boxSizing: 'border-box',
+                          fontSize: '0.9rem',
+                          lineHeight: 1.5,
+                        }}
                         placeholder="Write observations, progress, behaviors, accommodations, and next steps..."
                       />
                     </div>
 
                     {saveFeedback && (
-                      <div style={{ marginTop: "1rem", borderRadius: "1rem", padding: "0.8rem 1rem", fontSize: "0.9rem", border: saveFeedback.type === "success" ? "1px solid #a7f3d0" : "1px solid #fecaca", backgroundColor: saveFeedback.type === "success" ? "#f0fdf4" : "#fef2f2", color: saveFeedback.type === "success" ? "#166534" : "#b91c1c" }}>
+                      <div
+                        style={{
+                          marginBottom: '0.85rem',
+                          borderRadius: '0.75rem',
+                          padding: '0.7rem 0.9rem',
+                          fontSize: '0.85rem',
+                          border:
+                            saveFeedback.type === 'success' ? '1px solid #a7f3d0' : '1px solid #fecaca',
+                          backgroundColor: saveFeedback.type === 'success' ? '#f0fdf4' : '#fef2f2',
+                          color: saveFeedback.type === 'success' ? '#166534' : '#b91c1c',
+                        }}
+                      >
                         {saveFeedback.message}
                       </div>
                     )}
 
-                    <div style={{ marginTop: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", flexWrap: "wrap", backgroundColor: "white", border: "1px solid #e5e7eb", borderRadius: "1rem", padding: "0.9rem 1rem" }}>
-                      <div style={{ fontSize: "0.9rem", color: "#6b7280" }}>
-                        {notes.trim() ? "Draft is ready to save." : "Start typing to build your note."}
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap',
+                        backgroundColor: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '0.85rem',
+                        padding: '0.8rem 0.9rem',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                        {notes.trim() ? 'Draft is ready to save.' : 'Start typing to build your note.'}
                       </div>
-                      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+                      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                         <button
                           onClick={handleSave}
                           disabled={saving}
-                          style={{ backgroundColor: "#2563eb", color: "white", padding: "0.75rem 1.25rem", borderRadius: "0.9rem", border: "none", cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.7 : 1 }}
+                          style={{
+                            backgroundColor: '#2563eb',
+                            color: 'white',
+                            padding: '0.65rem 1.1rem',
+                            borderRadius: '0.75rem',
+                            border: 'none',
+                            cursor: saving ? 'not-allowed' : 'pointer',
+                            opacity: saving ? 0.7 : 1,
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                          }}
                         >
-                          {saving ? "Saving..." : "Save notes"}
+                          {saving ? 'Saving...' : 'Save notes'}
                         </button>
                         <button
                           onClick={() => {
@@ -459,7 +751,16 @@ export default function TeacherPage() {
                             setSelectedGoalId('');
                             setSaveFeedback(null);
                           }}
-                          style={{ backgroundColor: "white", color: "#374151", padding: "0.75rem 1.25rem", borderRadius: "0.9rem", border: "1px solid #d1d5db", cursor: "pointer" }}
+                          style={{
+                            backgroundColor: 'white',
+                            color: '#374151',
+                            padding: '0.65rem 1.1rem',
+                            borderRadius: '0.75rem',
+                            border: '1px solid #d1d5db',
+                            cursor: 'pointer',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                          }}
                         >
                           Clear draft
                         </button>
@@ -467,59 +768,185 @@ export default function TeacherPage() {
                     </div>
                   </>
                 ) : (
-                  <div style={{ minHeight: "420px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px dashed #d1d5db", borderRadius: "1rem", backgroundColor: "white", padding: "2rem", textAlign: "center" }}>
-                    <div style={{ fontSize: "2rem", marginBottom: "0.75rem" }}>📝</div>
-                    <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#111827" }}>Start your entry</h3>
-                    <p style={{ marginTop: "0.35rem", color: "#6b7280", fontSize: "0.92rem" }}>
-                      Select one or more students to begin writing progress notes.
+                  <div
+                    style={{
+                      minHeight: '380px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      border: '1px dashed #e5e7eb',
+                      borderRadius: '0.85rem',
+                      backgroundColor: '#fafafa',
+                      padding: '2rem',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontSize: '1.75rem', marginBottom: '0.6rem', opacity: 0.7 }}>📝</div>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#374151', margin: 0 }}>
+                      Start your entry
+                    </h3>
+                    <p style={{ marginTop: '0.3rem', color: '#9ca3af', fontSize: '0.85rem' }}>
+                      Select one or more students to begin writing progress notes
                     </p>
                   </div>
                 )}
               </div>
 
-              <div style={{ backgroundColor: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: "1.25rem", padding: "1.25rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.9rem" }}>
+              {/* Today's notes */}
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '1rem',
+                  padding: '1.1rem 1.25rem',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.75rem',
+                  }}
+                >
                   <div>
-                    <h2 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#111827" }}>Today&apos;s notes</h2>
-                    <p style={{ fontSize: "0.9rem", color: "#6b7280", marginTop: "2px" }}>A compact summary of the latest teacher input for today.</p>
+                    <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#111827', margin: 0 }}>
+                      Today’s notes
+                    </h2>
+                    <p style={{ fontSize: '0.82rem', color: '#9ca3af', marginTop: '2px' }}>
+                      Latest teacher input for today
+                    </p>
                   </div>
-                  <div style={{ backgroundColor: "#e5e7eb", color: "#374151", padding: "0.45rem 0.75rem", borderRadius: "999px", fontSize: "0.85rem", fontWeight: 600 }}>
-                    {reportEntries.length} entr{reportEntries.length === 1 ? "y" : "ies"}
+                  <div
+                    style={{
+                      backgroundColor: '#f3f4f6',
+                      color: '#6b7280',
+                      padding: '0.35rem 0.65rem',
+                      borderRadius: '999px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {reportEntries.length} entr{reportEntries.length === 1 ? 'y' : 'ies'}
                   </div>
                 </div>
 
                 {todaySummary ? (
-                  <div style={{ marginBottom: "0.9rem", borderRadius: "1rem", backgroundColor: "#eff6ff", color: "#1d4ed8", padding: "0.9rem 1rem", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      marginBottom: '0.75rem',
+                      borderRadius: '0.75rem',
+                      backgroundColor: '#eff6ff',
+                      color: '#1d4ed8',
+                      padding: '0.75rem 0.9rem',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     {todaySummary}
                   </div>
                 ) : (
-                  <div style={{ marginBottom: "0.9rem", borderRadius: "1rem", border: "1px dashed #d1d5db", backgroundColor: "white", padding: "0.9rem 1rem", color: "#6b7280", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      marginBottom: '0.75rem',
+                      borderRadius: '0.75rem',
+                      border: '1px dashed #e5e7eb',
+                      backgroundColor: '#fafafa',
+                      padding: '0.75rem 0.9rem',
+                      color: '#9ca3af',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     No notes saved for today yet.
                   </div>
                 )}
 
                 {!selectedStudents.length ? (
-                  <div style={{ borderRadius: "1rem", border: "1px dashed #d1d5db", backgroundColor: "white", padding: "0.9rem 1rem", color: "#6b7280", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      borderRadius: '0.75rem',
+                      border: '1px dashed #e5e7eb',
+                      backgroundColor: '#fafafa',
+                      padding: '0.75rem 0.9rem',
+                      color: '#9ca3af',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     Select students to view their teacher input history.
                   </div>
                 ) : reportLoading ? (
-                  <div style={{ borderRadius: "1rem", border: "1px dashed #d1d5db", backgroundColor: "white", padding: "0.9rem 1rem", color: "#6b7280", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      borderRadius: '0.75rem',
+                      border: '1px dashed #e5e7eb',
+                      backgroundColor: '#fafafa',
+                      padding: '0.75rem 0.9rem',
+                      color: '#9ca3af',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     Loading report...
                   </div>
                 ) : reportEntries.length === 0 ? (
-                  <div style={{ borderRadius: "1rem", border: "1px dashed #d1d5db", backgroundColor: "white", padding: "0.9rem 1rem", color: "#6b7280", fontSize: "0.9rem" }}>
+                  <div
+                    style={{
+                      borderRadius: '0.75rem',
+                      border: '1px dashed #e5e7eb',
+                      backgroundColor: '#fafafa',
+                      padding: '0.75rem 0.9rem',
+                      color: '#9ca3af',
+                      fontSize: '0.85rem',
+                    }}
+                  >
                     No teacher entries found for the selected students yet.
                   </div>
                 ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                     {reportEntries.map((entry) => (
-                      <div key={entry.id} style={{ borderRadius: "1rem", backgroundColor: "white", border: "1px solid #e5e7eb", padding: "0.9rem 1rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: "0.75rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-                          <div style={{ fontWeight: 700, color: "#111827" }}>{entry.student_name}</div>
-                          <div style={{ color: "#6b7280", fontSize: "0.85rem" }}>{entry.review_date}</div>
+                      <div
+                        key={entry.id}
+                        style={{
+                          borderRadius: '0.75rem',
+                          backgroundColor: '#f9fafb',
+                          border: '1px solid #e5e7eb',
+                          padding: '0.8rem 0.9rem',
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            gap: '0.75rem',
+                            marginBottom: '0.3rem',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <div style={{ fontWeight: 700, color: '#111827', fontSize: '0.9rem' }}>
+                            {entry.student_name}
+                          </div>
+                          <div style={{ color: '#9ca3af', fontSize: '0.8rem' }}>{entry.review_date}</div>
                         </div>
-                        <div style={{ color: "#2563eb", fontWeight: 600, fontSize: "0.9rem", marginBottom: "0.35rem" }}>{entry.goal_description}</div>
-                        <div style={{ whiteSpace: "pre-wrap", color: "#374151", lineHeight: 1.5, fontSize: "0.92rem" }}>{entry.progress_notes}</div>
+                        <div
+                          style={{
+                            color: '#2563eb',
+                            fontWeight: 600,
+                            fontSize: '0.85rem',
+                            marginBottom: '0.3rem',
+                          }}
+                        >
+                          {entry.goal_description}
+                        </div>
+                        <div
+                          style={{
+                            whiteSpace: 'pre-wrap',
+                            color: '#374151',
+                            lineHeight: 1.5,
+                            fontSize: '0.85rem',
+                          }}
+                        >
+                          {entry.progress_notes}
+                        </div>
                       </div>
                     ))}
                   </div>
