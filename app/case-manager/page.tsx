@@ -112,9 +112,18 @@ export default function CaseManagerPage() {
   // =========================================================
   // FILTER STUDENTS BY CASE MANAGER
   // =========================================================
+  //
+  // If no case manager is selected:
+  //     SHOW ALL STUDENTS
+  //
+  // If a case manager is selected:
+  //     SHOW ONLY THAT CASE MANAGER'S STUDENTS
+  //
+  // =========================================================
 
   const caseManagerStudents = students.filter((student) => {
-    if (!selectedCaseManager) return false;
+    // No case manager selected = ALL students
+    if (!selectedCaseManager) return true;
 
     /*
      * Supports either:
@@ -236,10 +245,6 @@ export default function CaseManagerPage() {
     (student) => student.id === selectedStudentId
   );
 
-  const getReportForGoal = (goalId: string) => {
-    return reports.filter((report) => report.goal_id === goalId);
-  };
-
   const getTeacherName = (teacherId: string | null | undefined) => {
     if (!teacherId) return "Teacher";
 
@@ -325,7 +330,7 @@ export default function CaseManagerPage() {
                 marginBottom: "0.5rem",
               }}
             >
-              Case Manager
+              Case Manager (Optional)
             </label>
 
             <select
@@ -349,7 +354,7 @@ export default function CaseManagerPage() {
               }}
             >
               <option value="">
-                Select a case manager...
+                All Case Managers / All Students
               </option>
 
               {caseManagers.map((manager) => (
@@ -358,282 +363,405 @@ export default function CaseManagerPage() {
                 </option>
               ))}
             </select>
+
+            <p
+              style={{
+                margin: "0.5rem 0 0",
+                color: "#6b7280",
+                fontSize: "0.8rem",
+              }}
+            >
+              Leave blank to view all students.
+            </p>
           </div>
 
-          {!selectedCaseManager ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "5rem 2rem",
-                color: "#9ca3af",
-              }}
-            >
-              <p
+          {/* Student Area */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 3fr",
+              gap: "2rem",
+            }}
+          >
+            {/* Student List */}
+            <div>
+              <input
+                type="text"
+                placeholder="Search students..."
+                value={studentSearchQuery}
+                onChange={(e) =>
+                  setStudentSearchQuery(e.target.value)
+                }
                 style={{
-                  fontSize: "4rem",
+                  width: "100%",
+                  padding: "0.9rem",
+                  borderRadius: "1rem",
+                  border: "1px solid #d1d5db",
                   marginBottom: "1rem",
+                  boxSizing: "border-box",
+                }}
+              />
+
+              <div
+                style={{
+                  marginBottom: "0.75rem",
+                  color: "#6b7280",
+                  fontSize: "0.85rem",
                 }}
               >
-                👤
-              </p>
-
-              <h3>
-                Select a case manager
-              </h3>
-
-              <p>
-                Students assigned to that case manager will appear here.
-              </p>
-            </div>
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "2fr 3fr",
-                gap: "2rem",
-              }}
-            >
-              {/* Student List */}
-              <div>
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={studentSearchQuery}
-                  onChange={(e) =>
-                    setStudentSearchQuery(e.target.value)
-                  }
-                  style={{
-                    width: "100%",
-                    padding: "0.9rem",
-                    borderRadius: "1rem",
-                    border: "1px solid #d1d5db",
-                    marginBottom: "1rem",
-                    boxSizing: "border-box",
-                  }}
-                />
-
-                <div
-                  style={{
-                    marginBottom: "0.75rem",
-                    color: "#6b7280",
-                    fontSize: "0.85rem",
-                  }}
-                >
-                  {loading
-                    ? "Loading students..."
-                    : `${filteredStudents.length} student${
-                        filteredStudents.length === 1
-                          ? ""
-                          : "s"
-                      }`}
-                </div>
-
-                <div
-                  style={{
-                    maxHeight: "75vh",
-                    overflowY: "auto",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.75rem",
-                  }}
-                >
-                  {filteredStudents.length === 0 ? (
-                    <p
-                      style={{
-                        textAlign: "center",
-                        color: "#9ca3af",
-                        padding: "3rem 0",
-                      }}
-                    >
-                      No students found
-                    </p>
-                  ) : (
-                    filteredStudents.map((student) => (
-                      <button
-                        key={student.id}
-                        onClick={() =>
-                          handleSelectStudent(student.id)
-                        }
-                        style={{
-                          textAlign: "left",
-                          padding: "1.1rem",
-                          borderRadius: "1rem",
-                          border:
-                            selectedStudentId === student.id
-                              ? "2px solid #2563eb"
-                              : "1px solid #e5e7eb",
-                          backgroundColor:
-                            selectedStudentId === student.id
-                              ? "#eff6ff"
-                              : "white",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontWeight: "600",
-                            color: "#111827",
-                          }}
-                        >
-                          {student.name}
-                        </div>
-
-                        {student.grade_level && (
-                          <div
-                            style={{
-                              fontSize: "0.9rem",
-                              color: "#6b7280",
-                            }}
-                          >
-                            Grade {student.grade_level}
-                          </div>
-                        )}
-                      </button>
-                    ))
-                  )}
-                </div>
+                {loading
+                  ? "Loading students..."
+                  : `${filteredStudents.length} student${
+                      filteredStudents.length === 1
+                        ? ""
+                        : "s"
+                    }`}
               </div>
 
-              {/* Student / Goals / Teacher Input */}
-              <div>
-                {!selectedStudentId ? (
-                  <div
+              <div
+                style={{
+                  maxHeight: "75vh",
+                  overflowY: "auto",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "0.75rem",
+                }}
+              >
+                {filteredStudents.length === 0 ? (
+                  <p
                     style={{
                       textAlign: "center",
-                      padding: "5rem 2rem",
                       color: "#9ca3af",
+                      padding: "3rem 0",
                     }}
                   >
-                    <p
-                      style={{
-                        fontSize: "4rem",
-                        marginBottom: "1rem",
-                      }}
-                    >
-                      👨‍🎓
-                    </p>
-
-                    <h3>
-                      Select a student
-                    </h3>
-
-                    <p>
-                      Student goals and teacher input will appear here.
-                    </p>
-                  </div>
+                    No students found
+                  </p>
                 ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "1.5rem",
-                    }}
-                  >
-                    {/* Student Header */}
-                    <div
+                  filteredStudents.map((student) => (
+                    <button
+                      key={student.id}
+                      onClick={() =>
+                        handleSelectStudent(student.id)
+                      }
                       style={{
-                        backgroundColor: "#f9fafb",
-                        border: "1px solid #e5e7eb",
+                        textAlign: "left",
+                        padding: "1.1rem",
                         borderRadius: "1rem",
-                        padding: "1.25rem",
-                      }}
-                    >
-                      <h2
-                        style={{
-                          margin: 0,
-                          fontSize: "1.4rem",
-                          fontWeight: 800,
-                          color: "#111827",
-                        }}
-                      >
-                        {selectedStudent?.name}
-                      </h2>
-
-                      {selectedStudent?.grade_level && (
-                        <p
-                          style={{
-                            margin: "0.25rem 0 0",
-                            color: "#6b7280",
-                          }}
-                        >
-                          Grade {selectedStudent.grade_level}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Goals */}
-                    <div
-                      style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "1rem",
-                        padding: "1.25rem",
-                        backgroundColor: "white",
+                        border:
+                          selectedStudentId === student.id
+                            ? "2px solid #2563eb"
+                            : "1px solid #e5e7eb",
+                        backgroundColor:
+                          selectedStudentId === student.id
+                            ? "#eff6ff"
+                            : "white",
+                        cursor: "pointer",
                       }}
                     >
                       <div
                         style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "1rem",
+                          fontWeight: "600",
+                          color: "#111827",
                         }}
                       >
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontSize: "1.1rem",
-                            fontWeight: 700,
-                            color: "#111827",
-                          }}
-                        >
-                          IEP Goals
-                        </h3>
-
-                        <span
-                          style={{
-                            color: "#6b7280",
-                            fontSize: "0.9rem",
-                          }}
-                        >
-                          {goals.length} goal
-                          {goals.length === 1 ? "" : "s"}
-                        </span>
+                        {student.name}
                       </div>
 
-                      {goalsLoading ? (
-                        <p
-                          style={{
-                            color: "#6b7280",
-                          }}
-                        >
-                          Loading goals...
-                        </p>
-                      ) : goals.length === 0 ? (
-                        <p
-                          style={{
-                            color: "#6b7280",
-                            margin: 0,
-                          }}
-                        >
-                          No goals have been entered for this
-                          student.
-                        </p>
-                      ) : (
+                      {student.grade_level && (
                         <div
                           style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "0.9rem",
+                            fontSize: "0.9rem",
+                            color: "#6b7280",
                           }}
                         >
-                          {goals.map((goal) => (
+                          Grade {student.grade_level}
+                        </div>
+                      )}
+                    </button>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Student / Goals / Teacher Input */}
+            <div>
+              {!selectedStudentId ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "5rem 2rem",
+                    color: "#9ca3af",
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "4rem",
+                      marginBottom: "1rem",
+                    }}
+                  >
+                    👨‍🎓
+                  </p>
+
+                  <h3>
+                    Select a student
+                  </h3>
+
+                  <p>
+                    Student goals and teacher input will appear here.
+                  </p>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "1.5rem",
+                  }}
+                >
+                  {/* Student Header */}
+                  <div
+                    style={{
+                      backgroundColor: "#f9fafb",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "1rem",
+                      padding: "1.25rem",
+                    }}
+                  >
+                    <h2
+                      style={{
+                        margin: 0,
+                        fontSize: "1.4rem",
+                        fontWeight: 800,
+                        color: "#111827",
+                      }}
+                    >
+                      {selectedStudent?.name}
+                    </h2>
+
+                    {selectedStudent?.grade_level && (
+                      <p
+                        style={{
+                          margin: "0.25rem 0 0",
+                          color: "#6b7280",
+                        }}
+                      >
+                        Grade {selectedStudent.grade_level}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Goals */}
+                  <div
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "1rem",
+                      padding: "1.25rem",
+                      backgroundColor: "white",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "1.1rem",
+                          fontWeight: 700,
+                          color: "#111827",
+                        }}
+                      >
+                        IEP Goals
+                      </h3>
+
+                      <span
+                        style={{
+                          color: "#6b7280",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {goals.length} goal
+                        {goals.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+
+                    {goalsLoading ? (
+                      <p
+                        style={{
+                          color: "#6b7280",
+                        }}
+                      >
+                        Loading goals...
+                      </p>
+                    ) : goals.length === 0 ? (
+                      <p
+                        style={{
+                          color: "#6b7280",
+                          margin: 0,
+                        }}
+                      >
+                        No goals have been entered for this
+                        student.
+                      </p>
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "0.9rem",
+                        }}
+                      >
+                        {goals.map((goal) => (
+                          <div
+                            key={goal.id}
+                            style={{
+                              backgroundColor: "#f9fafb",
+                              border:
+                                "1px solid #e5e7eb",
+                              borderRadius: "0.9rem",
+                              padding: "1rem",
+                            }}
+                          >
                             <div
-                              key={goal.id}
                               style={{
-                                backgroundColor: "#f9fafb",
+                                display: "flex",
+                                justifyContent:
+                                  "space-between",
+                                alignItems: "flex-start",
+                                gap: "1rem",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              <strong
+                                style={{
+                                  color: "#111827",
+                                }}
+                              >
+                                Goal {goal.goal_number}
+                              </strong>
+
+                              {goal.subject && (
+                                <span
+                                  style={{
+                                    backgroundColor:
+                                      "#eff6ff",
+                                    color: "#2563eb",
+                                    padding:
+                                      "0.3rem 0.65rem",
+                                    borderRadius:
+                                      "999px",
+                                    fontSize:
+                                      "0.8rem",
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  {goal.subject}
+                                </span>
+                              )}
+                            </div>
+
+                            <div
+                              style={{
+                                color: "#374151",
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              {goal.goal_description}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Teacher Input */}
+                  <div
+                    style={{
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "1rem",
+                      padding: "1.25rem",
+                      backgroundColor: "#f9fafb",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <h3
+                        style={{
+                          margin: 0,
+                          fontSize: "1.1rem",
+                          fontWeight: 700,
+                          color: "#111827",
+                        }}
+                      >
+                        Teacher Input
+                      </h3>
+
+                      <span
+                        style={{
+                          color: "#6b7280",
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {reports.length} entr
+                        {reports.length === 1
+                          ? "y"
+                          : "ies"}
+                      </span>
+                    </div>
+
+                    {reportsLoading ? (
+                      <p
+                        style={{
+                          color: "#6b7280",
+                        }}
+                      >
+                        Loading teacher input...
+                      </p>
+                    ) : reports.length === 0 ? (
+                      <p
+                        style={{
+                          margin: 0,
+                          color: "#6b7280",
+                        }}
+                      >
+                        No teacher input has been saved
+                        for this student yet.
+                      </p>
+                    ) : (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "1rem",
+                        }}
+                      >
+                        {reports.map((report) => {
+                          const goal = goals.find(
+                            (g) =>
+                              g.id === report.goal_id
+                          );
+
+                          return (
+                            <div
+                              key={report.id}
+                              style={{
+                                backgroundColor:
+                                  "white",
                                 border:
                                   "1px solid #e5e7eb",
-                                borderRadius: "0.9rem",
+                                borderRadius:
+                                  "0.9rem",
                                 padding: "1rem",
                               }}
                             >
@@ -642,9 +770,10 @@ export default function CaseManagerPage() {
                                   display: "flex",
                                   justifyContent:
                                     "space-between",
-                                  alignItems: "flex-start",
                                   gap: "1rem",
-                                  marginBottom: "0.5rem",
+                                  marginBottom:
+                                    "0.75rem",
+                                  flexWrap: "wrap",
                                 }}
                               >
                                 <strong
@@ -652,236 +781,96 @@ export default function CaseManagerPage() {
                                     color: "#111827",
                                   }}
                                 >
-                                  Goal {goal.goal_number}
+                                  {goal
+                                    ? `Goal ${goal.goal_number}`
+                                    : "Teacher Input"}
                                 </strong>
 
-                                {goal.subject && (
-                                  <span
-                                    style={{
-                                      backgroundColor:
-                                        "#eff6ff",
-                                      color: "#2563eb",
-                                      padding:
-                                        "0.3rem 0.65rem",
-                                      borderRadius:
-                                        "999px",
-                                      fontSize:
-                                        "0.8rem",
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    {goal.subject}
-                                  </span>
-                                )}
+                                <span
+                                  style={{
+                                    color: "#6b7280",
+                                    fontSize:
+                                      "0.85rem",
+                                  }}
+                                >
+                                  {report.review_date}
+                                </span>
                               </div>
+
+                              {goal && (
+                                <div
+                                  style={{
+                                    fontSize:
+                                      "0.9rem",
+                                    color: "#6b7280",
+                                    marginBottom:
+                                      "0.75rem",
+                                  }}
+                                >
+                                  {goal.goal_description}
+                                </div>
+                              )}
 
                               <div
                                 style={{
                                   color: "#374151",
                                   lineHeight: 1.5,
+                                  whiteSpace:
+                                    "pre-wrap",
                                 }}
                               >
-                                {goal.goal_description}
+                                {report.progress_notes}
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Teacher Input */}
-                    <div
-                      style={{
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "1rem",
-                        padding: "1.25rem",
-                        backgroundColor: "#f9fafb",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "1rem",
-                        }}
-                      >
-                        <h3
-                          style={{
-                            margin: 0,
-                            fontSize: "1.1rem",
-                            fontWeight: 700,
-                            color: "#111827",
-                          }}
-                        >
-                          Teacher Input
-                        </h3>
-
-                        <span
-                          style={{
-                            color: "#6b7280",
-                            fontSize: "0.9rem",
-                          }}
-                        >
-                          {reports.length} entr
-                          {reports.length === 1
-                            ? "y"
-                            : "ies"}
-                        </span>
-                      </div>
-
-                      {reportsLoading ? (
-                        <p
-                          style={{
-                            color: "#6b7280",
-                          }}
-                        >
-                          Loading teacher input...
-                        </p>
-                      ) : reports.length === 0 ? (
-                        <p
-                          style={{
-                            margin: 0,
-                            color: "#6b7280",
-                          }}
-                        >
-                          No teacher input has been saved
-                          for this student yet.
-                        </p>
-                      ) : (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "1rem",
-                          }}
-                        >
-                          {reports.map((report) => {
-                            const goal = goals.find(
-                              (g) =>
-                                g.id === report.goal_id
-                            );
-
-                            return (
-                              <div
-                                key={report.id}
-                                style={{
-                                  backgroundColor:
-                                    "white",
-                                  border:
-                                    "1px solid #e5e7eb",
-                                  borderRadius:
-                                    "0.9rem",
-                                  padding: "1rem",
-                                }}
-                              >
+                              {(report.class_period ||
+                                report.school_year) && (
                                 <div
                                   style={{
-                                    display: "flex",
-                                    justifyContent:
-                                      "space-between",
-                                    gap: "1rem",
-                                    marginBottom:
+                                    marginTop:
                                       "0.75rem",
-                                    flexWrap: "wrap",
+                                    paddingTop:
+                                      "0.75rem",
+                                    borderTop:
+                                      "1px solid #f3f4f6",
+                                    fontSize:
+                                      "0.8rem",
+                                    color: "#6b7280",
                                   }}
                                 >
-                                  <strong
-                                    style={{
-                                      color: "#111827",
-                                    }}
-                                  >
-                                    {goal
-                                      ? `Goal ${goal.goal_number}`
-                                      : "Teacher Input"}
-                                  </strong>
+                                  {report.school_year && (
+                                    <span>
+                                      School Year:{" "}
+                                      {
+                                        report.school_year
+                                      }
+                                    </span>
+                                  )}
 
-                                  <span
-                                    style={{
-                                      color: "#6b7280",
-                                      fontSize:
-                                        "0.85rem",
-                                    }}
-                                  >
-                                    {report.review_date}
-                                  </span>
+                                  {report.class_period && (
+                                    <span
+                                      style={{
+                                        marginLeft:
+                                          "1rem",
+                                      }}
+                                    >
+                                      Period:{" "}
+                                      {
+                                        report.class_period
+                                      }
+                                    </span>
+                                  )}
                                 </div>
-
-                                {goal && (
-                                  <div
-                                    style={{
-                                      fontSize:
-                                        "0.9rem",
-                                      color: "#6b7280",
-                                      marginBottom:
-                                        "0.75rem",
-                                    }}
-                                  >
-                                    {goal.goal_description}
-                                  </div>
-                                )}
-
-                                <div
-                                  style={{
-                                    color: "#374151",
-                                    lineHeight: 1.5,
-                                    whiteSpace:
-                                      "pre-wrap",
-                                  }}
-                                >
-                                  {report.progress_notes}
-                                </div>
-
-                                {(report.class_period ||
-                                  report.school_year) && (
-                                  <div
-                                    style={{
-                                      marginTop:
-                                        "0.75rem",
-                                      paddingTop:
-                                        "0.75rem",
-                                      borderTop:
-                                        "1px solid #f3f4f6",
-                                      fontSize:
-                                        "0.8rem",
-                                      color: "#6b7280",
-                                    }}
-                                  >
-                                    {report.school_year && (
-                                      <span>
-                                        School Year:{" "}
-                                        {
-                                          report.school_year
-                                        }
-                                      </span>
-                                    )}
-
-                                    {report.class_period && (
-                                      <span
-                                        style={{
-                                          marginLeft:
-                                            "1rem",
-                                        }}
-                                      >
-                                        Period:{" "}
-                                        {
-                                          report.class_period
-                                        }
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </main>
