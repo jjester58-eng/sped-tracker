@@ -72,12 +72,28 @@ export default function HomePage() {
           <div>
             <h2 style={titleStyle}>Case Manager</h2>
             <p style={descStyle}>
-              Manage student rosters, review IEP goals, and track long-term progress.
+              Review student rosters, IEP goals, and teacher progress input.
             </p>
           </div>
 
           <div style={actionStyle("#16a34a")}>
             Open dashboard →
+          </div>
+        </Link>
+
+        {/* ADMIN */}
+        <Link href="/admin" style={cardStyle}>
+          <div style={iconStyle("#7c3aed")}>⚙️</div>
+
+          <div>
+            <h2 style={titleStyle}>Admin</h2>
+            <p style={descStyle}>
+              Manage teachers, case managers, students, goals, and school settings.
+            </p>
+          </div>
+
+          <div style={actionStyle("#7c3aed")}>
+            Open administration →
           </div>
         </Link>
 
@@ -117,12 +133,12 @@ const titleStyle: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: 700,
   margin: "0 0 4px",
-  color: "#111827", // FIX: strong contrast
+  color: "#111827",
 };
 
 const descStyle: React.CSSProperties = {
   fontSize: "14px",
-  color: "#4b5563", // FIX: darker gray
+  color: "#4b5563",
   lineHeight: 1.5,
   margin: 0,
 };
