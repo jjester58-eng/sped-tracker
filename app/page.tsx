@@ -1,315 +1,151 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { getSupabase, isSupabaseConfigured } from "../lib/supabaseClient";
-
-interface ProgressEntry {
-  id: string;
-  student_id: string;
-  student_name: string;
-  goal_id: string;
-  goal_description: string;
-  case_manager_id: string;
-  case_manager_name: string;
-  progress_notes: string;
-  accommodations_used: string;
-  review_date: string | null;
-  created_at: string;
-}
-
-interface Student {
-  id: string;
-  name: string;
-  grade_level: string;
-}
-
-interface CaseManager {
-  id: string;
-  name: string;
-}
-
-interface DataEntryPerson {
-  id: string;
-  name: string;
-}
+import Link from "next/link";
 
 export default function HomePage() {
-  const [records, setRecords] = useState<ProgressEntry[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
-  const [dataEntryPeople, setDataEntryPeople] = useState<DataEntryPerson[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formState, setFormState] = useState({
-    studentId: "",
-    caseManagerId: "",
-    enteredById: "",
-    progressNotes: "",
-    accommodationsUsed: "",
-    reviewDate: ""
-  });
-
-  useEffect(() => {
-    if (!isSupabaseConfigured) {
-      setError("Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
-      return;
-    }
-
-    async function init() {
-      await loadDropdownOptions();
-      await refreshRecords();
-    }
-
-    init();
-  }, []);
-
-  async function loadDropdownOptions() {
-    const supabase = getSupabase();
-    if (!supabase) return;
-
-    setLoading(true);
-    const [studentsRes, caseManagersRes, dataEntryRes] = await Promise.all([
-      supabase.from("students").select("id, name, grade_level"),
-      supabase.from("case_managers").select("id, name"),
-      supabase.from("data_entry_people").select("id, name").order("name")
-    ]);
-
-    if (studentsRes.data) setStudents(studentsRes.data as Student[]);
-    if (caseManagersRes.data) setCaseManagers(caseManagersRes.data as CaseManager[]);
-    if (dataEntryRes.data) setDataEntryPeople(dataEntryRes.data as DataEntryPerson[]);
-    setLoading(false);
-  }
-
-  async function refreshRecords() {
-    if (!isSupabaseConfigured) {
-      return;
-    }
-
-    const supabase = getSupabase();
-    if (!supabase) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const { data, error: fetchError } = await supabase
-      .from("weekly_progress")
-      .select("id, student_id, goal_id, case_manager_id, progress_notes, accommodations_used, review_date, created_at")
-      .order("created_at", { ascending: false });
-
-    if (fetchError) {
-      setError(fetchError.message);
-    } else if (data) {
-      const studentMap = new Map(students.map((s) => [s.id, s.name]));
-      const caseManagerMap = new Map(caseManagers.map((cm) => [cm.id, cm.name]));
-      const transformed = data.map((row: any) => ({
-        id: row.id,
-        student_id: row.student_id,
-        student_name: studentMap.get(row.student_id) || "Unknown",
-        goal_id: row.goal_id,
-        goal_description: "No goal",
-        case_manager_id: row.case_manager_id,
-        case_manager_name: caseManagerMap.get(row.case_manager_id) || "Unknown",
-        progress_notes: row.progress_notes,
-        accommodations_used: row.accommodations_used,
-        review_date: row.review_date,
-        created_at: row.created_at
-      }));
-      setRecords(transformed as ProgressEntry[]);
-    }
-
-    setLoading(false);
-  }
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    if (!formState.studentId || !formState.caseManagerId || !formState.enteredById || !formState.progressNotes) {
-      setError("Please fill in student, case manager, entered by, and progress notes.");
-      setLoading(false);
-      return;
-    }
-
-    const supabase = getSupabase();
-    if (!supabase) {
-      setError("Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
-      setLoading(false);
-      return;
-    }
-
-    const payload = {
-      student_id: formState.studentId,
-      case_manager_id: formState.caseManagerId,
-      entered_by_id: formState.enteredById,
-      progress_notes: formState.progressNotes,
-      accommodations_used: formState.accommodationsUsed,
-      review_date: formState.reviewDate || null
-    };
-
-    const { error: insertError } = await supabase
-      .from("weekly_progress")
-      .insert(payload);
-
-    if (insertError) {
-      setError(insertError.message);
-    } else {
-      setFormState({
-        studentId: "",
-        caseManagerId: "",
-        enteredById: "",
-        progressNotes: "",
-        accommodationsUsed: "",
-        reviewDate: ""
-      });
-      refreshRecords();
-    }
-
-    setLoading(false);
-  }
-
   return (
-    <main className="page">
-      <section className="header">
-        <div>
-          <h1>SPED Teacher Data Tracker</h1>
-          <p>
-            Track student progress, accommodations, IEP goals, and review dates for special education
-            teams in a public school setting.
-          </p>
-        </div>
-      </section>
+    <main style={{ fontFamily: "sans-serif", background: "#f3f4f6", minHeight: "100vh" }}>
 
-      <section className="card">
-        <h2>Record weekly progress</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-grid">
-            <div className="field">
-              <label htmlFor="studentId">Student</label>
-              <select
-                id="studentId"
-                value={formState.studentId}
-                onChange={(event) => setFormState({ ...formState, studentId: event.target.value })}
-                required
-              >
-                <option value="">-- Select student --</option>
-                {students.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} (Grade {s.grade_level})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="caseManagerId">Case manager</label>
-              <select
-                id="caseManagerId"
-                value={formState.caseManagerId}
-                onChange={(event) => setFormState({ ...formState, caseManagerId: event.target.value })}
-                required
-              >
-                <option value="">-- Select case manager --</option>
-                {caseManagers.map((cm) => (
-                  <option key={cm.id} value={cm.id}>
-                    {cm.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="enteredById">Entered by</label>
-              <select
-                id="enteredById"
-                value={formState.enteredById}
-                onChange={(event) => setFormState({ ...formState, enteredById: event.target.value })}
-                required
-              >
-                <option value="">-- Select person --</option>
-                {dataEntryPeople.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field full">
-              <label htmlFor="progressNotes">Progress notes</label>
-              <textarea
-                id="progressNotes"
-                value={formState.progressNotes}
-                onChange={(event) => setFormState({ ...formState, progressNotes: event.target.value })}
-                required
-              />
-            </div>
-            <div className="field full">
-              <label htmlFor="accommodationsUsed">Accommodations used</label>
-              <textarea
-                id="accommodationsUsed"
-                value={formState.accommodationsUsed}
-                onChange={(event) => setFormState({ ...formState, accommodationsUsed: event.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="reviewDate">Next review date</label>
-              <input
-                id="reviewDate"
-                type="date"
-                value={formState.reviewDate}
-                onChange={(event) => setFormState({ ...formState, reviewDate: event.target.value })}
-              />
-            </div>
-          </div>
-
-          <div style={{ marginTop: "24px" }}>
-            <button className="button" type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save progress entry"}
-            </button>
-          </div>
-
-          {error ? <p style={{ color: "#b91c1c", marginTop: "16px" }}>{error}</p> : null}
-        </form>
-      </section>
-
-      <section className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h2>Recent progress entries</h2>
-          <button className="button" type="button" onClick={refreshRecords} disabled={loading}>
-            Refresh
-          </button>
+      {/* HERO */}
+      <section style={{ textAlign: "center", padding: "3rem 1.5rem 2rem" }}>
+        <div style={{
+          display: "inline-block",
+          fontSize: "12px",
+          padding: "6px 12px",
+          borderRadius: "999px",
+          background: "#dbeafe",
+          color: "#1d4ed8",
+          marginBottom: "14px",
+          fontWeight: 600,
+        }}>
+          Special Education Platform
         </div>
 
-        {loading && !records.length ? (
-          <p className="empty-state">Loading records...</p>
-        ) : records.length === 0 ? (
-          <p className="empty-state">No progress entries found yet.</p>
-        ) : (
-          records.map((record) => (
-            <article className="entry" key={record.id}>
-              <h3>{record.student_name}</h3>
-              <div className="entry-meta">
-                <span>
-                  <strong>Case manager:</strong> {record.case_manager_name}
-                </span>
-                <span>
-                  <strong>Next review:</strong> {record.review_date || "None"}
-                </span>
-                <span>
-                  <strong>Logged:</strong> {new Date(record.created_at).toLocaleString()}
-                </span>
-              </div>
-              <p className="note">
-                <strong>Goal:</strong> {record.goal_description}
-                <br />
-                <strong>Progress:</strong> {record.progress_notes}
-                <br />
-                <strong>Accommodations:</strong> {record.accommodations_used || "None recorded."}
-              </p>
-            </article>
-          ))
-        )}
+        <h1 style={{
+          fontSize: "38px",
+          margin: "0 0 10px",
+          fontWeight: 700,
+          color: "#111827",
+        }}>
+          SPED Tracker
+        </h1>
+
+        <p style={{
+          maxWidth: "520px",
+          margin: "0 auto",
+          color: "#374151",
+          lineHeight: 1.6,
+          fontSize: "15px",
+        }}>
+          Track student progress, manage IEP goals, and log weekly notes in one simple system built for teachers and case managers.
+        </p>
+      </section>
+
+      {/* CARDS */}
+      <section style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+        gap: "18px",
+        maxWidth: "820px",
+        margin: "0 auto",
+        padding: "0 1.5rem 2rem",
+      }}>
+
+        {/* TEACHER */}
+        <Link href="/teacher" style={cardStyle}>
+          <div style={iconStyle("#2563eb")}>✏️</div>
+
+          <div>
+            <h2 style={titleStyle}>Teacher Workspace</h2>
+            <p style={descStyle}>
+              Log student progress, select goals, and record instructional notes.
+            </p>
+          </div>
+
+          <div style={actionStyle("#2563eb")}>
+            Open workspace →
+          </div>
+        </Link>
+
+        {/* CASE MANAGER */}
+        <Link href="/case-manager" style={cardStyle}>
+          <div style={iconStyle("#16a34a")}>👥</div>
+
+          <div>
+            <h2 style={titleStyle}>Case Manager</h2>
+            <p style={descStyle}>
+              Review student rosters, IEP goals, and teacher progress input.
+            </p>
+          </div>
+
+          <div style={actionStyle("#16a34a")}>
+            Open dashboard →
+          </div>
+        </Link>
+
+        {/* ADMIN */}
+        <Link href="/admin" style={cardStyle}>
+          <div style={iconStyle("#7c3aed")}>⚙️</div>
+
+          <div>
+            <h2 style={titleStyle}>Admin</h2>
+            <p style={descStyle}>
+              Manage teachers, case managers, students, goals, and school settings.
+            </p>
+          </div>
+
+          <div style={actionStyle("#7c3aed")}>
+            Open administration →
+          </div>
+        </Link>
+
       </section>
     </main>
   );
 }
+
+/* ---------- STYLES ---------- */
+
+const cardStyle: React.CSSProperties = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: "16px",
+  padding: "20px",
+  textDecoration: "none",
+  color: "inherit",
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+};
+
+const iconStyle = (color: string): React.CSSProperties => ({
+  width: "44px",
+  height: "44px",
+  borderRadius: "12px",
+  background: `${color}15`,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "22px",
+  color,
+});
+
+const titleStyle: React.CSSProperties = {
+  fontSize: "18px",
+  fontWeight: 700,
+  margin: "0 0 4px",
+  color: "#111827",
+};
+
+const descStyle: React.CSSProperties = {
+  fontSize: "14px",
+  color: "#4b5563",
+  lineHeight: 1.5,
+  margin: 0,
+};
+
+const actionStyle = (color: string): React.CSSProperties => ({
+  marginTop: "6px",
+  fontSize: "13px",
+  fontWeight: 600,
+  color,
+});
