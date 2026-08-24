@@ -1,12 +1,20 @@
 "use client";
+
 export const dynamic = "force-dynamic";
+
 import Papa from "papaparse";
 import { useState } from "react";
 import { useSupabase } from "@/lib/useSupabase";
 
 type CsvRow = {
-  name: string;
+  student_name?: string;
+  name?: string;
+  grade?: string;
   grade_level?: string;
+  case_manager?: string;
+  schedule?: string;
+  accommodations?: string;
+  accomodations?: string;
 };
 
 interface CsvUploaderProps {
@@ -22,66 +30,157 @@ export default function CsvUploader({ onUploadSuccess }: CsvUploaderProps) {
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setLoading(true);
     setMessage(null);
     setIsSuccess(false);
-    
+
     Papa.parse<CsvRow>(file, {
       header: true,
       skipEmptyLines: true,
       async complete(results) {
-        const cleaned = (results.data || [])
-          .map((row) => ({
-            name: row.name?.trim(),
-            grade_level: row.grade_level?.trim() || null,
-          }))
-          .filter((row) => row.name);
-        
-        if (cleaned.length === 0) {
-          setMessage("No valid rows found.");
-          setLoading(false);
-          setIsSuccess(false);
-          return;
-        }
-        
-        const { error } = await supabase.from("students").insert(cleaned);
-        if (error) {
-          console.error(error);
-          setMessage("Upload failed. Check console for details.");
-          setIsSuccess(false);
-        } else {
-          setMessage(`Successfully uploaded ${cleaned.length} students.`);
+        try {
+          const rawRows = results.data || [];
+          const cleaned = rawRows
+            .map((row) => {
+              const studentName = (row.student_name || row.name || "").trim();
+              const gradeLevel = (row.grade || row.grade_level || "").trim();
+              const caseManager = (row.case_manager || "").trim();
+              const accommodations = (
+                row.accommodations ||
+                row.accomodations ||
+                ""
+              ).trim();
+
+              return {
+                name: studentName,
+                grade_level: gradeLevel || null,
+                case_manager: caseManager || null,
+                is_active: true,
+                status: "active",
+                accommodations: accommodations,
+              };
+            })
+            .filter((row) => row.name.length > 0);
+
+          if (cleaned.length === 0) {
+            setMessage(
+              "No valid student rows found in CSV. Please ensure the CSV includes a 'student_name' or 'name' header."
+            );
+            setLoading(false);
+            setIsSuccess(false);
+            return;
+          }
+
+          const studentPayload = cleaned.map((s) => ({
+            name: s.name,
+            grade_level: s.grade_level,
+            case_manager: s.case_manager,
+            is_active: true,
+            status: "active",
+          }));
+
+          const { error: insertError } = await supabase
+            .from("students")
+            .insert(studentPayload as any);
+
+          if (insertError) throw insertError;
+
+          setMessage(
+            `✅ Successfully imported ${cleaned.length} student${
+              cleaned.length > 1 ? "s" : ""
+            } into Supabase!`
+          );
           setIsSuccess(true);
           onUploadSuccess?.();
+        } catch (err: any) {
+          console.error("CSV upload error:", err);
+          setMessage(`Upload failed: ${err?.message || String(err)}`);
+          setIsSuccess(false);
+        } finally {
+          setLoading(false);
+          e.target.value = "";
         }
-        
+      },
+      error(err) {
+        console.error("CSV parse error:", err);
+        setMessage(`CSV parsing error: ${err.message}`);
         setLoading(false);
-        e.target.value = "";
+        setIsSuccess(false);
       },
     });
   }
 
   return (
-    <div className="space-y-2">
-      <input
-        type="file"
-        accept=".csv"
-        onChange={handleUpload}
-        disabled={loading}
-        className="block w-full text-sm text-gray-500
-          file:mr-4 file:py-2 file:px-4
-          file:rounded file:border-0
-          file:text-sm file:font-semibold
-          file:bg-blue-50 file:text-blue-700
-          hover:file:bg-blue-100
-          disabled:opacity-50 disabled:cursor-not-allowed"
-      />
-      {loading && <p className="text-sm text-gray-600">Uploading...</p>}
-      {message && (
-        <p className={`text-sm ${isSuccess ? "text-green-600" : "text-red-600"}`}>
-          {message}
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div
+        style={{
+          border: "2px dashed #cbd5e1",
+          borderRadius: "0.75rem",
+          padding: "1.25rem",
+          backgroundColor: "#f8fafc",
+          textAlign: "center",
+        }}
+      >
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleUpload}
+          disabled={loading}
+          id="csv-file-input"
+          style={{ display: "none" }}
+        />
+        <label
+          htmlFor="csv-file-input"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.65rem 1.25rem",
+            backgroundColor: "#2563eb",
+            color: "white",
+            borderRadius: "0.5rem",
+            fontWeight: 600,
+            fontSize: "0.9rem",
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.6 : 1,
+          }}
+        >
+          <span>📁</span> {loading ? "Importing Students..." : "Choose CSV File to Upload"}
+        </label>
+        <p
+          style={{
+            fontSize: "0.78rem",
+            color: "#64748b",
+            margin: "0.6rem 0 0",
+          }}
+        >
+          Supported headers: <code>student_name</code>, <code>grade</code>,{" "}
+          <code>case_manager</code>, <code>schedule</code>,{" "}
+          <code>accommodations</code>
         </p>
+      </div>
+
+      {loading && (
+        <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
+          Uploading and processing records...
+        </p>
+      )}
+
+      {message && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            borderRadius: "0.5rem",
+            fontSize: "0.88rem",
+            fontWeight: 600,
+            backgroundColor: isSuccess ? "#f0fdf4" : "#fef2f2",
+            color: isSuccess ? "#166534" : "#991b1b",
+            border: `1px solid ${isSuccess ? "#bbf7d0" : "#fecaca"}`,
+          }}
+        >
+          {message}
+        </div>
       )}
     </div>
   );
