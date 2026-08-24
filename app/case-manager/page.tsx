@@ -66,6 +66,33 @@ export default function CaseManagerPage() {
   const [studentSearchQuery, setStudentSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<"observations" | "goals">("observations");
 
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const filteredReports = useMemo(() => {
+    return reports.filter((report) => {
+      if (!startDate && !endDate) return true;
+      const reportDateStr = report.created_at || report.review_date;
+      if (!reportDateStr) return true;
+      
+      const reportDate = new Date(reportDateStr);
+      if (isNaN(reportDate.getTime())) return true;
+      
+      let inRange = true;
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (reportDate < start) inRange = false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (reportDate > end) inRange = false;
+      }
+      return inRange;
+    });
+  }, [reports, startDate, endDate]);
+
   const loadLookups = useCallback(async () => {
     try {
       const [cmRes, teacherRes] = await Promise.all([
@@ -554,7 +581,23 @@ export default function CaseManagerPage() {
                   </p>
                 ) : activeTab === "observations" ? (
                   <div>
-                    {reports.length === 0 ? (
+                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', alignItems: 'center', backgroundColor: '#f8fafc', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #e2e8f0' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginBottom: '0.25rem' }}>Start Date</label>
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#334155' }} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, marginBottom: '0.25rem' }}>End Date</label>
+                        <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', fontSize: '0.9rem', color: '#334155' }} />
+                      </div>
+                      {(startDate || endDate) && (
+                        <button onClick={() => { setStartDate(''); setEndDate(''); }} style={{ marginTop: '1.25rem', padding: '0.5rem 0.85rem', borderRadius: '0.5rem', border: '1px solid #cbd5e1', backgroundColor: '#ffffff', cursor: 'pointer', fontWeight: 600, color: '#64748b', fontSize: '0.85rem' }}>
+                          Clear Filters
+                        </button>
+                      )}
+                    </div>
+
+                    {filteredReports.length === 0 ? (
                       <div
                         style={{
                           textAlign: "center",
@@ -576,7 +619,7 @@ export default function CaseManagerPage() {
                       </div>
                     ) : (
                       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                        {reports.map((report) => (
+                        {filteredReports.map((report) => (
                           <div
                             key={report.id}
                             style={{

@@ -193,23 +193,63 @@ export default function TeacherPage() {
     });
   }, [allStudents, studentSearchTerm, selectedStudents]);
 
-  const handleAddStudent = (student: Student) => {
+  const handleAddStudent = async (student: Student) => {
     setSelectedStudents((prev) => [...prev, student]);
     setStudentSearchTerm('');
     setShowStudentDropdown(false);
+
+    try {
+      const { data, error } = await supabase
+        .from('weekly_progress')
+        .select('accommodations_used')
+        .eq('student_id', student.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data && data.accommodations_used) {
+        const prevAccs = data.accommodations_used.split(',').map((a: string) => a.trim());
+        setSelectedAccommodations((prev) => {
+          const newSet = new Set([...prev, ...prevAccs]);
+          return Array.from(newSet);
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching past accommodations:', err);
+    }
   };
 
   const handleRemoveStudent = (studentId: string) => {
     setSelectedStudents((prev) => prev.filter((s) => s.id !== studentId));
   };
 
-  const handleSelectAllFiltered = () => {
-    setSelectedStudents((prev) => [
-      ...prev,
-      ...filteredStudents.slice(0, 15),
-    ]);
+  const handleSelectAllFiltered = async () => {
+    const studentsToAdd = filteredStudents.slice(0, 15);
+    setSelectedStudents((prev) => [...prev, ...studentsToAdd]);
     setStudentSearchTerm('');
     setShowStudentDropdown(false);
+
+    for (const student of studentsToAdd) {
+      try {
+        const { data } = await supabase
+          .from('weekly_progress')
+          .select('accommodations_used')
+          .eq('student_id', student.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data && data.accommodations_used) {
+          const prevAccs = data.accommodations_used.split(',').map((a: string) => a.trim());
+          setSelectedAccommodations((prev) => {
+            const newSet = new Set([...prev, ...prevAccs]);
+            return Array.from(newSet);
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching past accommodations:', err);
+      }
+    }
   };
 
   const toggleAccommodation = (acc: string) => {
