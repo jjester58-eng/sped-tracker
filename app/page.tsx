@@ -28,15 +28,22 @@ interface CaseManager {
   name: string;
 }
 
+interface DataEntryPerson {
+  id: string;
+  name: string;
+}
+
 export default function HomePage() {
   const [records, setRecords] = useState<ProgressEntry[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [caseManagers, setCaseManagers] = useState<CaseManager[]>([]);
+  const [dataEntryPeople, setDataEntryPeople] = useState<DataEntryPerson[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formState, setFormState] = useState({
     studentId: "",
     caseManagerId: "",
+    enteredById: "",
     progressNotes: "",
     accommodationsUsed: "",
     reviewDate: ""
@@ -61,13 +68,15 @@ export default function HomePage() {
     if (!supabase) return;
 
     setLoading(true);
-    const [studentsRes, caseManagersRes] = await Promise.all([
+    const [studentsRes, caseManagersRes, dataEntryRes] = await Promise.all([
       supabase.from("students").select("id, name, grade_level"),
-      supabase.from("case_managers").select("id, name")
+      supabase.from("case_managers").select("id, name"),
+      supabase.from("data_entry_people").select("id, name").order("name")
     ]);
 
     if (studentsRes.data) setStudents(studentsRes.data as Student[]);
     if (caseManagersRes.data) setCaseManagers(caseManagersRes.data as CaseManager[]);
+    if (dataEntryRes.data) setDataEntryPeople(dataEntryRes.data as DataEntryPerson[]);
     setLoading(false);
   }
 
@@ -118,8 +127,8 @@ export default function HomePage() {
     setLoading(true);
     setError(null);
 
-    if (!formState.studentId || !formState.caseManagerId || !formState.progressNotes) {
-      setError("Please fill in student, case manager, and progress notes.");
+    if (!formState.studentId || !formState.caseManagerId || !formState.enteredById || !formState.progressNotes) {
+      setError("Please fill in student, case manager, entered by, and progress notes.");
       setLoading(false);
       return;
     }
@@ -134,6 +143,7 @@ export default function HomePage() {
     const payload = {
       student_id: formState.studentId,
       case_manager_id: formState.caseManagerId,
+      entered_by_id: formState.enteredById,
       progress_notes: formState.progressNotes,
       accommodations_used: formState.accommodationsUsed,
       review_date: formState.reviewDate || null
@@ -149,6 +159,7 @@ export default function HomePage() {
       setFormState({
         studentId: "",
         caseManagerId: "",
+        enteredById: "",
         progressNotes: "",
         accommodationsUsed: "",
         reviewDate: ""
@@ -203,6 +214,22 @@ export default function HomePage() {
                 {caseManagers.map((cm) => (
                   <option key={cm.id} value={cm.id}>
                     {cm.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor="enteredById">Entered by</label>
+              <select
+                id="enteredById"
+                value={formState.enteredById}
+                onChange={(event) => setFormState({ ...formState, enteredById: event.target.value })}
+                required
+              >
+                <option value="">-- Select person --</option>
+                {dataEntryPeople.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
                   </option>
                 ))}
               </select>

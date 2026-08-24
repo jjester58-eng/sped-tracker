@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS weekly_progress (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   student_id UUID REFERENCES students(id),
   case_manager_id UUID REFERENCES case_managers(id),
+  entered_by_id UUID NOT NULL REFERENCES data_entry_people(id),
   goal_id UUID REFERENCES goals(id),
   progress_notes TEXT,
   accommodations_used TEXT,
