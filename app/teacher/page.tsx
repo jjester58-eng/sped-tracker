@@ -281,6 +281,29 @@ export default function TeacherPage() {
         (t) => t.id === selectedTeacher || t.name === selectedTeacher
       );
 
+      // Resolve the free-text name to a UUID in data_entry_people.
+      // Try to find an existing record first; if none, insert one.
+      const trimmedName = enteredByName.trim();
+      let enteredById: string | null = null;
+      const { data: existingPerson } = await supabase
+        .from('data_entry_people')
+        .select('id')
+        .ilike('name', trimmedName)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingPerson) {
+        enteredById = existingPerson.id;
+      } else {
+        const { data: newPerson, error: insertPersonError } = await supabase
+          .from('data_entry_people')
+          .insert({ name: trimmedName })
+          .select('id')
+          .single();
+        if (insertPersonError) throw insertPersonError;
+        enteredById = newPerson.id;
+      }
+
       const insertRows = selectedStudents.map((student) => {
         let studentNote = notes.trim();
         if (selectedStudents.length > 1) {
@@ -288,11 +311,12 @@ export default function TeacherPage() {
           studentNote = studentNote.replace(/\[Student Name\]/g, student.name);
         }
 
-        const fullNote = `[Recorded by: ${enteredByName.trim()} | Period: ${selectedClassPeriod} | ${currentTimestamp}]\n${studentNote}`;
+        const fullNote = `[Recorded by: ${trimmedName} | Period: ${selectedClassPeriod} | ${currentTimestamp}]\n${studentNote}`;
 
         return {
           student_id: student.id,
           teacher_id: teacherObj ? teacherObj.id : null,
+          entered_by_id: enteredById,
           class_period: String(selectedClassPeriod),
           progress_notes: fullNote,
           notes: fullNote,
