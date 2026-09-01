@@ -95,7 +95,7 @@ grant execute on function public.can_access_student(uuid) to authenticated;
 -- still be reviewed because permissive policies combine with OR semantics.
 revoke all on table public.students, public.goals, public.weekly_progress,
   public.data_entry_assignments, public.data_entry_people, public.case_managers,
-  public.classes, public.class_periods, public.teachers,
+  public.classes, public.class_periods,
   public.admin_users, public.admins from anon;
 
 alter table public.students enable row level security;
@@ -106,7 +106,6 @@ alter table public.data_entry_people enable row level security;
 alter table public.case_managers enable row level security;
 alter table public.classes enable row level security;
 alter table public.class_periods enable row level security;
-alter table public.teachers enable row level security;
 alter table public.admin_users enable row level security;
 alter table public.admins enable row level security;
 
@@ -183,16 +182,6 @@ create policy "sped2 case managers own read" on public.case_managers
   using (public.is_admin() or user_id = auth.uid());
  drop policy if exists "sped2 case managers admin write" on public.case_managers;
 create policy "sped2 case managers admin write" on public.case_managers
-  for all to authenticated
-  using (public.is_admin())
-  with check (public.is_admin());
-
- drop policy if exists "sped2 teachers own read" on public.teachers;
-create policy "sped2 teachers own read" on public.teachers
-  for select to authenticated
-  using (public.is_admin() or user_id = auth.uid());
- drop policy if exists "sped2 teachers admin write" on public.teachers;
-create policy "sped2 teachers admin write" on public.teachers
   for all to authenticated
   using (public.is_admin())
   with check (public.is_admin());
