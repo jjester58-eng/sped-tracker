@@ -70,8 +70,11 @@ $$;
 revoke all on function public.can_access_student(uuid) from public;
 grant execute on function public.can_access_student(uuid) to authenticated;
 
--- No anonymous access to student or progress data. Named policies are dropped
--- and recreated so this script is safe to re-run after review.
+-- Deny anonymous table access explicitly. Existing authenticated policies are
+-- not removed by this script; review them in Supabase before running.
+revoke all on table public.students, public.goals, public.weekly_progress,
+  public.data_entry_assignments, public.data_entry_people, public.case_managers,
+  public.classes from anon;
 
  alter table public.students enable row level security;
  alter table public.goals enable row level security;
@@ -107,7 +110,27 @@ create policy "sped progress admin update delete" on public.weekly_progress
 
 drop policy if exists "sped assignments own read" on public.data_entry_assignments;
 create policy "sped assignments own read" on public.data_entry_assignments
-  for select to authenticated using (public.is_admin() or exists (select 1 from public.sped_user_roles r where r.user_id = auth.uid() and r.role in ('case_manager','data_entry','viewer')));
+  for select to authenticated using (
+    public.is_admin()
+    or exists (
+      select 1
+      from public.sped_user_roles r
+      where r.user_id = auth.uid()
+        and r.role in ('case_manager', 'data_entry', 'viewer')
+        and (
+          exists (
+            select 1 from public.data_entry_people p
+            where p.id = data_entry_assignments.person_id
+              and lower(p.email) = lower((select email from auth.users where id = auth.uid()))
+          )
+          or exists (
+            select 1 from public.case_managers cm
+            where cm.id = data_entry_assignments.case_manager_id
+              and lower(cm.email) = lower((select email from auth.users where id = auth.uid()))
+          )
+        )
+    )
+  );
 drop policy if exists "sped assignments admin write" on public.data_entry_assignments;
 create policy "sped assignments admin write" on public.data_entry_assignments
   for all to authenticated using (public.is_admin()) with check (public.is_admin());
