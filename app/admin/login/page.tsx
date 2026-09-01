@@ -28,69 +28,23 @@ export default function AdminLoginPage() {
       if (signInError) throw signInError;
       if (!data.session) throw new Error("Login failed. Please check your credentials.");
 
-      let isAuthorized = false;
-
-      try {
-        const { data: rpcAdmin, error: rpcError } = await supabase.rpc("is_admin");
-        if (!rpcError && rpcAdmin === true) {
-          isAuthorized = true;
-        }
-      } catch {
-        // Fallback
+      const { data: rpcAdmin, error: rpcError } = await supabase.rpc("is_admin");
+      if (rpcError) {
+        throw new Error("Administrator authorization is not configured. Contact your administrator.");
       }
-
-      if (!isAuthorized) {
-        try {
-          const { data: adminUser } = await supabase
-            .from("admin_users")
-            .select("id, active")
-            .eq("email", email.trim().toLowerCase())
-            .single();
-
-          if (adminUser && adminUser.active !== false) {
-            isAuthorized = true;
-          }
-        } catch {
-          // Fallback
-        }
-      }
-
-      if (!isAuthorized) {
-        try {
-          const { data: adminRecord } = await supabase
-            .from("admins")
-            .select("user_id")
-            .eq("email", email.trim().toLowerCase())
-            .single();
-
-          if (adminRecord) {
-            isAuthorized = true;
-          }
-        } catch {
-          // Fallback
-        }
-      }
-
-      if (!isAuthorized) {
-        try {
-          const { count } = await supabase
-            .from("admin_users")
-            .select("id", { count: "exact", head: true });
-
-          if (!count || count === 0) {
-            isAuthorized = true;
-          }
-        } catch {
-          isAuthorized = true;
-        }
-      }
+      const isAuthorized = rpcAdmin === true;
 
       if (!isAuthorized) {
         await supabase.auth.signOut();
         throw new Error("This account is not authorized for administrator access.");
       }
 
-      router.push("/admin");
+      const nextPath = new URLSearchParams(window.location.search).get("next");
+      const destination =
+        nextPath && nextPath.startsWith("/") && !nextPath.startsWith("//")
+          ? nextPath
+          : "/admin";
+      router.push(destination);
     } catch (err: any) {
       console.error(err);
       setError(err?.message || "Unable to log in.");
