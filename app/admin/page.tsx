@@ -39,10 +39,10 @@ export default function AdminPage() {
     const checkAuth = async () => {
       try {
         const {
-          data: { session },
-        } = await supabase.auth.getSession();
+          data: { user },
+        } = await supabase.auth.getUser();
 
-        if (!session) {
+        if (!user) {
           router.push("/admin/login");
           return;
         }
