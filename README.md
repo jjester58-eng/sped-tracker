@@ -20,7 +20,7 @@ A   Next.js data tracker for special education teachers working in public school
 
 4. Set the same Supabase environment variables in Vercel if you deploy there.
 
-5. Verify your Supabase database tables exist (see Data Model below).
+5. Verify your Supabase database tables and Row Level Security policies exist (see Data Model below).
 
 6. Run the development server:
 
@@ -35,7 +35,7 @@ A   Next.js data tracker for special education teachers working in public school
 The app expects the following environment values:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## Data model
 
@@ -72,4 +72,4 @@ The tracker records:
 
 ## Notes
 
-This setup is intended for special education teams in public schools to record and review student progress data in real time.
+This setup is intended for special education teams in public schools to record and review student progress data in real time. Before using real student data, review and apply `supabase/security-hardening.sql`, then verify authentication, Row Level Security, backups, and your organization’s privacy requirements.
