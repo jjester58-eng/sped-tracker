@@ -1,3 +1,4 @@
+/* entire updated CSS content */
 :root {
   --bg: #0f1117;
   --surface: #181c27;
@@ -176,7 +177,9 @@ textarea {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  color: var(--text);
+  /* Make form controls inherit the surrounding text color so pages that use a light background and set a dark text color render correctly.
+     This prevents the white-on-white / black-on-black contrast issues when inline styles change background color without also setting the color. */
+  color: inherit;
   font-family: var(--font-mono);
   font-size: 0.85rem;
   padding: 0.55rem 0.75rem;
@@ -194,6 +197,7 @@ textarea:focus {
 
 select option {
   background: var(--surface-2);
+  color: inherit;
 }
 
 textarea {
