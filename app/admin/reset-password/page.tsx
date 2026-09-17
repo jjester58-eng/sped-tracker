@@ -49,8 +49,6 @@ export default function ResetPasswordPage() {
 
     if (showUrlError()) return;
 
-    // Supabase consumes the recovery link in the browser and emits
-    // PASSWORD_RECOVERY when the recovery session is established.
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
         if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
@@ -59,14 +57,14 @@ export default function ResetPasswordPage() {
       }
     );
 
-    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+    supabase.auth.getSession().then((result: { data: { session: Session | null }; error: Error | null }) => {
       if (cancelled) return;
-      if (sessionError) {
-        setError(sessionError.message);
+      if (result.error) {
+        setError(result.error.message);
         setCheckingLink(false);
         return;
       }
-      finishChecking(data.session);
+      finishChecking(result.data.session);
     });
 
     timeoutId = setTimeout(() => {
@@ -114,7 +112,6 @@ export default function ResetPasswordPage() {
       setPassword("");
       setConfirmPassword("");
 
-      // Do not leave the recovery session active after the password is changed.
       await supabase.auth.signOut();
       setTimeout(() => router.push("/admin/login"), 1200);
     } catch (err: any) {
