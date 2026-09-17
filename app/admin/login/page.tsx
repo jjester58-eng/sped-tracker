@@ -121,7 +121,10 @@ export default function AdminLoginPage() {
         window.localStorage.setItem(SAVED_EMAIL_KEY, normalizedEmail);
       }
 
-      const redirectTo = `${window.location.origin}/admin/reset-password`;
+      // Use the configured production URL when available so password-reset links
+      // don't accidentally point at a Vercel preview deployment.
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const redirectTo = `${siteUrl.replace(/\/$/, "")}/admin/reset-password`;
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         normalizedEmail,
         { redirectTo }
