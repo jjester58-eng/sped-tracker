@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
       }
     );
 
-    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+    supabase.auth.getSession().then(({ data, error: sessionError }: { data: { session: Session | null }; error: Error | null }) => {
       if (cancelled) return;
       if (sessionError) {
         setError(sessionError.message);
