@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/useSupabase";
+
+const SAVED_EMAIL_KEY = "sped-tracker-admin-email";
 
 export default function AdminLoginPage() {
   const supabase = useSupabase();
@@ -10,18 +12,36 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberEmail, setRememberEmail] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedEmail = window.localStorage.getItem(SAVED_EMAIL_KEY);
+      if (savedEmail) setEmail(savedEmail);
+    } catch {
+      // Local storage may be unavailable in some browser privacy modes.
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
+      if (rememberEmail) {
+        window.localStorage.setItem(SAVED_EMAIL_KEY, normalizedEmail);
+      } else {
+        window.localStorage.removeItem(SAVED_EMAIL_KEY);
+      }
+
       const { data, error: signInError } =
         await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
         });
 
@@ -44,7 +64,7 @@ export default function AdminLoginPage() {
           const { data: adminUser } = await supabase
             .from("admin_users")
             .select("id, active")
-            .eq("email", email.trim().toLowerCase())
+            .eq("email", normalizedEmail)
             .single();
 
           if (adminUser && adminUser.active !== false) {
@@ -60,7 +80,7 @@ export default function AdminLoginPage() {
           const { data: adminRecord } = await supabase
             .from("admins")
             .select("user_id")
-            .eq("email", email.trim().toLowerCase())
+            .eq("email", normalizedEmail)
             .single();
 
           if (adminRecord) {
@@ -113,6 +133,7 @@ export default function AdminLoginPage() {
     >
       <form
         onSubmit={handleLogin}
+        autoComplete="on"
         style={{
           backgroundColor: "white",
           borderRadius: "1.25rem",
@@ -157,6 +178,7 @@ export default function AdminLoginPage() {
 
         {error && (
           <div
+            role="alert"
             style={{
               color: "#991b1b",
               background: "#fef2f2",
@@ -173,6 +195,7 @@ export default function AdminLoginPage() {
 
         <div style={{ marginBottom: "1.1rem" }}>
           <label
+            htmlFor="admin-email"
             style={{
               display: "block",
               fontWeight: 600,
@@ -184,10 +207,14 @@ export default function AdminLoginPage() {
             Admin Email
           </label>
           <input
+            id="admin-email"
+            name="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            autoComplete="username"
+            inputMode="email"
             placeholder="admin@school.org"
             style={{
               width: "100%",
@@ -200,8 +227,9 @@ export default function AdminLoginPage() {
           />
         </div>
 
-        <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ marginBottom: "0.9rem" }}>
           <label
+            htmlFor="admin-password"
             style={{
               display: "block",
               fontWeight: 600,
@@ -213,10 +241,13 @@ export default function AdminLoginPage() {
             Password
           </label>
           <input
+            id="admin-password"
+            name="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            autoComplete="current-password"
             placeholder="••••••••"
             style={{
               width: "100%",
@@ -228,6 +259,26 @@ export default function AdminLoginPage() {
             }}
           />
         </div>
+
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.55rem",
+            marginBottom: "1.5rem",
+            color: "#475569",
+            fontSize: "0.88rem",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={rememberEmail}
+            onChange={(e) => setRememberEmail(e.target.checked)}
+            style={{ width: "1rem", height: "1rem" }}
+          />
+          <span>Remember this login on this computer</span>
+        </label>
 
         <button
           type="submit"
