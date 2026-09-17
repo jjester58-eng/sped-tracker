@@ -49,6 +49,8 @@ export default function ResetPasswordPage() {
 
     if (showUrlError()) return;
 
+    // Supabase consumes the recovery link in the browser and emits
+    // PASSWORD_RECOVERY when the recovery session is established.
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
         if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
@@ -57,7 +59,7 @@ export default function ResetPasswordPage() {
       }
     );
 
-    supabase.auth.getSession().then(({ data, error: sessionError }: { data: { session: Session | null }; error: Error | null }) => {
+    supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (cancelled) return;
       if (sessionError) {
         setError(sessionError.message);
@@ -99,13 +101,22 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     try {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!sessionData.session) {
+        throw new Error("Your password reset session is missing or has expired. Please request a new reset email.");
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
 
-      setMessage("Your password has been updated successfully.");
+      setMessage("Your password has been changed successfully. Redirecting to admin login...");
       setPassword("");
       setConfirmPassword("");
-      setTimeout(() => router.push("/admin/login"), 1500);
+
+      // Do not leave the recovery session active after the password is changed.
+      await supabase.auth.signOut();
+      setTimeout(() => router.push("/admin/login"), 1200);
     } catch (err: any) {
       console.error(err);
       setError(
@@ -125,9 +136,9 @@ export default function ResetPasswordPage() {
         <p style={{ color: "#64748b", fontSize: "0.9rem", margin: "0 0 1.5rem" }}>Choose a new password for your SPED Tracker account.</p>
         {error && <div role="alert" style={{ color: "#991b1b", background: "#fef2f2", padding: "0.85rem 1rem", borderRadius: "0.65rem", marginBottom: "1.25rem", fontSize: "0.88rem", border: "1px solid #fecaca" }}>{error}</div>}
         {message && <div role="status" style={{ color: "#166534", background: "#f0fdf4", padding: "0.85rem 1rem", borderRadius: "0.65rem", marginBottom: "1.25rem", fontSize: "0.88rem", border: "1px solid #bbf7d0" }}>{message}</div>}
-        <div style={{ marginBottom: "1.1rem" }}><label htmlFor="new-password" style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", color: "#334155", fontSize: "0.9rem" }}>New Password</label><input id="new-password" name="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" placeholder="At least 6 characters" disabled={!ready} style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", boxSizing: "border-box", fontSize: "0.95rem" }} /></div>
-        <div style={{ marginBottom: "1.5rem" }}><label htmlFor="confirm-password" style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", color: "#334155", fontSize: "0.9rem" }}>Confirm New Password</label><input id="confirm-password" name="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} autoComplete="new-password" placeholder="Enter it again" disabled={!ready} style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", boxSizing: "border-box", fontSize: "0.95rem" }} /></div>
-        <button type="submit" disabled={loading || !ready} style={{ width: "100%", padding: "0.85rem", borderRadius: "0.65rem", border: "none", backgroundColor: "#2563eb", color: "white", fontWeight: 700, fontSize: "0.95rem", cursor: loading || !ready ? "not-allowed" : "pointer", opacity: loading || !ready ? 0.6 : 1 }}>{loading ? "Updating Password..." : checkingLink ? "Verifying Reset Link..." : !ready ? "Reset Link Not Valid" : "Update Password"}</button>
+        <div style={{ marginBottom: "1.1rem" }}><label htmlFor="new-password" style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", color: "#334155", fontSize: "0.9rem" }}>New Password</label><input id="new-password" name="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" placeholder="At least 6 characters" disabled={!ready || !!message} style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", boxSizing: "border-box", fontSize: "0.95rem" }} /></div>
+        <div style={{ marginBottom: "1.5rem" }}><label htmlFor="confirm-password" style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", color: "#334155", fontSize: "0.9rem" }}>Confirm New Password</label><input id="confirm-password" name="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} autoComplete="new-password" placeholder="Enter it again" disabled={!ready || !!message} style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", boxSizing: "border-box", fontSize: "0.95rem" }} /></div>
+        <button type="submit" disabled={loading || !ready || !!message} style={{ width: "100%", padding: "0.85rem", borderRadius: "0.65rem", border: "none", backgroundColor: "#2563eb", color: "white", fontWeight: 700, fontSize: "0.95rem", cursor: loading || !ready || !!message ? "not-allowed" : "pointer", opacity: loading || !ready || !!message ? 0.6 : 1 }}>{loading ? "Updating Password..." : checkingLink ? "Verifying Reset Link..." : !ready ? "Reset Link Not Valid" : "Update Password"}</button>
         <button type="button" onClick={() => router.push("/admin/login")} style={{ width: "100%", marginTop: "0.85rem", padding: "0.7rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", background: "white", color: "#475569", fontWeight: 600, cursor: "pointer" }}>Back to Login</button>
       </form>
     </main>
