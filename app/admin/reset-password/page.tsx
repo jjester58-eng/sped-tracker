@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { AuthChangeEvent } from "@supabase/supabase-js";
 import { useSupabase } from "@/lib/useSupabase";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 export default function ResetPasswordPage() {
   const supabase = useSupabase();
@@ -16,10 +16,12 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event: AuthChangeEvent) => {
-      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
-    });
-    supabase.auth.getSession().then(({ data }) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, _session: Session | null) => {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
+      }
+    );
+    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
       if (data.session) setReady(true);
     });
     return () => listener.subscription.unsubscribe();
