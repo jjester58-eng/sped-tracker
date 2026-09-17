@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main style={{ fontFamily: "sans-serif", background: "#f3f4f6", minHeight: "100vh" }}>
+    <main style={{ fontFamily: "Inter, system-ui, sans-serif", background: "#f5f0e8", minHeight: "100vh" }}>
 
       {/* HERO */}
       <section style={{ textAlign: "center", padding: "3rem 1.5rem 2rem" }}>
@@ -11,8 +11,8 @@ export default function HomePage() {
           fontSize: "12px",
           padding: "6px 12px",
           borderRadius: "999px",
-          background: "#dbeafe",
-          color: "#1d4ed8",
+          background: "#eadfd5",
+          color: "#8f513c",
           marginBottom: "14px",
           fontWeight: 600,
         }}>
@@ -23,7 +23,7 @@ export default function HomePage() {
           fontSize: "38px",
           margin: "0 0 10px",
           fontWeight: 700,
-          color: "#111827",
+          color: "#3f3b36",
         }}>
           SPED Tracker
         </h1>
@@ -31,7 +31,7 @@ export default function HomePage() {
         <p style={{
           maxWidth: "520px",
           margin: "0 auto",
-          color: "#374151",
+          color: "#675f56",
           lineHeight: 1.6,
           fontSize: "15px",
         }}>
@@ -51,7 +51,7 @@ export default function HomePage() {
 
         {/* TEACHER */}
         <Link href="/teacher" style={cardStyle}>
-          <div style={iconStyle("#2563eb")}>✏️</div>
+          <div style={iconStyle("#a85f46")}>✏️</div>
 
           <div>
             <h2 style={titleStyle}>Teacher Workspace</h2>
@@ -60,14 +60,14 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div style={actionStyle("#2563eb")}>
+          <div style={actionStyle("#a85f46")}>
             Open workspace →
           </div>
         </Link>
 
         {/* CASE MANAGER */}
         <Link href="/case-manager" style={cardStyle}>
-          <div style={iconStyle("#16a34a")}>👥</div>
+          <div style={iconStyle("#657b69")}>👥</div>
 
           <div>
             <h2 style={titleStyle}>Case Manager</h2>
@@ -76,14 +76,14 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div style={actionStyle("#16a34a")}>
+          <div style={actionStyle("#657b69")}>
             Open dashboard →
           </div>
         </Link>
 
         {/* ADMIN */}
         <Link href="/admin" style={cardStyle}>
-          <div style={iconStyle("#7c3aed")}>⚙️</div>
+          <div style={iconStyle("#6f7d78")}>⚙️</div>
 
           <div>
             <h2 style={titleStyle}>Admin</h2>
@@ -92,7 +92,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div style={actionStyle("#7c3aed")}>
+          <div style={actionStyle("#6f7d78")}>
             Open administration →
           </div>
         </Link>
@@ -105,8 +105,8 @@ export default function HomePage() {
 /* ---------- STYLES ---------- */
 
 const cardStyle: React.CSSProperties = {
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
+  background: "#fffaf3",
+  border: "1px solid #ded4c7",
   borderRadius: "16px",
   padding: "20px",
   textDecoration: "none",
@@ -114,7 +114,8 @@ const cardStyle: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: "12px",
-  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  boxShadow: "0 2px 10px rgba(80,65,50,0.06)",
+  transition: "transform 0.15s ease, box-shadow 0.15s ease",
 };
 
 const iconStyle = (color: string): React.CSSProperties => ({
@@ -133,12 +134,12 @@ const titleStyle: React.CSSProperties = {
   fontSize: "18px",
   fontWeight: 700,
   margin: "0 0 4px",
-  color: "#111827",
+  color: "#3f3b36",
 };
 
 const descStyle: React.CSSProperties = {
   fontSize: "14px",
-  color: "#4b5563",
+  color: "#675f56",
   lineHeight: 1.5,
   margin: 0,
 };
