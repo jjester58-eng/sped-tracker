@@ -47,7 +47,41 @@ export default function ResetPasswordPage() {
       if (timeoutId) clearTimeout(timeoutId);
     };
 
-    if (showUrlError()) return;
+    const verifyRecoveryLink = async () => {
+      if (showUrlError()) return;
+
+      // Supabase can return password-recovery links using either the implicit
+      // flow (tokens in the URL hash) or PKCE (an authorization code in the
+      // query string). Handle PKCE explicitly so the recovery session exists
+      // before we render the password form.
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { data, error: exchangeError } =
+          await supabase.auth.exchangeCodeForSession(code);
+
+        if (cancelled) return;
+        if (exchangeError) {
+          setError(
+            `This password reset link could not be verified: ${exchangeError.message}`
+          );
+          setCheckingLink(false);
+          return;
+        }
+
+        finishChecking(data.session);
+        return;
+      }
+
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (sessionError) {
+        setError(sessionError.message);
+        setCheckingLink(false);
+        return;
+      }
+
+      finishChecking(data.session);
+    };
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, session: Session | null) => {
@@ -57,18 +91,19 @@ export default function ResetPasswordPage() {
       }
     );
 
-    supabase.auth.getSession().then((result: { data: { session: Session | null }; error: Error | null }) => {
+    verifyRecoveryLink().catch((err: unknown) => {
       if (cancelled) return;
-      if (result.error) {
-        setError(result.error.message);
-        setCheckingLink(false);
-        return;
-      }
-      finishChecking(result.data.session);
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to verify the password reset link."
+      );
+      setCheckingLink(false);
     });
 
     timeoutId = setTimeout(() => {
-      if (cancelled) return;
+      if (cancelled || ready) return;
       setCheckingLink(false);
       setError(
         "The reset link could not be verified. It may have expired, already been used, or been opened by your email security scanner. Request a new reset email and open the newest link directly."
@@ -80,7 +115,7 @@ export default function ResetPasswordPage() {
       if (timeoutId) clearTimeout(timeoutId);
       listener.subscription.unsubscribe();
     };
-  }, [supabase]);
+  }, [supabase, ready]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,16 +134,23 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     try {
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       if (!sessionData.session) {
-        throw new Error("Your password reset session is missing or has expired. Please request a new reset email.");
+        throw new Error(
+          "Your password reset session is missing or has expired. Please request a new reset email."
+        );
       }
 
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
       if (updateError) throw updateError;
 
-      setMessage("Your password has been changed successfully. Redirecting to admin login...");
+      setMessage(
+        "Your password has been changed successfully. Redirecting to admin login..."
+      );
       setPassword("");
       setConfirmPassword("");
 
