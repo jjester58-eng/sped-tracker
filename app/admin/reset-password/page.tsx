@@ -14,42 +14,104 @@ export default function ResetPasswordPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const showUrlError = () => {
+      const hash = window.location.hash.startsWith("#")
+        ? window.location.hash.slice(1)
+        : window.location.hash;
+      const params = new URLSearchParams(hash);
+      const errorCode = params.get("error_code");
+      const errorDescription = params.get("error_description");
+
+      if (errorCode || errorDescription) {
+        const description = errorDescription
+          ? decodeURIComponent(errorDescription.replace(/\+/g, " "))
+          : "The password reset link could not be verified.";
+        setError(`${description}${errorCode ? ` (${errorCode})` : ""}`);
+        setCheckingLink(false);
+        return true;
+      }
+
+      return false;
+    };
+
+    const finishChecking = (session: Session | null) => {
+      if (cancelled) return;
+      if (session) setReady(true);
+      setCheckingLink(false);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+
+    if (showUrlError()) return;
+
     const { data: listener } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, _session: Session | null) => {
-        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
+      (event: AuthChangeEvent, session: Session | null) => {
+        if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
+          finishChecking(session);
+        }
       }
     );
-    supabase.auth.getSession().then(({ data }: { data: { session: Session | null } }) => {
-      if (data.session) setReady(true);
+
+    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+      if (cancelled) return;
+      if (sessionError) {
+        setError(sessionError.message);
+        setCheckingLink(false);
+        return;
+      }
+      finishChecking(data.session);
     });
-    return () => listener.subscription.unsubscribe();
+
+    timeoutId = setTimeout(() => {
+      if (cancelled) return;
+      setCheckingLink(false);
+      setError(
+        "The reset link could not be verified. It may have expired, already been used, or been opened by your email security scanner. Request a new reset email and open the newest link directly."
+      );
+    }, 8000);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      listener.subscription.unsubscribe();
+    };
   }, [supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setMessage(null);
+
     if (password.length < 6) {
       setError("Your new password must be at least 6 characters.");
       return;
     }
+
     if (password !== confirmPassword) {
       setError("The passwords do not match.");
       return;
     }
+
     setLoading(true);
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
+
       setMessage("Your password has been updated successfully.");
       setPassword("");
       setConfirmPassword("");
       setTimeout(() => router.push("/admin/login"), 1500);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || "Unable to update your password. Please request a new reset email.");
+      setError(
+        err?.message ||
+          "Unable to update your password. Please request a new reset email."
+      );
     } finally {
       setLoading(false);
     }
@@ -65,7 +127,7 @@ export default function ResetPasswordPage() {
         {message && <div role="status" style={{ color: "#166534", background: "#f0fdf4", padding: "0.85rem 1rem", borderRadius: "0.65rem", marginBottom: "1.25rem", fontSize: "0.88rem", border: "1px solid #bbf7d0" }}>{message}</div>}
         <div style={{ marginBottom: "1.1rem" }}><label htmlFor="new-password" style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", color: "#334155", fontSize: "0.9rem" }}>New Password</label><input id="new-password" name="new-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} autoComplete="new-password" placeholder="At least 6 characters" disabled={!ready} style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", boxSizing: "border-box", fontSize: "0.95rem" }} /></div>
         <div style={{ marginBottom: "1.5rem" }}><label htmlFor="confirm-password" style={{ display: "block", fontWeight: 600, marginBottom: "0.4rem", color: "#334155", fontSize: "0.9rem" }}>Confirm New Password</label><input id="confirm-password" name="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={6} autoComplete="new-password" placeholder="Enter it again" disabled={!ready} style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", boxSizing: "border-box", fontSize: "0.95rem" }} /></div>
-        <button type="submit" disabled={loading || !ready} style={{ width: "100%", padding: "0.85rem", borderRadius: "0.65rem", border: "none", backgroundColor: "#2563eb", color: "white", fontWeight: 700, fontSize: "0.95rem", cursor: loading || !ready ? "not-allowed" : "pointer", opacity: loading || !ready ? 0.6 : 1 }}>{loading ? "Updating Password..." : !ready ? "Verifying Reset Link..." : "Update Password"}</button>
+        <button type="submit" disabled={loading || !ready} style={{ width: "100%", padding: "0.85rem", borderRadius: "0.65rem", border: "none", backgroundColor: "#2563eb", color: "white", fontWeight: 700, fontSize: "0.95rem", cursor: loading || !ready ? "not-allowed" : "pointer", opacity: loading || !ready ? 0.6 : 1 }}>{loading ? "Updating Password..." : checkingLink ? "Verifying Reset Link..." : !ready ? "Reset Link Not Valid" : "Update Password"}</button>
         <button type="button" onClick={() => router.push("/admin/login")} style={{ width: "100%", marginTop: "0.85rem", padding: "0.7rem", borderRadius: "0.65rem", border: "1px solid #cbd5e1", background: "white", color: "#475569", fontWeight: 600, cursor: "pointer" }}>Back to Login</button>
       </form>
     </main>
