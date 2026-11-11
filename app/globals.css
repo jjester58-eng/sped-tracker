@@ -315,3 +315,44 @@ button[style*="#eff6ff"] {
 .theme-page [style*="color: #2563eb"],.theme-page [style*="color: rgb(37, 99, 235)"],.theme-page [style*="color: #1d4ed8"],.theme-page [style*="color: rgb(29, 78, 216)"],.theme-page [style*="color: #1e40af"],.theme-page [style*="color: rgb(30, 64, 175)"],.theme-page [style*="color: #7e22ce"]{color:#6f5594!important}
 .theme-page [style*="border: 1px solid #e2e8f0"],.theme-page [style*="border: 1px solid rgb(226, 232, 240)"],.theme-page [style*="border-bottom: 1px solid #f1f5f9"]{border-color:#dfe4dc!important}
 @media(max-width:760px){.workspace-grid{grid-template-columns:1fr}.workspace-card{min-height:230px}.workspace-heading{align-items:flex-start;flex-direction:column}.home-footer{margin-top:2.5rem}}
+
+
+/* DARKER WORKSPACE BACKGROUND — deep warm charcoal with the existing light cards preserved. */
+:root {
+  --bg: #292731;
+  --text: #f2eff4;
+  --text-muted: #c0bac8;
+  --text-dim: #a39baa;
+  --border: #484451;
+  --border-light: #5a5362;
+}
+body { background: #292731 !important; color: #f2eff4; }
+main, main[style], main[style*="background"] {
+  background-color: #302d38 !important;
+  color: #f2eff4 !important;
+}
+.theme-page {
+  background: linear-gradient(145deg, #302d38 0%, #292731 65%, #34303d 100%) !important;
+  color: #f2eff4 !important;
+}
+.theme-page h1, .theme-page h2, .theme-page h3, .theme-page h4,
+.theme-page p, .theme-page label { color: #f2eff4; }
+.theme-page [style*="color: #343a38"],
+.theme-page [style*="color: rgb(52, 58, 56)"] { color: #34303d !important; }
+.home-page {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(128,100,168,.24), transparent 44%),
+    linear-gradient(180deg, #302b39 0%, #292731 58%, #34303b 100%) !important;
+  color: #f2eff4 !important;
+}
+.home-hero h1, .workspace-heading h2 { color: #f2eff4; }
+.home-intro, .home-hero-note, .workspace-count { color: #c2bacb; }
+.home-footer { border-top-color: #514b59; color: #aaa2b2; }
+.home-footer span:first-child { color: #c7bdcf; }
+.nav, .nav-bar {
+  background: rgba(39, 36, 47, .97);
+  border-bottom-color: #494352;
+}
+.nav-brand, .nav-title { color: #f2eff4; }
+.nav-link { color: #c2bacb; }
+.nav-link:hover, .nav-link:focus-visible { color: #fff; background: rgba(128,100,168,.24); }
