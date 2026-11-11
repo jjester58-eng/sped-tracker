@@ -1,151 +1,40 @@
 import Link from "next/link";
 
+const workspaces = [
+  { href: "/teacher", number: "01", eyebrow: "TEACHER WORKSPACE", title: "Record student progress", description: "Capture classroom observations, select students, document accommodations, and save progress notes.", action: "Open teacher workspace", tone: "purple" },
+  { href: "/case-manager", number: "02", eyebrow: "CASE MANAGER", title: "Review the full picture", description: "Explore student caseloads, follow observation timelines, and review IEP goals in one place.", action: "Open case manager", tone: "sage" },
+  { href: "/admin", number: "03", eyebrow: "ADMINISTRATION", title: "Manage your program", description: "Maintain staff, student records, goals, and the settings that keep your tracker organized.", action: "Open administration", tone: "blue" },
+];
+
 export default function HomePage() {
   return (
-    <main style={{ fontFamily: "sans-serif", background: "#f3f4f6", minHeight: "100vh" }}>
-
-      {/* HERO */}
-      <section style={{ textAlign: "center", padding: "3rem 1.5rem 2rem" }}>
-        <div style={{
-          display: "inline-block",
-          fontSize: "12px",
-          padding: "6px 12px",
-          borderRadius: "999px",
-          background: "#dbeafe",
-          color: "#1d4ed8",
-          marginBottom: "14px",
-          fontWeight: 600,
-        }}>
-          Special Education Platform
-        </div>
-
-        <h1 style={{
-          fontSize: "38px",
-          margin: "0 0 10px",
-          fontWeight: 700,
-          color: "#111827",
-        }}>
-          SPED Tracker
-        </h1>
-
-        <p style={{
-          maxWidth: "520px",
-          margin: "0 auto",
-          color: "#374151",
-          lineHeight: 1.6,
-          fontSize: "15px",
-        }}>
-          Track student progress, manage IEP goals, and log weekly notes in one simple system built for teachers and case managers.
-        </p>
-      </section>
-
-      {/* CARDS */}
-      <section style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-        gap: "18px",
-        maxWidth: "820px",
-        margin: "0 auto",
-        padding: "0 1.5rem 2rem",
-      }}>
-
-        {/* TEACHER */}
-        <Link href="/teacher" style={cardStyle}>
-          <div style={iconStyle("#2563eb")}>✏️</div>
-
-          <div>
-            <h2 style={titleStyle}>Teacher Workspace</h2>
-            <p style={descStyle}>
-              Log student progress, select goals, and record instructional notes.
-            </p>
+    <main className="home-page">
+      <div className="home-shell">
+        <section className="home-hero">
+          <div className="home-kicker"><span className="home-kicker-mark">✦</span> A clearer view of student growth</div>
+          <h1>Good information.<br /><span>Better support.</span></h1>
+          <p className="home-intro">One thoughtful workspace for documenting progress, coordinating support, and keeping student goals in focus.</p>
+          <div className="home-hero-note"><span className="home-note-dot" />Built for the people who work with students every day</div>
+        </section>
+        <section className="workspace-section" aria-label="Choose a workspace">
+          <div className="workspace-heading">
+            <div><p className="section-eyebrow">YOUR WORKSPACES</p><h2>Where would you like to start?</h2></div>
+            <span className="workspace-count">03 AREAS</span>
           </div>
-
-          <div style={actionStyle("#2563eb")}>
-            Open workspace →
+          <div className="workspace-grid">
+            {workspaces.map((workspace) => (
+              <Link href={workspace.href} className={`workspace-card workspace-${workspace.tone}`} key={workspace.href}>
+                <div className="workspace-card-top"><span className="workspace-number">{workspace.number}</span><span className="workspace-arrow" aria-hidden="true">↗</span></div>
+                <p className="workspace-eyebrow">{workspace.eyebrow}</p>
+                <h3>{workspace.title}</h3>
+                <p className="workspace-description">{workspace.description}</p>
+                <span className="workspace-action">{workspace.action}<span aria-hidden="true"> →</span></span>
+              </Link>
+            ))}
           </div>
-        </Link>
-
-        {/* CASE MANAGER */}
-        <Link href="/case-manager" style={cardStyle}>
-          <div style={iconStyle("#16a34a")}>👥</div>
-
-          <div>
-            <h2 style={titleStyle}>Case Manager</h2>
-            <p style={descStyle}>
-              Review student rosters, IEP goals, and teacher progress input.
-            </p>
-          </div>
-
-          <div style={actionStyle("#16a34a")}>
-            Open dashboard →
-          </div>
-        </Link>
-
-        {/* ADMIN */}
-        <Link href="/admin" style={cardStyle}>
-          <div style={iconStyle("#7c3aed")}>⚙️</div>
-
-          <div>
-            <h2 style={titleStyle}>Admin</h2>
-            <p style={descStyle}>
-              Manage teachers, case managers, students, goals, and school settings.
-            </p>
-          </div>
-
-          <div style={actionStyle("#7c3aed")}>
-            Open administration →
-          </div>
-        </Link>
-
-      </section>
+        </section>
+        <footer className="home-footer"><span>SPED TRACKER</span><span>Progress is a team effort.</span></footer>
+      </div>
     </main>
   );
 }
-
-/* ---------- STYLES ---------- */
-
-const cardStyle: React.CSSProperties = {
-  background: "#ffffff",
-  border: "1px solid #e5e7eb",
-  borderRadius: "16px",
-  padding: "20px",
-  textDecoration: "none",
-  color: "inherit",
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-};
-
-const iconStyle = (color: string): React.CSSProperties => ({
-  width: "44px",
-  height: "44px",
-  borderRadius: "12px",
-  background: `${color}15`,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "22px",
-  color,
-});
-
-const titleStyle: React.CSSProperties = {
-  fontSize: "18px",
-  fontWeight: 700,
-  margin: "0 0 4px",
-  color: "#111827",
-};
-
-const descStyle: React.CSSProperties = {
-  fontSize: "14px",
-  color: "#4b5563",
-  lineHeight: 1.5,
-  margin: 0,
-};
-
-const actionStyle = (color: string): React.CSSProperties => ({
-  marginTop: "6px",
-  fontSize: "13px",
-  fontWeight: 600,
-  color,
-});
