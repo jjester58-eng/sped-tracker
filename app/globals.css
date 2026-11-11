@@ -262,3 +262,9 @@ button[style*="background-color: rgb(239, 246, 255)"],
 button[style*="#eff6ff"] {
   border-color: var(--accent) !important;
 }
+
+/* React serializes hex inline colors to rgb() in the rendered style attribute. */
+[style*="rgb(255, 255, 255)"],
+[style*="rgb(255,255,255)"] {
+  background-color: #f8f7f2 !important;
+}
