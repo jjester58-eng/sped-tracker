@@ -401,7 +401,7 @@ export default function TeacherPage() {
   const draftWordCount = notes.trim().split(/\s+/).filter(Boolean).length;
 
   return (
-    <main
+    <main className="theme-page theme-teacher"
       style={{
         minHeight: '100vh',
         backgroundColor: '#f8fafc',
