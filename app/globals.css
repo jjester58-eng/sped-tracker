@@ -229,3 +229,36 @@ tbody tr:hover td { background: #fafbf9; }
   .nav-link { padding: 0.45rem 0.65rem; }
   .form-row { grid-template-columns: 1fr; }
 }
+
+
+/* WARMER WORKSPACE SURFACES — keep white from dominating the interface */
+main {
+  background-color: #e9eee8 !important;
+}
+main[style], main[style*="background"] {
+  background-color: #e9eee8 !important;
+}
+/* Inline white cards become warm ivory instead of stark white. */
+[style*="background-color: white"],
+[style*="background: white"],
+[style*="backgroundColor: white"] {
+  background-color: #f8f7f2 !important;
+}
+/* Common inline cool-gray surfaces become soft sage-gray. */
+[style*="#f8fafc"],
+[style*="#f1f5f9"],
+[style*="#f3f4f6"],
+[style*="#f9fafb"] {
+  background-color: #edf0eb !important;
+}
+/* Blue callouts and selections shift toward the softer Hudl lavender. */
+[style*="#eff6ff"],
+[style*="#dbeafe"],
+[style*="#e0f2fe"] {
+  background-color: #eee8f4 !important;
+}
+/* Keep selected controls and primary actions distinctly purple. */
+button[style*="background-color: rgb(239, 246, 255)"],
+button[style*="#eff6ff"] {
+  border-color: var(--accent) !important;
+}
