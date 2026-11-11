@@ -225,7 +225,7 @@ export default function CaseManagerPage() {
   };
 
   return (
-    <main
+    <main className="theme-page theme-case-manager"
       style={{
         minHeight: "100vh",
         backgroundColor: "#f8fafc",
