@@ -12,9 +12,9 @@ export default function HomePage() {
     <main className="home-page">
       <div className="home-shell">
         <section className="home-hero">
-          <div className="home-kicker"><span className="home-kicker-mark">✦</span> A clearer view of student growth</div>
-          <h1>SPED Tracker</h1>
-          <p className="home-intro">One thoughtful workspace for documenting progress, coordinating support, and keeping student goals in focus.</p>
+          <div className="home-kicker"><span className="home-kicker-mark">✦</span> Scheduling, support, and student progress</div>
+          <h1>One connected view<br /><span>of every student.</span></h1>
+          <p className="home-intro">A unified workspace for student schedules, course planning, caseload management, meetings, and progress monitoring—bringing the information your team needs into one place.</p>
           <div className="home-hero-note"><span className="home-note-dot" />Built for the people who work with students every day</div>
         </section>
         <section className="workspace-section" aria-label="Choose a workspace">
