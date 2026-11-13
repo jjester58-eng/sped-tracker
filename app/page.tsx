@@ -4,6 +4,7 @@ const workspaces = [
   { href: "/teacher", number: "01", eyebrow: "TEACHER WORKSPACE", title: "Record student progress", description: "Capture classroom observations, select students, document accommodations, and save progress notes.", action: "Open teacher workspace", tone: "purple" },
   { href: "/case-manager", number: "02", eyebrow: "CASE MANAGER", title: "Review the full picture", description: "Explore student caseloads, follow observation timelines, and review IEP goals in one place.", action: "Open case manager", tone: "sage" },
   { href: "/admin", number: "03", eyebrow: "ADMINISTRATION", title: "Manage your program", description: "Maintain staff, student records, goals, and the settings that keep your tracker organized.", action: "Open administration", tone: "blue" },
+  { href: "/student-scheduler", number: "04", eyebrow: "STUDENT SCHEDULER", title: "Explore your schedule", description: "Preview a student-facing schedule, browse course options, and try a sample course request.", action: "Open student scheduler", tone: "purple" },
 ];
 
 export default function HomePage() {
@@ -19,7 +20,7 @@ export default function HomePage() {
         <section className="workspace-section" aria-label="Choose a workspace">
           <div className="workspace-heading">
             <div><p className="section-eyebrow">YOUR WORKSPACES</p><h2>Where would you like to start?</h2></div>
-            <span className="workspace-count">03 AREAS</span>
+            <span className="workspace-count">04 AREAS</span>
           </div>
           <div className="workspace-grid">
             {workspaces.map((workspace) => (
