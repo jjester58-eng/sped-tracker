@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <Link href="/teacher" className="nav-link hover:text-blue-600 transition">Teacher Input</Link>
                 <Link href="/case-manager" className="nav-link hover:text-blue-600 transition font-medium">Case Manager</Link>
                 <Link href="/scheduling-prototype" className="nav-link hover:text-blue-600 transition font-medium">Scheduling Lab</Link>
+                <Link href="/student-scheduler" className="nav-link hover:text-blue-600 transition font-medium">Student Scheduler</Link>
               </div>
             </div>
           </div>
