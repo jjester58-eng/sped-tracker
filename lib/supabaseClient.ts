@@ -45,9 +45,32 @@ const createFallbackClient = () => {
   const message =
     "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.";
 
+  const unavailable = async () => ({
+    data: { user: null, session: null },
+    error: new Error(message),
+  });
+
   return {
     from: () => new FallbackQueryBuilder(message),
     rpc: async () => ({ data: null, error: new Error(message) }),
+    auth: {
+      signInWithPassword: unavailable,
+      signUp: unavailable,
+      signOut: async () => ({ error: new Error(message) }),
+      getSession: async () => ({
+        data: { session: null },
+        error: new Error(message),
+      }),
+      getUser: async () => ({
+        data: { user: null },
+        error: new Error(message),
+      }),
+      resetPasswordForEmail: async () => ({ data: null, error: new Error(message) }),
+      updateUser: unavailable,
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe: () => undefined } },
+      }),
+    },
   } as any;
 };
 
