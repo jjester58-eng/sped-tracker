@@ -13,7 +13,7 @@ export default function HomePage() {
       <div className="home-shell">
         <section className="home-hero">
           <div className="home-kicker"><span className="home-kicker-mark">✦</span> A clearer view of student growth</div>
-          <h1>Good information.<br /><span>Better support.</span></h1>
+          <h1>SPED Tracker</h1>
           <p className="home-intro">One thoughtful workspace for documenting progress, coordinating support, and keeping student goals in focus.</p>
           <div className="home-hero-note"><span className="home-note-dot" />Built for the people who work with students every day</div>
         </section>
