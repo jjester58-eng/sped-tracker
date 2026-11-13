@@ -3,3 +3,15 @@
 .page .profile{color:#29243a!important;background:#fff!important}
 .page .profile small{color:#777087!important}
 .page .profile b{color:#29243a!important}
+
+/* Stronger contrast for the school year, welcome heading, and section headings. */
+.page .hero>div>small{color:#625078!important;font-weight:850}
+.page .hero h1{color:#241b35!important;font-weight:800}
+.page .hero p{color:#5f586d!important}
+.page .heading h2{color:#2d2340!important;font-weight:800}
+.page .heading p{color:#625b70!important}
+.page .tabs button{color:#625b70}
+.page .tabs .selected{color:#523b7b}
+.page .muted{color:#655a78}
+.page .profile small{color:#625b70!important}
+.page .brand small{color:#625b70}
