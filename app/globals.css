@@ -403,3 +403,25 @@ main, main[style], main[style*="background"] {
 @media(max-width:640px) {
   .nav-menu-panel { right: auto; left: 0; }
 }
+
+
+/* Student Progress Input: readable controls on the light teacher workspace. */
+.theme-teacher select,
+.theme-teacher input,
+.theme-teacher textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1;
+  color-scheme: light;
+}
+
+.theme-teacher select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.theme-teacher input::placeholder,
+.theme-teacher textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1;
+}
