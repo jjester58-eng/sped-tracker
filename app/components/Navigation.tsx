@@ -43,6 +43,7 @@ export default function Navigation() {
                 <Link href="/admin/login" className="nav-menu-item">Login</Link>
                 <Link href="/student-scheduler" className="nav-menu-item">Student Scheduler</Link>
                 <Link href="/master-schedule" className="nav-menu-item">Master Schedule</Link>
+                <Link href="/inclusion-support" className="nav-menu-item">Inclusion Support</Link>
               </div>
             </details>
           </div>
