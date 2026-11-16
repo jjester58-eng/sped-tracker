@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { FormEvent } from "react";
 import styles from "./inclusion.module.css";
 
 type Section = {
@@ -64,7 +65,7 @@ export default function InclusionSupportPage() {
     setMessage(`${teachers.find((t) => t.id === teacherId)?.name} assigned to ${section.course}, Period ${section.period}.`);
   }
 
-  function addTeacher(event: React.FormEvent<HTMLFormElement>) {
+  function addTeacher(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const name = newTeacher.trim();
     if (!name) return;
