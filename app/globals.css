@@ -356,3 +356,50 @@ main, main[style], main[style*="background"] {
 .nav-brand, .nav-title { color: #f2eff4; }
 .nav-link { color: #c2bacb; }
 .nav-link:hover, .nav-link:focus-visible { color: #fff; background: rgba(128,100,168,.24); }
+
+/* Compact workspace dropdown navigation */
+.nav-menu { position: relative; }
+.nav-menu-trigger {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem .9rem;
+  border: 1px solid #d9d1e3;
+  border-radius: 9px;
+  background: #f4f0f8;
+  color: #4e3d68;
+  font-size: .84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-menu-trigger::-webkit-details-marker { display: none; }
+.nav-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + .55rem);
+  z-index: 300;
+  min-width: 210px;
+  padding: .4rem;
+  border: 1px solid #ded8e8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(35, 28, 48, .16);
+}
+.nav-menu-item {
+  display: block;
+  padding: .7rem .8rem;
+  border-radius: 8px;
+  color: #342944 !important;
+  text-decoration: none;
+  font-size: .88rem;
+  font-weight: 650;
+}
+.nav-menu-item:hover, .nav-menu-item:focus-visible {
+  background: #f0ebf8;
+  color: #5b4381 !important;
+  outline: none;
+}
+@media(max-width:640px) {
+  .nav-menu-panel { right: auto; left: 0; }
+}
