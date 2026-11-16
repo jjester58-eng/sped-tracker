@@ -10,3 +10,38 @@
 .catalogGrid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.catalogCard {background:white;border:1px solid #e6ebf2;border-radius:9px;padding:15px}.catalogCard>span {font-size:8px;color:#5078b4;font-weight:800;letter-spacing:.1em}.catalogCard h3 {font-size:12px;color:#30415c;margin-top:8px}.catalogCard p,.catalogCard small {display:block;font-size:9px;color:#929eae;margin-top:5px}.catalogCard button {border:0;background:none;padding:0;margin-top:13px;color:#326bc2;font-size:9px;font-weight:750;cursor:pointer}.footer {text-align:center;color:#a2acba;font-size:8px;letter-spacing:.1em;padding:25px 0 5px}.footer span {padding:0 7px;color:#c5ccd5}
 @media(max-width:760px) {.header{padding:0 15px}.container{padding:23px 14px}.welcome{align-items:flex-start;flex-direction:column}.profileStrip{grid-template-columns:repeat(2,1fr)}.profileStrip div:nth-child(2){border-right:0}.profileStrip div:nth-child(3){border-top:1px solid #edf0f4}.profileStrip div:nth-child(4){border-top:1px solid #edf0f4}.requestLayout{grid-template-columns:1fr}.requestSummary{position:static}.catalogGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.courseNote{display:none}}
 @media(max-width:480px) {.welcome h1{font-size:23px}.studentPicker,.studentPicker select{width:100%}.tabs{gap:15px}.tabs button{font-size:10px}.classCard{gap:10px;padding:10px}.time{font-size:9px}.catalogGrid{grid-template-columns:1fr}.calendarHint{align-items:flex-start}.calendarHint>span{display:none}}
+
+
+/* Accessible contrast for course-planning navigation and section title. */
+.page .tabs {
+  background: #ffffff !important;
+  border: 1px solid #e2e7ef !important;
+  border-radius: 10px !important;
+  padding: 12px 16px 0 !important;
+  box-shadow: 0 2px 8px rgba(23, 36, 58, 0.05);
+}
+.page .tabs button {
+  color: #46546a !important;
+  font-weight: 750 !important;
+}
+.page .tabs button:hover { color: #35205f !important; }
+.page .tabs button.activeTab {
+  color: #4b287f !important;
+  border-bottom-color: #6842a0 !important;
+}
+.page .tabs button span {
+  color: #34445d !important;
+  background: #edf1f7 !important;
+}
+.page .sectionHeading h2 {
+  color: #17243a !important;
+  font-weight: 800 !important;
+}
+.page .sectionHeading p { color: #536176 !important; }
+.page .requestCount {
+  color: #34445d !important;
+  background: #edf1f7 !important;
+}
+@media (max-width: 480px) {
+  .page .tabs { padding-left: 10px !important; padding-right: 10px !important; }
+}
