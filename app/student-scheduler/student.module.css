@@ -177,3 +177,35 @@
   .tabs { gap: 14px; overflow-x: auto; }
   .tabs button { white-space: nowrap; }
 }
+
+
+/* Scheduler contrast guard: the global dark workspace theme must not override
+   this page's original light lavender canvas and readable dark typography. */
+.page {
+  background: #f6f4fa !important;
+  color: #29243a !important;
+  color-scheme: light;
+}
+.page h1, .page h2, .page h3, .page h4,
+.page p, .page label, .page small, .page b, .page strong,
+.page td, .page th, .page time, .page footer {
+  color: inherit;
+}
+.page .hero h1 { color: #211a2e !important; }
+.page .hero > div > small { color: #594477 !important; }
+.page .hero p { color: #514a5f !important; }
+.page .heading h2 { color: #2d2340 !important; }
+.page .heading p, .page .masterFootnote { color: #625b70 !important; }
+.page .brand b { color: #29243a !important; }
+.page .brand small, .page .demo, .page .muted { color: #625b70 !important; }
+.page .tabs button { color: #625b70 !important; }
+.page .tabs .selected { color: #523b7b !important; }
+.page .classRow, .page .profile, .page .group, .page .summary,
+.page .catalogCard, .page .masterForm, .page .masterTableWrap {
+  color: #29243a !important;
+}
+.page .summary button, .page .masterForm button { color: #fff !important; }
+.page .catalogCard button, .page .removeSection { color: #6d55a2 !important; }
+.page input, .page select { color: #29243a !important; background: #fff !important; color-scheme: light; }
+.page input::placeholder { color: #898397 !important; }
+.page .notice, .page .adminNotice { color: #594477 !important; }
