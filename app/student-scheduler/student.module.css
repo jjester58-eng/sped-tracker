@@ -55,3 +55,125 @@
 @media (max-width: 700px) {
   .page .hero { padding: 18px; }
 }
+
+
+/* Student Scheduler title: preserve the page background and use the same
+   school-year / title / supporting-copy hierarchy as the welcome treatment. */
+.page .hero {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  align-items: end;
+}
+.page .hero h1 {
+  color: #211a2e !important;
+  font-size: clamp(28px, 3vw, 34px);
+  font-weight: 850 !important;
+}
+.page .hero > div > small { color: #594477 !important; }
+.page .hero p { color: #514a5f !important; }
+
+.adminNotice {
+  padding: 11px 14px;
+  margin: 0 0 14px;
+  border: 1px solid #e2d9ef;
+  border-radius: 8px;
+  background: #f0ebf8;
+  color: #67558c;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+.masterForm {
+  display: grid;
+  grid-template-columns: 1.3fr 1.3fr .8fr .65fr .7fr auto;
+  gap: 9px;
+  align-items: end;
+  padding: 15px;
+  margin-bottom: 14px;
+  background: #fff;
+  border: 1px solid #e9e4ef;
+  border-radius: 9px;
+}
+.masterForm label {
+  display: grid;
+  gap: 6px;
+  color: #625b70;
+  font-size: 9px;
+  font-weight: 800;
+}
+.masterForm input, .masterForm select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid #ded8e8;
+  border-radius: 6px;
+  background: #fff;
+  color: #29243a;
+  font: inherit;
+  font-size: 10px;
+}
+.masterForm button {
+  border: 0;
+  border-radius: 6px;
+  background: #6d55a2;
+  color: #fff;
+  padding: 10px 12px;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.masterTableWrap {
+  overflow-x: auto;
+  background: #fff;
+  border: 1px solid #e9e4ef;
+  border-radius: 9px;
+}
+.masterTable {
+  width: 100%;
+  border-collapse: collapse;
+  color: #29243a;
+  font-size: 10px;
+  text-align: left;
+}
+.masterTable th {
+  padding: 12px 13px;
+  background: #f7f5fa;
+  color: #625b70;
+  font-size: 8px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.masterTable td {
+  padding: 12px 13px;
+  border-top: 1px solid #eeeaf2;
+  white-space: nowrap;
+}
+.masterTable td b { color: #29243a; }
+.removeSection {
+  border: 0;
+  background: transparent;
+  color: #8b5260;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.masterFootnote {
+  margin-top: 12px;
+  color: #706981;
+  font-size: 10px;
+  line-height: 1.5;
+}
+@media(max-width:900px) {
+  .masterForm { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media(max-width:600px) {
+  .page .hero { align-items: stretch; }
+  .masterForm { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .masterForm button { grid-column: 1 / -1; }
+  .tabs { gap: 14px; overflow-x: auto; }
+  .tabs button { white-space: nowrap; }
+}
