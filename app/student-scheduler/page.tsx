@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "./student.module.css";
 
 const students = [
@@ -36,6 +36,7 @@ type MasterSection = { id: number; course: string; teacher: string; room: string
 export default function StudentSchedulerPage() {
   const [studentId,setStudentId]=useState("S-1001");
   const [tab,setTab]=useState<Tab>("schedule");
+  useEffect(() => { if (new URLSearchParams(window.location.search).get("tab") === "master") setTab("master"); }, []);
   const [requests,setRequests]=useState<string[]>(["Computer Science","Spanish I"]);
   const [submitted,setSubmitted]=useState(false);
   const [sections,setSections]=useState<MasterSection[]>([
