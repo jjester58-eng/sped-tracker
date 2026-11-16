@@ -19,11 +19,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <span>SPED Tracker</span>
               </Link>
               <div className="nav-links">
-                <Link href="/" className="nav-link">Home</Link>
-                <Link href="/teacher" className="nav-link">Teacher Input</Link>
-                <Link href="/case-manager" className="nav-link">Case Manager</Link>
-                <Link href="/admin" className="nav-link">Admin</Link>
-                <Link href="/student-scheduler" className="nav-link">Student Scheduler</Link>
+                <details className="nav-menu">
+                  <summary className="nav-menu-trigger">Menu <span aria-hidden="true">⌄</span></summary>
+                  <div className="nav-menu-panel">
+                    <Link href="/admin" className="nav-menu-item">Admin</Link>
+                    <Link href="/admin/login" className="nav-menu-item">Login</Link>
+                    <Link href="/student-scheduler" className="nav-menu-item">Student Scheduler</Link>
+                    <Link href="/student-scheduler?tab=master" className="nav-menu-item">Master Schedule</Link>
+                  </div>
+                </details>
               </div>
             </div>
           </div>
@@ -32,4 +36,52 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </body>
     </html>
   );
+}
+
+
+/* Compact workspace dropdown navigation */
+.nav-menu { position: relative; }
+.nav-menu-trigger {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .55rem .9rem;
+  border: 1px solid #d9d1e3;
+  border-radius: 9px;
+  background: #f4f0f8;
+  color: #4e3d68;
+  font-size: .84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-menu-trigger::-webkit-details-marker { display: none; }
+.nav-menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + .55rem);
+  z-index: 300;
+  min-width: 210px;
+  padding: .4rem;
+  border: 1px solid #ded8e8;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(35, 28, 48, .16);
+}
+.nav-menu-item {
+  display: block;
+  padding: .7rem .8rem;
+  border-radius: 8px;
+  color: #342944 !important;
+  text-decoration: none;
+  font-size: .88rem;
+  font-weight: 650;
+}
+.nav-menu-item:hover, .nav-menu-item:focus-visible {
+  background: #f0ebf8;
+  color: #5b4381 !important;
+  outline: none;
+}
+@media(max-width:640px) {
+  .nav-menu-panel { right: auto; left: 0; }
 }
