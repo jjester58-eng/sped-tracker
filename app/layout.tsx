@@ -24,8 +24,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <div className="nav-menu-panel">
                     <Link href="/admin" className="nav-menu-item">Admin</Link>
                     <Link href="/admin/login" className="nav-menu-item">Login</Link>
+                    <Link href="/teacher" className="nav-menu-item">Input</Link>
+                    <Link href="/case-manager" className="nav-menu-item">Case Manager</Link>
                     <Link href="/student-scheduler" className="nav-menu-item">Student Scheduler</Link>
-                    <Link href="/student-scheduler?tab=master" className="nav-menu-item">Master Schedule</Link>
+                    <Link href="/master-schedule" className="nav-menu-item">Master Schedule</Link>
                   </div>
                 </details>
               </div>
