@@ -15,3 +15,43 @@
 .page .muted{color:#655a78}
 .page .profile small{color:#625b70!important}
 .page .brand small{color:#625b70}
+
+
+/* Student welcome panel: explicit high-contrast surface and text colors.
+   Keep this section readable even if the site-wide theme changes. */
+.page .hero {
+  background: #ffffff !important;
+  border: 1px solid #e2dbea;
+  border-radius: 12px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 16px rgba(41, 36, 58, 0.06);
+}
+.page .hero > div > small {
+  color: #594477 !important;
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+}
+.page .hero h1 {
+  color: #211a2e !important;
+  font-size: clamp(28px, 3vw, 34px);
+  font-weight: 850 !important;
+  line-height: 1.2;
+}
+.page .hero p {
+  color: #514a5f !important;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.page .hero label {
+  color: #514a5f !important;
+  font-weight: 750;
+}
+.page .hero select {
+  color: #29243a !important;
+  background: #ffffff !important;
+  border-color: #cfc6dc !important;
+}
+@media (max-width: 700px) {
+  .page .hero { padding: 18px; }
+}
