@@ -95,6 +95,29 @@ create trigger validate_inclusion_assignment_before_write
 before insert or update on public.inclusion_assignments
 for each row execute function public.validate_inclusion_assignment();
 
+create or replace function public.validate_master_schedule_teacher_period()
+returns trigger
+language plpgsql
+set search_path = public
+as $
+begin
+  if exists (
+    select 1 from public.inclusion_assignments
+    where inclusion_teacher_id = new.teacher_id
+      and class_period_id = new.class_period_id
+      and school_year = new.school_year
+  ) then
+    raise exception 'This teacher is already assigned as inclusion support during this period.';
+  end if;
+  return new;
+end;
+$;
+
+drop trigger if exists validate_master_schedule_teacher_period_before_write on public.master_schedule_entries;
+create trigger validate_master_schedule_teacher_period_before_write
+before insert or update on public.master_schedule_entries
+for each row execute function public.validate_master_schedule_teacher_period();
+
 alter table public.master_schedule_entries enable row level security;
 alter table public.inclusion_assignments enable row level security;
 
