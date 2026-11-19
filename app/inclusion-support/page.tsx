@@ -8,7 +8,7 @@ import styles from "./inclusion.module.css";
 type Teacher = { id: string; name: string | null; email: string | null };
 type Period = { id: string; name: string; sort_order: number | null };
 type Section = { id: string; teacher_id: string; class_period_id: string; entry_type: string; course_name: string | null; subject: string | null; department: string | null; room: string | null; school_year: string; needs_inclusion: boolean };
-type Assignment = { id: string; schedule_entry_id: string; inclusion_teacher_id: string; class_period_id: string; school_year: string };
+type Assignment = { id: string; schedule_entry_id: string; inclusion_teacher_id: string; class_period_id: string; school_year: string };\ntype ScheduleBlock = { id: string; teacher_id: string; class_period_id: string; entry_type: string; course_name: string | null; room: string | null };
 
 export default function InclusionSupportPage() {
   const supabase = useSupabase();
@@ -23,7 +23,7 @@ export default function InclusionSupportPage() {
   const [year, setYear] = useState("2026-27");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);\n  const [scheduleBlocks, setScheduleBlocks] = useState<ScheduleBlock[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [tab, setTab] = useState<"assign" | "schedules" | "coverage">("assign");
   const [selectedTeacher, setSelectedTeacher] = useState("");
@@ -44,15 +44,15 @@ export default function InclusionSupportPage() {
   const load = useCallback(async () => {
     if (!authorized) return;
     setLoading(true); setError("");
-    const [t,p,s,a] = await Promise.all([
+    const [t,p,s,b,a] = await Promise.all([
       db.from("teachers").select("id,name,email").order("name"),
       db.from("class_periods").select("id,name,sort_order").eq("is_active",true).order("sort_order"),
       db.from("master_schedule_entries").select("id,teacher_id,class_period_id,entry_type,course_name,subject,department,room,school_year,needs_inclusion").eq("school_year",year).eq("is_active",true).eq("entry_type","teaching"),
       db.from("inclusion_assignments").select("id,schedule_entry_id,inclusion_teacher_id,class_period_id,school_year").eq("school_year",year),
     ]);
-    const failure=t.error||p.error||s.error||a.error;
+    const failure=t.error||p.error||s.error||b.error||a.error;
     if(failure) setError(failure.message||"Unable to load inclusion data. Apply the master schedule database setup script if these tables are missing.");
-    setTeachers(t.data||[]); setPeriods(p.data||[]); setSections(s.data||[]); setAssignments(a.data||[]);
+    setTeachers(t.data||[]); setPeriods(p.data||[]); setSections(s.data||[]); setScheduleBlocks(b.data||[]); setAssignments(a.data||[]);
     if (!selectedTeacher && t.data?.length) setSelectedTeacher(t.data[0].id);
     if (!selectedSection && s.data?.length) setSelectedSection(s.data[0].id);
     setLoading(false);
@@ -66,19 +66,19 @@ export default function InclusionSupportPage() {
   const unfilled=flagged.filter(s=>!assignments.some(a=>a.schedule_entry_id===s.id));
   const assigned=assignments.map(a=>({assignment:a,section:sections.find(s=>s.id===a.schedule_entry_id),teacher:teachers.find(t=>t.id===a.inclusion_teacher_id)})).filter(x=>x.section);
   const teacherSchedule=useMemo(()=>periods.map(period=>{
-    const regular=sections.find(s=>s.teacher_id===selectedTeacher&&s.class_period_id===period.id);
+    const regular=scheduleBlocks.find(s=>s.teacher_id===selectedTeacher&&s.class_period_id===period.id);
     const support=assignments.find(a=>a.inclusion_teacher_id===selectedTeacher&&a.class_period_id===period.id);
     const supportSection=support?sections.find(s=>s.id===support.schedule_entry_id):undefined;
-    if(regular) return {period,status:"Teaching",detail:regular.course_name||"Class",room:regular.room||"—"};
+    if(regular) return {period,status:regular.entry_type==="teaching"?"Teaching":regular.entry_type==="conference"?"Conference":regular.entry_type==="plc"?"PLC":"Off period",detail:regular.course_name||regular.entry_type,room:regular.room||"—"};
     if(supportSection) return {period,status:"Teaching · Inclusion",detail:supportSection.course_name||"Class support",room:supportSection.room||"—"};
     return {period,status:"Unrecorded",detail:"No schedule entry recorded",room:"—"};
-  }),[periods,sections,assignments,selectedTeacher]);
+  }),[periods,sections,assignments,scheduleBlocks,selectedTeacher]);
 
   async function assign() {
     const section=sections.find(s=>s.id===selectedSection);
     if(!section||!selectedTeacher) return;
     if(section.teacher_id===selectedTeacher){setError("The classroom teacher cannot also be assigned as the inclusion teacher for the same class.");return;}
-    const conflict=sections.some(s=>s.teacher_id===selectedTeacher&&s.class_period_id===section.class_period_id);
+    const conflict=scheduleBlocks.some(s=>s.teacher_id===selectedTeacher&&s.class_period_id===section.class_period_id);
     const supportConflict=assignments.some(a=>a.inclusion_teacher_id===selectedTeacher&&a.class_period_id===section.class_period_id&&a.schedule_entry_id!==section.id);
     if(conflict||supportConflict){setError("Scheduling conflict: this inclusion teacher already has a teaching assignment during that period.");return;}
     setSaving(true);setError("");setNotice("");
