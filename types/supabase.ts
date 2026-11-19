@@ -111,6 +111,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      master_schedule_entries: {
+        Row: {
+          id: string; teacher_id: string; class_period_id: string; entry_type: string;
+          course_name: string | null; subject: string | null; department: string | null;
+          room: string | null; capacity: number | null; school_year: string;
+          needs_inclusion: boolean; is_active: boolean; created_at: string;
+        };
+        Insert: {
+          id?: string; teacher_id: string; class_period_id: string; entry_type: string;
+          course_name?: string | null; subject?: string | null; department?: string | null;
+          room?: string | null; capacity?: number | null; school_year: string;
+          needs_inclusion?: boolean; is_active?: boolean; created_at?: string;
+        };
+        Update: {
+          id?: string; teacher_id?: string; class_period_id?: string; entry_type?: string;
+          course_name?: string | null; subject?: string | null; department?: string | null;
+          room?: string | null; capacity?: number | null; school_year?: string;
+          needs_inclusion?: boolean; is_active?: boolean; created_at?: string;
+        };
+        Relationships: [];
+      };
+      inclusion_assignments: {
+        Row: {
+          id: string; schedule_entry_id: string; inclusion_teacher_id: string;
+          class_period_id: string; school_year: string; created_at: string;
+        };
+        Insert: {
+          id?: string; schedule_entry_id: string; inclusion_teacher_id: string;
+          class_period_id: string; school_year: string; created_at?: string;
+        };
+        Update: {
+          id?: string; schedule_entry_id?: string; inclusion_teacher_id?: string;
+          class_period_id?: string; school_year?: string; created_at?: string;
+        };
+        Relationships: [];
+      };
       classes: {
         Row: {
           id: string;
