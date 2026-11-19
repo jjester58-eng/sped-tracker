@@ -59,7 +59,7 @@ function syncGeneratedGridToMasterSchedule(data:PlanningData, sections:PlannedSe
   const entries:DemoEntry[]=[];
   data.staff.filter(s=>s.status==="Active").forEach((staff,index)=>{
     const ownSections=sections.filter(section=>section.teacherId===staff.id);
-    const off=staff.offPeriodTypes.slice(0,staff.offPeriods);
+    const off=getOffLabels(staff);
     const offSlots:Record<number,string>={};
     if(off.length===2&&off.every(x=>x==="TRAVEL")){offSlots[4]="TRAVEL";offSlots[5]="TRAVEL";}
     else if(off.length===2){const pair=[[2,3],[4,5],[6,7]][index%3];offSlots[pair[0]]=off[0]||"CONF";offSlots[pair[1]]=off[1]||"PLC";}
