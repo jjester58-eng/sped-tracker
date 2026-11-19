@@ -10,7 +10,7 @@ import styles from "./schedule.module.css";
 type Teacher = { id: string; name: string | null; email: string | null };
 type Period = { id: string; name: string; sort_order: number | null; start_time: string | null; end_time: string | null };
 type Entry = {
-  id: string; teacher_id: string; class_period_id: string; entry_type: "teaching" | "conference" | "plc" | "off";
+  id: string; teacher_id: string; class_period_id: string; entry_type: "teaching" | "conference" | "plc" | "off" | "advisory";
   course_name: string | null; subject: string | null; department: string | null; room: string | null;
   capacity: number | null; school_year: string; is_active: boolean;
 };
@@ -18,7 +18,7 @@ type Inclusion = { id: string; schedule_entry_id: string; inclusion_teacher_id: 
 
 const yearOptions = ["2026-27", "2027-28", "2028-29"];
 const families = ["Math", "English Language Arts", "Science", "Social Studies", "CTE", "Fine Arts", "Physical Education", "World Languages", "Other"];
-const typeLabels: Record<Entry["entry_type"], string> = { teaching: "Teaching", conference: "Conference", plc: "PLC", off: "Off period" };
+const typeLabels: Record<Entry["entry_type"], string> = { teaching: "Teaching", conference: "Conference", plc: "PLC", off: "Off period", advisory: "Advisory / Duty" };
 
 function subjectFamily(subject: string | null, department: string | null) {
   const value = `${subject || ""} ${department || ""}`.toLowerCase();
@@ -147,7 +147,7 @@ export default function MasterSchedulePage() {
     const own = entries.find(e => e.teacher_id === teacher.id && e.class_period_id === period.id);
     const inclusion = inclusions.find(a => a.inclusion_teacher_id === teacher.id && entries.some(e => e.id === a.schedule_entry_id && e.class_period_id === period.id));
     const inclusionEntry = inclusion ? entries.find(e => e.id === inclusion.schedule_entry_id) : undefined;
-    if (own) return { teacher, period, status: own.entry_type === "teaching" ? "Teaching" : own.entry_type === "conference" ? "Conference" : own.entry_type === "plc" ? "PLC" : "Off period", detail: own.course_name || typeLabels[own.entry_type], room: own.room || "—", isOff: own.entry_type !== "teaching" };
+    if (own) return { teacher, period, status: own.entry_type === "teaching" ? "Teaching" : own.entry_type === "conference" ? "Conference" : own.entry_type === "plc" ? "PLC" : own.entry_type === "advisory" ? "Advisory / Duty" : "Off period", detail: own.course_name || typeLabels[own.entry_type], room: own.room || "—", isOff: own.entry_type === "conference" || own.entry_type === "plc" || own.entry_type === "off" };
     if (inclusionEntry) return { teacher, period, status: "Teaching · Inclusion", detail: inclusionEntry.course_name || "Class support", room: inclusionEntry.room || "—", isOff: false };
     return { teacher, period, status: "Unrecorded", detail: "No schedule entry recorded", room: "—", isOff: false };
   })), [teachers, periods, entries, inclusions]);
@@ -169,10 +169,10 @@ export default function MasterSchedulePage() {
       const demo = loadDemoSchedule(year);
       const item: Entry = {
         id: newDemoId("entry"), teacher_id: teacherId, class_period_id: periodId, entry_type: entryType,
-        course_name: entryType === "teaching" ? course.trim() : null,
+        course_name: entryType === "teaching" ? course.trim() : entryType === "advisory" ? "Advisory / Duty" : null,
         subject: entryType === "teaching" ? subject : null,
         department: entryType === "teaching" ? department.trim() || null : null,
-        room: entryType === "teaching" ? room.trim() : null,
+        room: entryType === "teaching" || entryType === "advisory" ? room.trim() || null : null,
         capacity: entryType === "teaching" ? Number(capacity) || 28 : null,
         school_year: year, is_active: true,
       };
@@ -223,7 +223,7 @@ export default function MasterSchedulePage() {
     {view==="schedule" ? <>
       <section className={styles.panel}><div className={styles.panelHeading}><div><h2>Add schedule entry</h2><p>Teaching, conference, PLC, and off-period records all live in the same schedule.</p></div></div>
         <form className={styles.entryForm} onSubmit={addEntry}>
-          <label>Entry type<select value={entryType} onChange={e=>setEntryType(e.target.value as Entry["entry_type"])}><option value="teaching">Teaching</option><option value="conference">Conference</option><option value="plc">PLC</option><option value="off">Off period</option></select></label>
+          <label>Entry type<select value={entryType} onChange={e=>setEntryType(e.target.value as Entry["entry_type"])}><option value="teaching">Teaching</option><option value="conference">Conference</option><option value="plc">PLC</option><option value="off">Off period</option><option value="advisory">Advisory / daily duty</option></select></label>
           <label>Teacher<select value={teacherId} onChange={e=>setTeacherId(e.target.value)} required><option value="">Choose teacher</option>{teachers.map(t=><option key={t.id} value={t.id}>{t.name || "Unnamed teacher"}</option>)}</select></label>
           <label>Period<select value={periodId} onChange={e=>setPeriodId(e.target.value)} required><option value="">Choose period</option>{periods.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
           {entryType==="teaching" && <><label>Course<input value={course} onChange={e=>setCourse(e.target.value)} placeholder="Course name" required/></label><label>Subject family<select value={subject} onChange={e=>setSubject(e.target.value)}>{families.map(f=><option key={f}>{f}</option>)}</select></label><label>Department<input value={department} onChange={e=>setDepartment(e.target.value)} placeholder="Department"/></label><label>Classroom<input value={room} onChange={e=>setRoom(e.target.value)} placeholder="Room number" required/></label><label>Capacity<input type="number" min="1" max="60" value={capacity} onChange={e=>setCapacity(e.target.value)}/></label></>}
