@@ -68,6 +68,7 @@ function syncGeneratedGridToMasterSchedule(data:PlanningData, sections:PlannedSe
         entries.push({id,teacher_id:staff.id,class_period_id:`p${period}`,entry_type:tag==="CONF"?"conference":tag==="PLC"?"plc":"off",course_name:tag,subject:null,department:staff.department,room:staff.room,capacity:null,school_year:year,is_active:true});
       }
     }
+    entries.push({id:`plan-${staff.id}-advisory`,teacher_id:staff.id,class_period_id:"adv",entry_type:"advisory",course_name:staff.advisory,subject:null,department:staff.department,room:staff.room,capacity:null,school_year:year,is_active:true});
   });
   const validIds=new Set(entries.map(e=>e.id));
   const inclusions=current.inclusions.filter(a=>validIds.has(a.schedule_entry_id));
