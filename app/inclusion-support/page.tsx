@@ -61,7 +61,7 @@ export default function InclusionSupportPage() {
     if (isDemoMode()) {
       const demo = loadDemoSchedule(year);
       setTeachers(demo.teachers); setPeriods(demo.periods);
-      setSections(demo.entries.filter(e => e.entry_type === "teaching"));
+      setSections(demo.entries.filter(e => e.entry_type === "teaching").map(e => ({ ...e, needs_inclusion: Boolean(e.needs_inclusion) })));
       setScheduleBlocks(demo.entries); setAssignments(demo.inclusions);
       if (demo.teachers.length) setSelectedTeacher(old => old || demo.teachers[0].id);
       const firstFlagged = demo.entries.find(e => e.entry_type === "teaching" && e.needs_inclusion);
