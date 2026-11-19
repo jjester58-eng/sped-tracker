@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/useSupabase";
 import { verifyAdminAccess } from "@/lib/adminAccess";
+import { isDemoMode, loadDemoSchedule, saveDemoSchedule, newDemoId } from "@/lib/scheduleDemo";
 import styles from "./inclusion.module.css";
 
 type Teacher = { id: string; name: string | null; email: string | null };
@@ -33,14 +34,16 @@ export default function InclusionSupportPage() {
   const [selectedSection, setSelectedSection] = useState("");
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setAuthorized(true);
+      setAuthChecked(true);
+      return;
+    }
     let alive = true;
     (async () => {
       const result = await verifyAdminAccess(supabase);
       if (!alive) return;
-      if (!result.hasSession) {
-        router.replace("/admin/login");
-        return;
-      }
+      if (!result.hasSession) { router.replace("/admin/login"); return; }
       if (!result.authorized) {
         setError(result.message || "Administrator access could not be confirmed.");
         setAuthChecked(true);
@@ -55,6 +58,16 @@ export default function InclusionSupportPage() {
   const load = useCallback(async () => {
     if (!authorized) return;
     setLoading(true); setError("");
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      setTeachers(demo.teachers); setPeriods(demo.periods);
+      setSections(demo.entries.filter(e => e.entry_type === "teaching"));
+      setScheduleBlocks(demo.entries); setAssignments(demo.inclusions);
+      if (demo.teachers.length) setSelectedTeacher(old => old || demo.teachers[0].id);
+      const firstFlagged = demo.entries.find(e => e.entry_type === "teaching" && e.needs_inclusion);
+      if (firstFlagged) setSelectedSection(old => old || firstFlagged.id);
+      setLoading(false); return;
+    }
     const [t,p,s,b,a] = await Promise.all([
       db.from("teachers").select("id,name,email").order("name"),
       db.from("class_periods").select("id,name,sort_order").eq("is_active",true).order("sort_order"),
@@ -94,6 +107,14 @@ export default function InclusionSupportPage() {
     const supportConflict=assignments.some(a=>a.inclusion_teacher_id===selectedTeacher&&a.class_period_id===section.class_period_id&&a.schedule_entry_id!==section.id);
     if(conflict||supportConflict){setError("Scheduling conflict: this inclusion teacher already has a teaching assignment during that period.");return;}
     setSaving(true);setError("");setNotice("");
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      const item = { id: newDemoId("inclusion"), schedule_entry_id: section.id, inclusion_teacher_id: selectedTeacher, class_period_id: section.class_period_id, school_year: year };
+      const next = { ...demo, inclusions: [...demo.inclusions, item] };
+      saveDemoSchedule(next); setAssignments(next.inclusions);
+      setNotice(`${teacherName(selectedTeacher)} assigned to ${section.course_name}, ${periodName(section.class_period_id)} (demo).`);
+      setSaving(false); return;
+    }
     const {data,error:insertError}=await db.from("inclusion_assignments").insert({schedule_entry_id:section.id,inclusion_teacher_id:selectedTeacher,class_period_id:section.class_period_id,school_year:year}).select("id,schedule_entry_id,inclusion_teacher_id,class_period_id,school_year").single();
     if(insertError)setError(insertError.message);
     else{setAssignments(old=>[...old,data]);setNotice(`${teacherName(selectedTeacher)} assigned to ${section.course_name}, ${periodName(section.class_period_id)}.`);}
@@ -101,12 +122,25 @@ export default function InclusionSupportPage() {
   }
 
   async function removeAssignment(id:string){
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      const next = { ...demo, inclusions: demo.inclusions.filter(a => a.id !== id) };
+      saveDemoSchedule(next); setAssignments(next.inclusions); setNotice("Demo inclusion assignment removed."); return;
+    }
     const {error:removeError}=await db.from("inclusion_assignments").delete().eq("id",id);
     if(removeError)setError(removeError.message);else{setAssignments(old=>old.filter(a=>a.id!==id));setNotice("Inclusion assignment removed.");}
   }
 
   async function toggleFlag(section:Section){
     const next=!section.needs_inclusion;
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      const nextData = { ...demo, entries: demo.entries.map(e => e.id === section.id ? { ...e, needs_inclusion: next } : e) };
+      saveDemoSchedule(nextData);
+      setSections(old => old.map(s => s.id === section.id ? { ...s, needs_inclusion: next } : s));
+      setScheduleBlocks(nextData.entries);
+      setNotice(next ? "Class flagged for inclusion review (demo)." : "Inclusion flag removed (demo)."); return;
+    }
     const {error:updateError}=await db.from("master_schedule_entries").update({needs_inclusion:next}).eq("id",section.id);
     if(updateError)setError(updateError.message);else{setSections(old=>old.map(s=>s.id===section.id?{...s,needs_inclusion:next}:s));setNotice(next?"Class flagged for inclusion review.":"Inclusion flag removed.");}
   }
