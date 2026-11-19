@@ -8,7 +8,8 @@ import styles from "./inclusion.module.css";
 type Teacher = { id: string; name: string | null; email: string | null };
 type Period = { id: string; name: string; sort_order: number | null };
 type Section = { id: string; teacher_id: string; class_period_id: string; entry_type: string; course_name: string | null; subject: string | null; department: string | null; room: string | null; school_year: string; needs_inclusion: boolean };
-type Assignment = { id: string; schedule_entry_id: string; inclusion_teacher_id: string; class_period_id: string; school_year: string };\ntype ScheduleBlock = { id: string; teacher_id: string; class_period_id: string; entry_type: string; course_name: string | null; room: string | null };
+type Assignment = { id: string; schedule_entry_id: string; inclusion_teacher_id: string; class_period_id: string; school_year: string };
+type ScheduleBlock = { id: string; teacher_id: string; class_period_id: string; entry_type: string; course_name: string | null; room: string | null };
 
 export default function InclusionSupportPage() {
   const supabase = useSupabase();
@@ -23,7 +24,8 @@ export default function InclusionSupportPage() {
   const [year, setYear] = useState("2026-27");
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [periods, setPeriods] = useState<Period[]>([]);
-  const [sections, setSections] = useState<Section[]>([]);\n  const [scheduleBlocks, setScheduleBlocks] = useState<ScheduleBlock[]>([]);
+  const [sections, setSections] = useState<Section[]>([]);
+  const [scheduleBlocks, setScheduleBlocks] = useState<ScheduleBlock[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [tab, setTab] = useState<"assign" | "schedules" | "coverage">("assign");
   const [selectedTeacher, setSelectedTeacher] = useState("");
@@ -48,13 +50,14 @@ export default function InclusionSupportPage() {
       db.from("teachers").select("id,name,email").order("name"),
       db.from("class_periods").select("id,name,sort_order").eq("is_active",true).order("sort_order"),
       db.from("master_schedule_entries").select("id,teacher_id,class_period_id,entry_type,course_name,subject,department,room,school_year,needs_inclusion").eq("school_year",year).eq("is_active",true).eq("entry_type","teaching"),
+      db.from("master_schedule_entries").select("id,teacher_id,class_period_id,entry_type,course_name,room").eq("school_year",year).eq("is_active",true),
       db.from("inclusion_assignments").select("id,schedule_entry_id,inclusion_teacher_id,class_period_id,school_year").eq("school_year",year),
     ]);
     const failure=t.error||p.error||s.error||b.error||a.error;
     if(failure) setError(failure.message||"Unable to load inclusion data. Apply the master schedule database setup script if these tables are missing.");
     setTeachers(t.data||[]); setPeriods(p.data||[]); setSections(s.data||[]); setScheduleBlocks(b.data||[]); setAssignments(a.data||[]);
-    if (!selectedTeacher && t.data?.length) setSelectedTeacher(t.data[0].id);
-    if (!selectedSection && s.data?.length) setSelectedSection(s.data[0].id);
+    if (t.data?.length) setSelectedTeacher(old => old || t.data[0].id);
+    if (s.data?.length) setSelectedSection(old => old || s.data[0].id);
     setLoading(false);
   }, [authorized, year]);
 
