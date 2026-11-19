@@ -39,13 +39,6 @@ function buildTeacherGrid(data:PlanningData) {
       const course=data.courses.find(c=>c.name.toLowerCase()===value.toLowerCase());
       if(course) sections.push({id:newPlanningId("section"),teacherId:staff.id,period:Number(period),courseId:course.id,courseName:course.name,department:course.department,room:staff.room,capacity:course.capacity,enrolled:0,spedEnrolled:0});
     });
-    for(let p=1;p<=8;p++){
-      const value=slots[p];
-      if(value&&!offChoices.includes(value)) {
-        const course=data.courses.find(c=>c.name.toLowerCase()===value.toLowerCase());
-        if(course&&!sections.some(s=>s.teacherId===staff.id&&s.period===p)) sections.push({id:newPlanningId("section"),teacherId:staff.id,period:p,courseId:course.id,courseName:course.name,department:course.department,room:staff.room,capacity:course.capacity,enrolled:0,spedEnrolled:0});
-      }
-    }
   });
   return sections;
 }
