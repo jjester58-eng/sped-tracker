@@ -15,19 +15,35 @@ const advisoryChoices=["Advisory Class","UI / Intervention","Hall / Campus Duty"
 const blankStaff=():StaffMember=>({id:"",name:"",department:"English",room:"",campus:"WHS",lunchWave:lunchChoices[0],offPeriods:2,offPeriodTypes:["CONF","PLC"],advisory:"Advisory Class",lockedPeriods:{},notes:"",status:"Active"});
 function getOffLabels(staff:StaffMember){const labels=staff.offPeriodTypes.slice(0,staff.offPeriods);while(labels.length<staff.offPeriods)labels.push(labels[0]==="CONF"?"PLC":"CONF");return labels;}
 
+function getOffPeriodSlots(staff:StaffMember,index:number){
+  const labels=getOffLabels(staff);
+  const occupied=new Set(Object.keys(staff.lockedPeriods||{}).map(Number));
+  const slots:Record<number,string>={};
+  const place=(preferred:number[],label:string)=>{
+    const period=preferred.find(p=>!occupied.has(p))??[2,3,4,5,6,7,1,8].find(p=>!occupied.has(p));
+    if(period){slots[period]=label;occupied.add(period);}
+  };
+  if(labels.length===2&&labels.every(label=>label==="TRAVEL")){
+    if(!occupied.has(4)){slots[4]="TRAVEL";occupied.add(4);}
+    if(!occupied.has(5)){slots[5]="TRAVEL";occupied.add(5);}
+  }else if(labels.length===2){
+    const pair=[[2,3],[4,5],[6,7]][index%3];
+    place([pair[0],2,3,4,5,6,7,1,8],labels[0]);
+    place([pair[1],3,5,7,2,4,6,1,8],labels[1]);
+  }else if(labels.length===1){
+    const preferred=2+(index%6);
+    place([preferred,2,3,4,5,6,7,1,8],labels[0]);
+  }
+  return slots;
+}
+
 function buildTeacherGrid(data:PlanningData) {
   const sections:PlannedSection[]=[];
   const staffRows=data.staff.filter(s=>s.status==="Active");
   staffRows.forEach((staff,index)=>{
     const slots:Record<number,string>={};
     Object.entries(staff.lockedPeriods||{}).forEach(([p,c])=>{const n=Number(p);if(n>=1&&n<=8&&c)slots[n]=c;});
-    const off=getOffLabels(staff);
-    if(off.every(x=>x==="TRAVEL")&&off.length===2){if(!slots[4])slots[4]="TRAVEL";if(!slots[5])slots[5]="TRAVEL";}
-    else {
-      const patterns=[[2,3],[4,5],[6,7]];
-      if(off.length===2){const pair=patterns[index%3];if(!slots[pair[0]])slots[pair[0]]=off[0]||"CONF";if(!slots[pair[1]])slots[pair[1]]=off[1]||"PLC";}
-      else if(off.length===1){const p=2+(index%6);if(!slots[p])slots[p]=off[0]||"CONF";}
-    }
+    Object.assign(slots,getOffPeriodSlots(staff,index));
     const assignment=data.assignments.find(a=>a.teacherId===staff.id);
     const courseList=(assignment?.preps||[]).flatMap(prep=>{
       const course=data.courses.find(c=>c.id===prep.courseId);
@@ -59,11 +75,7 @@ function syncGeneratedGridToMasterSchedule(data:PlanningData, sections:PlannedSe
   const entries:DemoEntry[]=[];
   data.staff.filter(s=>s.status==="Active").forEach((staff,index)=>{
     const ownSections=sections.filter(section=>section.teacherId===staff.id);
-    const off=getOffLabels(staff);
-    const offSlots:Record<number,string>={};
-    if(off.length===2&&off.every(x=>x==="TRAVEL")){offSlots[4]="TRAVEL";offSlots[5]="TRAVEL";}
-    else if(off.length===2){const pair=[[2,3],[4,5],[6,7]][index%3];offSlots[pair[0]]=off[0]||"CONF";offSlots[pair[1]]=off[1]||"PLC";}
-    else if(off.length===1){offSlots[2+(index%6)]=off[0]||"CONF";}
+    const offSlots=getOffPeriodSlots(staff,index);
     for(let period=1;period<=8;period++){
       const section=ownSections.find(s=>s.period===period);
       const id=`plan-${staff.id}-p${period}`;
