@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/useSupabase";
+import { verifyAdminAccess } from "@/lib/adminAccess";
 import styles from "./inclusion.module.css";
 
 type Teacher = { id: string; name: string | null; email: string | null };
@@ -34,12 +35,20 @@ export default function InclusionSupportPage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.replace("/admin/login"); return; }
-      const { data: isAdmin, error: adminError } = await db.rpc("is_admin");
-      if (adminError || !isAdmin) { setError("Administrator access is required to manage inclusion support."); setAuthChecked(true); return; }
-      if (alive) { setAuthorized(true); setAuthChecked(true); }
-    })().catch(() => { if (alive) { setError("Unable to verify administrator access."); setAuthChecked(true); } });
+      const result = await verifyAdminAccess(supabase);
+      if (!alive) return;
+      if (!result.hasSession) {
+        router.replace("/admin/login");
+        return;
+      }
+      if (!result.authorized) {
+        setError(result.message || "Administrator access could not be confirmed.");
+        setAuthChecked(true);
+        return;
+      }
+      setAuthorized(true);
+      setAuthChecked(true);
+    })();
     return () => { alive = false; };
   }, [supabase, router]);
 
