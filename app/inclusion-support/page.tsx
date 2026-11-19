@@ -94,9 +94,9 @@ export default function InclusionSupportPage() {
     const regular=scheduleBlocks.find(s=>s.teacher_id===selectedTeacher&&s.class_period_id===period.id);
     const support=assignments.find(a=>a.inclusion_teacher_id===selectedTeacher&&a.class_period_id===period.id);
     const supportSection=support?sections.find(s=>s.id===support.schedule_entry_id):undefined;
-    if(regular) return {period,status:regular.entry_type==="teaching"?"Teaching":regular.entry_type==="conference"?"Conference":regular.entry_type==="plc"?"PLC":"Off period",detail:regular.course_name||regular.entry_type,room:regular.room||"—"};
-    if(supportSection) return {period,status:"Teaching · Inclusion",detail:supportSection.course_name||"Class support",room:supportSection.room||"—"};
-    return {period,status:"Unrecorded",detail:"No schedule entry recorded",room:"—"};
+    if(regular) return {period,status:regular.entry_type==="teaching"?"Teaching":regular.entry_type==="conference"?"Conference":regular.entry_type==="plc"?"PLC":regular.entry_type==="advisory"?"Advisory / Duty":"Off period",detail:regular.course_name||regular.entry_type,room:regular.room||"—",isOff:regular.entry_type==="conference"||regular.entry_type==="plc"||regular.entry_type==="off"};
+    if(supportSection) return {period,status:"Teaching · Inclusion",detail:supportSection.course_name||"Class support",room:supportSection.room||"—",isOff:false};
+    return {period,status:"Unrecorded",detail:"No schedule entry recorded",room:"—",isOff:false};
   }),[periods,sections,assignments,scheduleBlocks,selectedTeacher]);
 
   async function assign() {
