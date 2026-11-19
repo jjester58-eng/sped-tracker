@@ -7,7 +7,7 @@ export type DemoEntry = {
   entry_type: "teaching" | "conference" | "plc" | "off";
   course_name: string | null; subject: string | null; department: string | null;
   room: string | null; capacity: number | null; school_year: string;
-  is_active: boolean; needs_inclusion: boolean;
+  is_active: boolean; needs_inclusion?: boolean;
 };
 export type DemoInclusion = { id: string; schedule_entry_id: string; inclusion_teacher_id: string; class_period_id: string; school_year: string };
 export type DemoScheduleData = { teachers: DemoTeacher[]; periods: DemoPeriod[]; entries: DemoEntry[]; inclusions: DemoInclusion[] };
