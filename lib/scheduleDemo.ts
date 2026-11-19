@@ -58,10 +58,10 @@ const seedEntries: DemoEntry[] = [
 }));
 const seed: DemoScheduleData = {
  teachers, periods, entries: seedEntries,
- inclusions: [{id:"ia1",schedule_entry_id:"e1",inclusion_teacher_id:"t9",class_period_id:"p1",school_year:"2026-27"}],
+ inclusions: [],
 };
 export function isDemoMode() {
-  return !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return process.env.NEXT_PUBLIC_SPED_DEMO_MODE !== "false";
 }
 export function loadDemoSchedule(year = "2026-27"): DemoScheduleData {
   if (typeof window === "undefined") return { ...seed, entries: seed.entries.filter(e=>e.school_year===year), inclusions: seed.inclusions.filter(a=>a.school_year===year) };
