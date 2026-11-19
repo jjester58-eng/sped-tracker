@@ -6,7 +6,8 @@ import styles from "./prototype.module.css";
 type Student = { id: string; name: string; grade: number; requests: string[] };
 type Section = { id: string; course: string; period: number; teacher: string; room: string; capacity: number };
 type Assignment = { studentId: string; sectionId: string; course: string; period: number };
-type Tab = "overview" | "students" | "master" | "builder";
+type Tab = "overview" | "students" | "master" | "availability" | "builder";
+type MasterSortKey = "teacher" | "department" | "course" | "period" | "room" | "status";
 
 const courses = [
   { name: "English I", department: "English", grades: "9" },
@@ -46,6 +47,29 @@ const initialSections: Section[] = [
   { id: "SPAN-01", course: "Spanish I", period: 1, teacher: "M. Garcia", room: "A301", capacity: 18 },
   { id: "SPAN-02", course: "Spanish I", period: 6, teacher: "M. Garcia", room: "A301", capacity: 18 },
 ];
+
+// Explicit non-teaching assignments for the fictional scheduling demo.
+// An unlisted period is intentionally shown as "—", not assumed to be an off period.
+const teacherNonTeachingPeriods = [
+  { teacher: "M. Carter", period: 3, type: "Conference" },
+  { teacher: "J. Lewis", period: 7, type: "PLC" },
+  { teacher: "S. Patel", period: 4, type: "Conference" },
+  { teacher: "D. Moore", period: 1, type: "PLC" },
+  { teacher: "R. Brooks", period: 6, type: "Conference" },
+  { teacher: "A. Nguyen", period: 5, type: "PLC" },
+  { teacher: "T. Evans", period: 3, type: "Conference" },
+  { teacher: "L. Davis", period: 7, type: "PLC" },
+  { teacher: "P. Wilson", period: 2, type: "Conference" },
+  { teacher: "K. Reed", period: 4, type: "PLC" },
+  { teacher: "C. Hall", period: 6, type: "Conference" },
+  { teacher: "J. Jester", period: 5, type: "PLC" },
+  { teacher: "M. Garcia", period: 2, type: "Conference" },
+];
+
+function getCourseDepartment(courseName: string) {
+  const normalized = courseName.toLowerCase();
+  return courses.find((course) => normalized.includes(course.name.toLowerCase()))?.department ?? "Other";
+}
 
 const firstNames = ["Avery", "Jordan", "Morgan", "Riley", "Cameron", "Taylor", "Parker", "Quinn", "Reese", "Drew", "Logan", "Casey", "Hayden", "Rowan", "Skyler", "Emerson", "Blake", "Finley", "Payton", "Sage", "Dakota", "Elliot", "Harper", "Kendall"];
 const lastNames = ["Anderson", "Bennett", "Campbell", "Diaz", "Ellis", "Foster", "Garcia", "Hughes", "Irwin", "Jackson", "Kim", "Lopez", "Mitchell", "Nelson", "Owens", "Price", "Reed", "Sullivan", "Turner", "Walker", "Young", "Brooks", "Cruz", "Perry"];
@@ -145,6 +169,17 @@ export default function SchedulingPrototypePage() {
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("9");
   const [notice, setNotice] = useState("Demo data is stored only in this browser session. No SIS or Supabase connection is active.");
+  const [masterView, setMasterView] = useState<"schedule" | "availability">("schedule");
+  const [masterSearch, setMasterSearch] = useState("");
+  const [masterDepartment, setMasterDepartment] = useState("all");
+  const [masterPeriod, setMasterPeriod] = useState("all");
+  const [masterRoom, setMasterRoom] = useState("all");
+  const [masterOffPeriod, setMasterOffPeriod] = useState("all");
+  const [masterSort, setMasterSort] = useState<MasterSortKey>("period");
+  const [masterSortDirection, setMasterSortDirection] = useState<"asc" | "desc">("asc");
+  const [availabilityPeriod, setAvailabilityPeriod] = useState("all");
+  const [availabilityDepartment, setAvailabilityDepartment] = useState("all");
+  const [availabilitySearch, setAvailabilitySearch] = useState("");
 
   const loads = useMemo(() => {
     const result: Record<string, number> = {};
@@ -155,6 +190,77 @@ export default function SchedulingPrototypePage() {
   const selected = students.find((student) => student.id === selectedStudent) ?? students[0];
   const selectedAssignments = assignments.filter((item) => item.studentId === selectedStudent).sort((a, b) => a.period - b.period);
   const filteredStudents = students.filter((student) => (student.name + " " + student.grade + " " + student.id).toLowerCase().includes(search.toLowerCase()));
+  const masterRows = useMemo(() => {
+    const teachingRows = sections.map((section) => ({
+      id: section.id,
+      teacher: section.teacher,
+      department: getCourseDepartment(section.course),
+      course: section.course,
+      period: section.period,
+      room: section.room,
+      status: "Teaching",
+      enrolled: loads[section.id] ?? 0,
+      capacity: section.capacity,
+    }));
+    const nonTeachingRows = teacherNonTeachingPeriods.map((entry) => ({
+      id: entry.teacher + "-" + entry.period + "-" + entry.type,
+      teacher: entry.teacher,
+      department: getCourseDepartment(sections.find((section) => section.teacher === entry.teacher)?.course ?? ""),
+      course: entry.type,
+      period: entry.period,
+      room: "—",
+      status: entry.type,
+      enrolled: 0,
+      capacity: 0,
+    }));
+    const term = masterSearch.trim().toLowerCase();
+    const filtered = [...teachingRows, ...nonTeachingRows].filter((row) => {
+      const matchesSearch = !term || [row.teacher, row.department, row.course, row.room, row.status, String(row.period)].some((value) => value.toLowerCase().includes(term));
+      const matchesDepartment = masterDepartment === "all" || row.department === masterDepartment;
+      const matchesPeriod = masterPeriod === "all" || String(row.period) === masterPeriod;
+      const matchesRoom = masterRoom === "all" || row.room === masterRoom;
+      const matchesOffPeriod =
+        masterOffPeriod === "all" ||
+        (masterOffPeriod === "teaching" && row.status === "Teaching") ||
+        (masterOffPeriod === "non-teaching" && row.status !== "Teaching") ||
+        row.status === masterOffPeriod;
+      return matchesSearch && matchesDepartment && matchesPeriod && matchesRoom && matchesOffPeriod;
+    });
+    return filtered.sort((a, b) => {
+      const left = a[masterSort];
+      const right = b[masterSort];
+      const comparison = typeof left === "number" && typeof right === "number"
+        ? left - right
+        : String(left).localeCompare(String(right));
+      return masterSortDirection === "asc" ? comparison : -comparison;
+    });
+  }, [sections, loads, masterSearch, masterDepartment, masterPeriod, masterRoom, masterOffPeriod, masterSort, masterSortDirection]);
+
+  const availabilityTeachers = useMemo(() => {
+    const teachers = [...new Set(sections.map((section) => section.teacher))].map((teacher) => ({
+      teacher,
+      department: getCourseDepartment(sections.find((section) => section.teacher === teacher)?.course ?? ""),
+    }));
+    const term = availabilitySearch.trim().toLowerCase();
+    return teachers.filter((item) =>
+      (!term || item.teacher.toLowerCase().includes(term)) &&
+      (availabilityDepartment === "all" || item.department === availabilityDepartment)
+    ).sort((a, b) => a.teacher.localeCompare(b.teacher));
+  }, [sections, availabilitySearch, availabilityDepartment]);
+
+  function getTeacherPeriod(teacher: string, period: number) {
+    const teaching = sections.find((section) => section.teacher === teacher && section.period === period);
+    if (teaching) return { status: "Teaching", detail: teaching.course, room: teaching.room };
+    const nonTeaching = teacherNonTeachingPeriods.find((entry) => entry.teacher === teacher && entry.period === period);
+    if (nonTeaching) return { status: nonTeaching.type, detail: nonTeaching.type, room: "—" };
+    return { status: "—", detail: "No entry in demo data", room: "—" };
+  }
+
+  function toggleMasterSort(key: MasterSortKey) {
+    if (masterSort === key) setMasterSortDirection((current) => current === "asc" ? "desc" : "asc");
+    else { setMasterSort(key); setMasterSortDirection("asc"); }
+  }
+
   const totalRequests = students.reduce((sum, student) => sum + student.requests.length, 0);
   const scheduledCount = assignments.length;
   const completion = totalRequests ? Math.round((scheduledCount / totalRequests) * 100) : 0;
@@ -274,6 +380,7 @@ export default function SchedulingPrototypePage() {
             ["overview", "Overview", "◫"],
             ["students", "Students", "♙"],
             ["master", "Master schedule", "▦"],
+            ["availability", "Teacher availability", "◷"],
             ["builder", "Schedule builder", "✣"],
           ] as [Tab, string, string][]).map(([key, label, icon]) => (
             <button key={key} className={tab === key ? styles.navActive : styles.navButton} onClick={() => setTab(key)}>
@@ -289,7 +396,7 @@ export default function SchedulingPrototypePage() {
 
         <section className={styles.content}>
           <div className={styles.pageHeading}>
-            <div><div className={styles.eyebrow}>CAMPUS OPERATIONS / 2027–28</div><h1>{tab === "overview" ? "Scheduling overview" : tab === "students" ? "Student records" : tab === "master" ? "Master schedule" : "Schedule builder"}</h1><p>Explore a working scheduling workflow using sample campus data.</p></div>
+            <div><div className={styles.eyebrow}>CAMPUS OPERATIONS / 2027–28</div><h1>{tab === "overview" ? "Scheduling overview" : tab === "students" ? "Student records" : tab === "master" ? "Master schedule" : tab === "availability" ? "Teacher availability" : "Schedule builder"}</h1><p>Explore a working scheduling workflow using sample campus data.</p></div>
             <div className={styles.headingActions}>
               <button className={styles.buttonSecondary} onClick={exportSchedules}>Export CSV</button>
               <button className={styles.buttonPrimary} onClick={generate}>✦ Generate schedules</button>
@@ -352,8 +459,73 @@ export default function SchedulingPrototypePage() {
 
           {tab === "master" && (
             <div className={styles.panel}>
-              <div className={styles.panelHeader}><div><h2>Master schedule sections</h2><p>{sections.length} sections · 7-period sample day · editable capacity model</p></div><span className={styles.softBadge}>READ-ONLY DEMO</span></div>
-              <div className={styles.sectionGrid}>{sections.map((section) => { const count = loads[section.id] ?? 0; const percent = Math.min(100, Math.round((count / section.capacity) * 100)); return <div className={styles.sectionCard} key={section.id}><div className={styles.sectionTop}><span className={styles.periodTag}>P{section.period}</span><span className={styles.sectionId}>{section.id}</span></div><h3>{section.course}</h3><p>{section.teacher} · Room {section.room}</p><div className={styles.progressTrack}><div className={percent >= 100 ? styles.progressWarning : styles.progressFill} style={{ width: percent + "%" }} /></div><div className={styles.sectionFoot}><span>{count} enrolled</span><span>Capacity {section.capacity}</span></div></div>; })}</div>
+              <div className={styles.panelHeader}>
+                <div><h2>Master schedule</h2><p>Search, filter, and sort teaching assignments and non-teaching periods.</p></div>
+                <span className={styles.softBadge}>DEMO DATA</span>
+              </div>
+              <div className={styles.viewToggle}>
+                <button className={masterView === "schedule" ? styles.viewActive : styles.viewButton} onClick={() => setMasterView("schedule")}>Schedule records</button>
+                <button className={masterView === "availability" ? styles.viewActive : styles.viewButton} onClick={() => setMasterView("availability")}>Teacher availability</button>
+              </div>
+              {masterView === "schedule" && <>
+                <div className={styles.masterFilters}>
+                  <input className={styles.searchInput} value={masterSearch} onChange={(event) => setMasterSearch(event.target.value)} placeholder="Search teacher, course, department, or room..." aria-label="Search master schedule" />
+                  <select value={masterDepartment} onChange={(event) => setMasterDepartment(event.target.value)} aria-label="Filter by department"><option value="all">All departments</option>{[...new Set(courses.map((course) => course.department))].sort().map((department) => <option key={department} value={department}>{department}</option>)}</select>
+                  <select value={masterPeriod} onChange={(event) => setMasterPeriod(event.target.value)} aria-label="Filter by period"><option value="all">All periods</option>{[1,2,3,4,5,6,7].map((period) => <option key={period} value={String(period)}>Period {period}</option>)}</select>
+                  <select value={masterRoom} onChange={(event) => setMasterRoom(event.target.value)} aria-label="Filter by classroom"><option value="all">All classrooms</option>{[...new Set(sections.map((section) => section.room))].sort().map((room) => <option key={room} value={room}>Room {room}</option>)}</select>
+                  <select value={masterOffPeriod} onChange={(event) => setMasterOffPeriod(event.target.value)} aria-label="Filter by period status"><option value="all">All period types</option><option value="teaching">Teaching</option><option value="non-teaching">All off periods (Conference + PLC)</option><option value="Conference">Conference</option><option value="PLC">PLC</option></select>
+                </div>
+                <div className={styles.subjectLegend}><strong>Subject colors</strong>{["Math","English","Science","Social Studies","Fine Arts","CTE","Elective","World Languages"].map((department) => <span key={department} className={styles["subject" + department.replace(/\s/g, "")]}>{department}</span>)}</div>
+                <div className={styles.tableWrap}>
+                  <table className={styles.masterTable}>
+                    <thead><tr>
+                      {([["teacher","Teacher"],["department","Department"],["course","Course / Assignment"],["period","Period"],["room","Classroom"],["status","Status"]] as [MasterSortKey,string][]).map(([key,label]) => <th key={key}><button className={styles.sortButton} onClick={() => toggleMasterSort(key)}>{label}{masterSort === key ? (masterSortDirection === "asc" ? " ↑" : " ↓") : " ↕"}</button></th>)}
+                      <th>Enrollment</th>
+                    </tr></thead>
+                    <tbody>
+                      {masterRows.map((row) => <tr key={row.id}>
+                        <td><strong>{row.teacher}</strong></td>
+                        <td><span className={styles["subject" + row.department.replace(/\s/g, "")]}>{row.department}</span></td>
+                        <td>{row.course}</td><td>P{row.period}</td><td>{row.room === "—" ? "—" : "Room " + row.room}</td>
+                        <td><span className={row.status === "Teaching" ? styles.statusTeaching : row.status === "Conference" ? styles.statusConference : styles.statusPlc}>{row.status}</span></td>
+                        <td>{row.status === "Teaching" ? row.enrolled + " / " + row.capacity : "—"}</td>
+                      </tr>)}
+                      {!masterRows.length && <tr><td colSpan={7} className={styles.emptyState}>No schedule entries match those filters.</td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+                <p className={styles.resultCount}>Showing {masterRows.length} schedule entries. Conference and PLC are classified as non-teaching periods.</p>
+              </>}
+              {masterView === "availability" && <div className={styles.availabilityBlock}>
+                <div className={styles.masterFilters}>
+                  <input className={styles.searchInput} value={availabilitySearch} onChange={(event) => setAvailabilitySearch(event.target.value)} placeholder="Search teachers..." aria-label="Search teachers" />
+                  <select value={availabilityDepartment} onChange={(event) => setAvailabilityDepartment(event.target.value)} aria-label="Filter availability by department"><option value="all">All departments</option>{[...new Set(courses.map((course) => course.department))].sort().map((department) => <option key={department} value={department}>{department}</option>)}</select>
+                  <select value={availabilityPeriod} onChange={(event) => setAvailabilityPeriod(event.target.value)} aria-label="Focus on a period"><option value="all">All periods</option>{[1,2,3,4,5,6,7].map((period) => <option key={period} value={String(period)}>Period {period}</option>)}</select>
+                </div>
+                <div className={styles.availabilityLegend}><span className={styles.statusTeaching}>Teaching (includes Inclusion)</span><span className={styles.statusConference}>Conference</span><span className={styles.statusPlc}>PLC</span><span className={styles.statusEmpty}>No entry recorded</span></div>
+                <div className={styles.tableWrap}><table className={styles.availabilityTable}>
+                  <thead><tr><th>Teacher</th><th>Department</th>{[1,2,3,4,5,6,7].filter((period) => availabilityPeriod === "all" || String(period) === availabilityPeriod).map((period) => <th key={period}>P{period}</th>)}</tr></thead>
+                  <tbody>{availabilityTeachers.map(({teacher, department}) => <tr key={teacher}><td><strong>{teacher}</strong></td><td><span className={styles["subject" + department.replace(/\s/g, "")]}>{department}</span></td>{[1,2,3,4,5,6,7].filter((period) => availabilityPeriod === "all" || String(period) === availabilityPeriod).map((period) => { const entry = getTeacherPeriod(teacher, period); return <td key={period}><div className={styles.availabilityCell}><span className={entry.status === "Teaching" ? styles.statusTeaching : entry.status === "Conference" ? styles.statusConference : entry.status === "PLC" ? styles.statusPlc : styles.statusEmpty}>{entry.status}</span>{entry.status === "Teaching" && <small>{entry.detail}<br />Room {entry.room}</small>}</div></td>; })}</tr>)}</tbody>
+                </table></div>
+                <p className={styles.resultCount}>Conference and PLC are the designated off-period types. A blank entry is not automatically treated as available.</p>
+              </div>}
+            </div>
+          )}
+
+          {tab === "availability" && (
+            <div className={styles.panel}>
+              <div className={styles.panelHeader}><div><h2>Teacher availability</h2><p>Period-by-period view of teaching assignments and designated off periods.</p></div><span className={styles.softBadge}>DEMO DATA</span></div>
+              <div className={styles.masterFilters}>
+                <input className={styles.searchInput} value={availabilitySearch} onChange={(event) => setAvailabilitySearch(event.target.value)} placeholder="Search teachers..." aria-label="Search teachers" />
+                <select value={availabilityDepartment} onChange={(event) => setAvailabilityDepartment(event.target.value)} aria-label="Filter availability by department"><option value="all">All departments</option>{[...new Set(courses.map((course) => course.department))].sort().map((department) => <option key={department} value={department}>{department}</option>)}</select>
+                <select value={availabilityPeriod} onChange={(event) => setAvailabilityPeriod(event.target.value)} aria-label="Focus on a period"><option value="all">All periods</option>{[1,2,3,4,5,6,7].map((period) => <option key={period} value={String(period)}>Period {period}</option>)}</select>
+              </div>
+              <div className={styles.availabilityLegend}><span className={styles.statusTeaching}>Teaching (includes Inclusion)</span><span className={styles.statusConference}>Conference</span><span className={styles.statusPlc}>PLC</span><span className={styles.statusEmpty}>No entry recorded</span></div>
+              <div className={styles.tableWrap}><table className={styles.availabilityTable}>
+                <thead><tr><th>Teacher</th><th>Department</th>{[1,2,3,4,5,6,7].filter((period) => availabilityPeriod === "all" || String(period) === availabilityPeriod).map((period) => <th key={period}>P{period}</th>)}</tr></thead>
+                <tbody>{availabilityTeachers.map(({teacher, department}) => <tr key={teacher}><td><strong>{teacher}</strong></td><td><span className={styles["subject" + department.replace(/\s/g, "")]}>{department}</span></td>{[1,2,3,4,5,6,7].filter((period) => availabilityPeriod === "all" || String(period) === availabilityPeriod).map((period) => { const entry = getTeacherPeriod(teacher, period); return <td key={period}><div className={styles.availabilityCell}><span className={entry.status === "Teaching" ? styles.statusTeaching : entry.status === "Conference" ? styles.statusConference : entry.status === "PLC" ? styles.statusPlc : styles.statusEmpty}>{entry.status}</span>{entry.status === "Teaching" && <small>{entry.detail}<br />Room {entry.room}</small>}</div></td>; })}</tr>)}</tbody>
+              </table></div>
+              <p className={styles.resultCount}>Conference and PLC are the designated off-period types. A blank entry is not automatically treated as available.</p>
             </div>
           )}
 
