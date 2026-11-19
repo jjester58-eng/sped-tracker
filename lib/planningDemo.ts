@@ -46,7 +46,7 @@ const seedCourses: CourseOffering[] = [
   ["c12","Spanish I","LOTE","LAN101",2,28],["c13","Cybersecurity","CTE / Fine Arts","CTE401",2,24],
   ["c14","Computer Science I","CTE / Fine Arts","CTE201",2,24],["c15","Art I","CTE / Fine Arts","ART101",2,24],
   ["c16","PE Foundations","Athletics / PE","PE101",3,45],["c17","Inclusion Support","NGC Shared / SPED","SPED101",2,8],
-].map(r=>({id:r[0],name:r[1],department:r[2],code:r[3],targetBlocks:r[4],capacity:r[5]}));
+].map((r:any)=>({id:r[0],name:r[1],department:r[2],code:r[3],targetBlocks:r[4],capacity:r[5]}));
 const seedAssignments: TeacherCourseAssignment[] = [
   {teacherId:"t1",preps:[{courseId:"c1",sections:2},{courseId:"c2",sections:2}]},
   {teacherId:"t2",preps:[{courseId:"c4",sections:2},{courseId:"c5",sections:1},{courseId:"c6",sections:1}]},
