@@ -145,6 +145,7 @@ export default function MasterSchedulePage() {
     if (!teacherId || !periodId) { setError("Choose a teacher and period."); return; }
     if (entryType === "teaching" && (!course.trim() || !room.trim())) { setError("Teaching entries need a course and classroom."); return; }
     if (entries.some(e => e.teacher_id === teacherId && e.class_period_id === periodId)) { setError("That teacher already has a schedule entry during this period."); return; }
+    if (inclusions.some(a => a.inclusion_teacher_id === teacherId && entries.some(e => e.id === a.schedule_entry_id && e.class_period_id === periodId))) { setError("That teacher is already assigned as inclusion support during this period."); return; }
     setSaving(true); setError(""); setSuccess("");
     const { data, error: insertError } = await db.from("master_schedule_entries").insert({
       teacher_id: teacherId, class_period_id: periodId, entry_type: entryType,
