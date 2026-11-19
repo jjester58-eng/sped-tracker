@@ -177,7 +177,7 @@ export default function MasterSchedulePage() {
         school_year: year, is_active: true,
       };
       const next = { ...demo, entries: [...demo.entries, item] };
-      saveDemoSchedule(next); setEntries(next.entries);
+      saveDemoSchedule(next, year); setEntries(next.entries);
       setCourse(""); setDepartment(""); setRoom("");
       setSuccess("Demo schedule entry saved in this browser.");
       setSaving(false); return;
