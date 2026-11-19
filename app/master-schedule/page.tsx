@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/useSupabase";
 import { verifyAdminAccess } from "@/lib/adminAccess";
+import { isDemoMode, loadDemoSchedule, saveDemoSchedule, newDemoId } from "@/lib/scheduleDemo";
 import styles from "./schedule.module.css";
 
 type Teacher = { id: string; name: string | null; email: string | null };
@@ -65,14 +66,16 @@ export default function MasterSchedulePage() {
   const db = supabase as any;
 
   useEffect(() => {
+    if (isDemoMode()) {
+      setAuthorized(true);
+      setAuthChecked(true);
+      return;
+    }
     let alive = true;
     (async () => {
       const result = await verifyAdminAccess(supabase);
       if (!alive) return;
-      if (!result.hasSession) {
-        router.replace("/admin/login");
-        return;
-      }
+      if (!result.hasSession) { router.replace("/admin/login"); return; }
       if (!result.authorized) {
         setError(result.message || "Administrator access could not be confirmed.");
         setAuthChecked(true);
@@ -87,6 +90,12 @@ export default function MasterSchedulePage() {
   const load = useCallback(async () => {
     if (!authorized) return;
     setLoading(true); setError("");
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      setTeachers(demo.teachers); setPeriods(demo.periods);
+      setEntries(demo.entries); setInclusions(demo.inclusions);
+      setLoading(false); return;
+    }
     const [teacherResult, periodResult, entryResult, inclusionResult] = await Promise.all([
       db.from("teachers").select("id,name,email").order("name"),
       db.from("class_periods").select("id,name,sort_order,start_time,end_time").eq("is_active", true).order("sort_order"),
@@ -156,6 +165,23 @@ export default function MasterSchedulePage() {
     if (entries.some(e => e.teacher_id === teacherId && e.class_period_id === periodId)) { setError("That teacher already has a schedule entry during this period."); return; }
     if (inclusions.some(a => a.inclusion_teacher_id === teacherId && entries.some(e => e.id === a.schedule_entry_id && e.class_period_id === periodId))) { setError("That teacher is already assigned as inclusion support during this period."); return; }
     setSaving(true); setError(""); setSuccess("");
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      const item: Entry = {
+        id: newDemoId("entry"), teacher_id: teacherId, class_period_id: periodId, entry_type: entryType,
+        course_name: entryType === "teaching" ? course.trim() : null,
+        subject: entryType === "teaching" ? subject : null,
+        department: entryType === "teaching" ? department.trim() || null : null,
+        room: entryType === "teaching" ? room.trim() : null,
+        capacity: entryType === "teaching" ? Number(capacity) || 28 : null,
+        school_year: year, is_active: true,
+      };
+      const next = { ...demo, entries: [...demo.entries, item] };
+      saveDemoSchedule(next); setEntries(next.entries);
+      setCourse(""); setDepartment(""); setRoom("");
+      setSuccess("Demo schedule entry saved in this browser.");
+      setSaving(false); return;
+    }
     const { data, error: insertError } = await db.from("master_schedule_entries").insert({
       teacher_id: teacherId, class_period_id: periodId, entry_type: entryType,
       course_name: entryType === "teaching" ? course.trim() : null,
@@ -172,6 +198,12 @@ export default function MasterSchedulePage() {
 
   async function removeEntry(entry: Entry) {
     if (!window.confirm("Remove this schedule entry? Any inclusion assignment linked to it will also be removed.")) return;
+    if (isDemoMode()) {
+      const demo = loadDemoSchedule(year);
+      const next = { ...demo, entries: demo.entries.filter(e => e.id !== entry.id), inclusions: demo.inclusions.filter(a => a.schedule_entry_id !== entry.id) };
+      saveDemoSchedule(next); setEntries(next.entries); setInclusions(next.inclusions);
+      setSuccess("Demo schedule entry removed."); return;
+    }
     const { error: deleteError } = await db.from("master_schedule_entries").delete().eq("id", entry.id);
     if (deleteError) setError(deleteError.message);
     else { setEntries(old => old.filter(e => e.id !== entry.id)); setInclusions(old => old.filter(a => a.schedule_entry_id !== entry.id)); setSuccess("Schedule entry removed."); }
