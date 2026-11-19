@@ -14,6 +14,36 @@ type Entry = {
 };
 type Inclusion = { id: string; schedule_entry_id: string; inclusion_teacher_id: string; school_year: string };
 
+const PREVIEW_MODE = true;
+const demoTeachers: Teacher[] = [
+{id:"10000000-0000-4000-8000-000000000001",name:"Alex Morgan",email:"alex@example.edu"},
+{id:"10000000-0000-4000-8000-000000000002",name:"Jamie Rivera",email:"jamie@example.edu"},
+{id:"10000000-0000-4000-8000-000000000003",name:"Taylor Brooks",email:"taylor@example.edu"},
+{id:"10000000-0000-4000-8000-000000000004",name:"Casey Bennett",email:"casey@example.edu"},
+{id:"10000000-0000-4000-8000-000000000005",name:"Jordan Lee",email:"jordan@example.edu"}];
+const demoPeriods: Period[] = [
+{id:"20000000-0000-4000-8000-000000000001",name:"1st Period",sort_order:1,start_time:"08:00",end_time:"08:50"},
+{id:"20000000-0000-4000-8000-000000000002",name:"2nd Period",sort_order:2,start_time:"08:55",end_time:"09:45"},
+{id:"20000000-0000-4000-8000-000000000003",name:"3rd Period",sort_order:3,start_time:"09:50",end_time:"10:40"},
+{id:"20000000-0000-4000-8000-000000000004",name:"4th Period",sort_order:4,start_time:"10:45",end_time:"11:35"},
+{id:"20000000-0000-4000-8000-000000000005",name:"5th Period",sort_order:5,start_time:"12:15",end_time:"13:05"},
+{id:"20000000-0000-4000-8000-000000000006",name:"6th Period",sort_order:6,start_time:"13:10",end_time:"14:00"}];
+const demoEntries: Entry[] = [
+{id:"30000000-0000-4000-8000-000000000001",teacher_id:demoTeachers[0].id,class_period_id:demoPeriods[0].id,entry_type:"teaching",course_name:"Algebra I",subject:"Math",department:"Mathematics",room:"A101",capacity:28,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000002",teacher_id:demoTeachers[1].id,class_period_id:demoPeriods[0].id,entry_type:"teaching",course_name:"English II",subject:"English Language Arts",department:"English",room:"B204",capacity:25,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000003",teacher_id:demoTeachers[2].id,class_period_id:demoPeriods[0].id,entry_type:"teaching",course_name:"Biology",subject:"Science",department:"Science",room:"C110",capacity:24,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000004",teacher_id:demoTeachers[0].id,class_period_id:demoPeriods[1].id,entry_type:"conference",course_name:null,subject:null,department:"Mathematics",room:null,capacity:null,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000005",teacher_id:demoTeachers[1].id,class_period_id:demoPeriods[1].id,entry_type:"teaching",course_name:"World History",subject:"Social Studies",department:"Social Studies",room:"B204",capacity:26,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000006",teacher_id:demoTeachers[2].id,class_period_id:demoPeriods[1].id,entry_type:"plc",course_name:null,subject:null,department:"Science",room:null,capacity:null,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000007",teacher_id:demoTeachers[3].id,class_period_id:demoPeriods[2].id,entry_type:"teaching",course_name:"Cybersecurity",subject:"CTE",department:"Career & Technical Education",room:"D302",capacity:20,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000008",teacher_id:demoTeachers[4].id,class_period_id:demoPeriods[2].id,entry_type:"teaching",course_name:"Financial Math",subject:"Math",department:"Mathematics",room:"A105",capacity:28,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000009",teacher_id:demoTeachers[0].id,class_period_id:demoPeriods[3].id,entry_type:"teaching",course_name:"Geometry",subject:"Math",department:"Mathematics",room:"A101",capacity:28,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000010",teacher_id:demoTeachers[3].id,class_period_id:demoPeriods[4].id,entry_type:"off",course_name:null,subject:null,department:null,room:null,capacity:null,school_year:"2026-27",is_active:true},
+{id:"30000000-0000-4000-8000-000000000011",teacher_id:demoTeachers[4].id,class_period_id:demoPeriods[5].id,entry_type:"teaching",course_name:"Engineering Design",subject:"CTE",department:"Career & Technical Education",room:"D305",capacity:22,school_year:"2026-27",is_active:true}];
+const demoInclusions: Inclusion[] = [
+{id:"40000000-0000-4000-8000-000000000001",schedule_entry_id:demoEntries[0].id,inclusion_teacher_id:demoTeachers[3].id,school_year:"2026-27"},
+{id:"40000000-0000-4000-8000-000000000002",schedule_entry_id:demoEntries[4].id,inclusion_teacher_id:demoTeachers[4].id,school_year:"2026-27"}];
+
 const yearOptions = ["2026-27", "2027-28", "2028-29"];
 const families = ["Math", "English Language Arts", "Science", "Social Studies", "CTE", "Fine Arts", "Physical Education", "World Languages", "Other"];
 const typeLabels: Record<Entry["entry_type"], string> = { teaching: "Teaching", conference: "Conference", plc: "PLC", off: "Off period" };
@@ -63,35 +93,16 @@ export default function MasterSchedulePage() {
 
   const db = supabase as any;
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.replace("/admin/login"); return; }
-      const { data: isAdmin, error: adminError } = await db.rpc("is_admin");
-      if (adminError || !isAdmin) { setError("Administrator access is required to manage the master schedule."); setAuthChecked(true); return; }
-      if (alive) { setAuthorized(true); setAuthChecked(true); }
-    })().catch(() => { if (alive) { setError("Unable to verify administrator access."); setAuthChecked(true); } });
-    return () => { alive = false; };
-  }, [supabase, router]);
+  useEffect(() => { setAuthorized(true); setAuthChecked(true); }, []);
 
   const load = useCallback(async () => {
-    if (!authorized) return;
-    setLoading(true); setError("");
-    const [teacherResult, periodResult, entryResult, inclusionResult] = await Promise.all([
-      db.from("teachers").select("id,name,email").order("name"),
-      db.from("class_periods").select("id,name,sort_order,start_time,end_time").eq("is_active", true).order("sort_order"),
-      db.from("master_schedule_entries").select("id,teacher_id,class_period_id,entry_type,course_name,subject,department,room,capacity,school_year,is_active").eq("school_year", year).eq("is_active", true),
-      db.from("inclusion_assignments").select("id,schedule_entry_id,inclusion_teacher_id,school_year").eq("school_year", year),
-    ]);
-    const firstError = teacherResult.error || periodResult.error || entryResult.error || inclusionResult.error;
-    if (firstError) setError(firstError.message || "Unable to load schedule data. Apply the master schedule database setup script first if these tables are not yet available.");
-    setTeachers(teacherResult.data || []);
-    setPeriods(periodResult.data || []);
-    setEntries(entryResult.data || []);
-    setInclusions(inclusionResult.data || []);
-    setLoading(false);
-  }, [authorized, year]);
+    setLoading(true);
+    setTeachers(demoTeachers); setPeriods(demoPeriods);
+    setEntries(demoEntries.filter(e=>e.school_year===year).map(e=>({...e})));
+    setInclusions(demoInclusions.filter(a=>a.school_year===year).map(a=>({...a})));
+    setTeacherId(old=>old||demoTeachers[0].id); setPeriodId(old=>old||demoPeriods[0].id);
+    setLoading(false); setError("");
+  }, [year]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -146,6 +157,7 @@ export default function MasterSchedulePage() {
     if (entryType === "teaching" && (!course.trim() || !room.trim())) { setError("Teaching entries need a course and classroom."); return; }
     if (entries.some(e => e.teacher_id === teacherId && e.class_period_id === periodId)) { setError("That teacher already has a schedule entry during this period."); return; }
     if (inclusions.some(a => a.inclusion_teacher_id === teacherId && entries.some(e => e.id === a.schedule_entry_id && e.class_period_id === periodId))) { setError("That teacher is already assigned as inclusion support during this period."); return; }
+    if (PREVIEW_MODE) { const added: Entry = {id:crypto.randomUUID(),teacher_id:teacherId,class_period_id:periodId,entry_type:entryType,course_name:entryType==="teaching"?course.trim():null,subject:entryType==="teaching"?subject:null,department:entryType==="teaching"?department.trim()||null:null,room:entryType==="teaching"?room.trim():null,capacity:entryType==="teaching"?Number(capacity)||28:null,school_year:year,is_active:true};setEntries(old=>[...old,added]);setCourse("");setDepartment("");setRoom("");setSuccess("Preview only: entry added in this browser session.");return; }
     setSaving(true); setError(""); setSuccess("");
     const { data, error: insertError } = await db.from("master_schedule_entries").insert({
       teacher_id: teacherId, class_period_id: periodId, entry_type: entryType,
@@ -163,6 +175,7 @@ export default function MasterSchedulePage() {
 
   async function removeEntry(entry: Entry) {
     if (!window.confirm("Remove this schedule entry? Any inclusion assignment linked to it will also be removed.")) return;
+    if (PREVIEW_MODE) { setEntries(old=>old.filter(e=>e.id!==entry.id));setInclusions(old=>old.filter(a=>a.schedule_entry_id!==entry.id));setSuccess("Preview only: entry removed in this browser session.");return; }
     const { error: deleteError } = await db.from("master_schedule_entries").delete().eq("id", entry.id);
     if (deleteError) setError(deleteError.message);
     else { setEntries(old => old.filter(e => e.id !== entry.id)); setInclusions(old => old.filter(a => a.schedule_entry_id !== entry.id)); setSuccess("Schedule entry removed."); }
@@ -170,11 +183,11 @@ export default function MasterSchedulePage() {
 
   function sortBy(key: string) { setSort(old => ({ key, direction: old.key === key && old.direction === "asc" ? "desc" : "asc" })); }
 
-  if (!authChecked) return <main className={styles.page}><div className={styles.shell}>Checking administrator access…</div></main>;
-  if (!authorized) return <main className={styles.page}><div className={styles.shell}><h1>Administrator access required</h1><p>{error || "Please sign in with an administrator account."}</p></div></main>;
+  if (!authChecked) return <main className={styles.page}><div className={styles.shell}>Loading schedule preview…</div></main>;
 
   return <main className={styles.page}><div className={styles.shell}>
     <header className={styles.header}><div><span className={styles.kicker}>CAMPUS SCHEDULING</span><h1>Master Schedule</h1><p>One shared schedule for classroom teachers, availability, and inclusion coverage.</p></div><label className={styles.yearPicker}>School year<select value={year} onChange={e=>setYear(e.target.value)}>{yearOptions.map(y=><option key={y}>{y}</option>)}</select></label></header>
+    <div className={styles.notice}>PREVIEW MODE · Sample data only. Changes are temporary and are not saved to the campus database.</div>
     <div className={styles.tabs}><button className={view==="schedule"?styles.active:""} onClick={()=>setView("schedule")}>Master schedule</button><button className={view==="availability"?styles.active:""} onClick={()=>setView("availability")}>Teacher availability</button><a href="/inclusion-support">Inclusion support →</a></div>
     <div className={styles.metrics}><div><strong>{entries.filter(e=>e.entry_type==="teaching").length}</strong><span>Teaching assignments</span></div><div><strong>{teachers.length}</strong><span>Teachers</span></div><div><strong>{entries.filter(e=>e.entry_type!=="teaching").length}</strong><span>Non-teaching blocks</span></div><div><strong>{inclusions.length}</strong><span>Inclusion assignments</span></div></div>
     {error && <div className={styles.error} role="alert">{error}</div>}{success && <div className={styles.success} role="status">{success}</div>}
