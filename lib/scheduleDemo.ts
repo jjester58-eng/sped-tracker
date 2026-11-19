@@ -4,7 +4,7 @@ export type DemoTeacher = { id: string; name: string; email: string | null };
 export type DemoPeriod = { id: string; name: string; sort_order: number; start_time: string | null; end_time: string | null };
 export type DemoEntry = {
   id: string; teacher_id: string; class_period_id: string;
-  entry_type: "teaching" | "conference" | "plc" | "off";
+  entry_type: "teaching" | "conference" | "plc" | "off" | "advisory";
   course_name: string | null; subject: string | null; department: string | null;
   room: string | null; capacity: number | null; school_year: string;
   is_active: boolean; needs_inclusion?: boolean;
@@ -14,14 +14,15 @@ export type DemoScheduleData = { teachers: DemoTeacher[]; periods: DemoPeriod[];
 
 const STORAGE_KEY = "sped-tracker-schedule-demo-v1";
 const periods: DemoPeriod[] = [
-  { id: "p1", name: "Period 1", sort_order: 1, start_time: "8:15 AM", end_time: "9:05 AM" },
-  { id: "p2", name: "Period 2", sort_order: 2, start_time: "9:10 AM", end_time: "10:40 AM" },
-  { id: "p3", name: "Period 3", sort_order: 3, start_time: "10:45 AM", end_time: "11:20 AM" },
-  { id: "p4", name: "Period 4", sort_order: 4, start_time: "11:25 AM", end_time: "1:30 PM" },
-  { id: "p5", name: "Period 5", sort_order: 5, start_time: "11:25 AM", end_time: "1:30 PM" },
-  { id: "p6", name: "Period 6", sort_order: 6, start_time: "1:35 PM", end_time: "2:15 PM" },
-  { id: "p7", name: "Period 7", sort_order: 7, start_time: "2:20 PM", end_time: "3:05 PM" },
-  { id: "p8", name: "Period 8", sort_order: 8, start_time: "3:10 PM", end_time: "4:00 PM" },
+  { id: "p1", name: "Period 1 · Daily", sort_order: 1, start_time: "8:15 AM", end_time: "9:05 AM" },
+  { id: "p2", name: "Period 2 · A Day", sort_order: 2, start_time: "9:10 AM", end_time: "10:40 AM" },
+  { id: "p3", name: "Period 3 · B Day", sort_order: 3, start_time: "9:10 AM", end_time: "10:40 AM" },
+  { id: "adv", name: "Advisory · Daily", sort_order: 4, start_time: "10:45 AM", end_time: "11:20 AM" },
+  { id: "p4", name: "Period 4 · A Day + Lunch", sort_order: 5, start_time: "11:25 AM", end_time: "1:30 PM" },
+  { id: "p5", name: "Period 5 · B Day + Lunch", sort_order: 6, start_time: "11:25 AM", end_time: "1:30 PM" },
+  { id: "p6", name: "Period 6 · A Day", sort_order: 7, start_time: "1:35 PM", end_time: "3:05 PM" },
+  { id: "p7", name: "Period 7 · B Day", sort_order: 8, start_time: "1:35 PM", end_time: "3:05 PM" },
+  { id: "p8", name: "Period 8 · Daily", sort_order: 9, start_time: "3:10 PM", end_time: "4:00 PM" },
 ];
 const teachers: DemoTeacher[] = [
   ["t1","Avery Johnson","avery.johnson@weatherfordisd.com"],["t2","Morgan Lee","morgan.lee@weatherfordisd.com"],
