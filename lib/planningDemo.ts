@@ -38,7 +38,7 @@ const seedStaff: StaffMember[] = [
   ["t11","Skyler Patel","NGC Shared / SPED","NGC 12","WHS ↔ NGC","Travel / Flex",2,["TRAVEL","TRAVEL"],"NGC Travel Buffer",{}],
   ["t12","Drew Wilson","NGC Shared / SPED","NGC 14","WHS ↔ NGC","Travel / Flex",2,["TRAVEL","TRAVEL"],"UI / Intervention",{}],
 ].map((r:any)=>({id:r[0],name:r[1],department:r[2],room:r[3],campus:r[4],lunchWave:r[5],offPeriods:r[6],offPeriodTypes:r[7],advisory:r[8],lockedPeriods:r[9],notes:"",status:"Active" as StaffStatus}));
-const seedCourses: CourseOffering[] = [
+const seedCourseRows: Array<[string, string, string, string, number, number]> = [
   ["c1","English I","English","ENG101",4,30],["c2","English II","English","ENG201",4,30],["c3","English III","English","ENG301",3,30],
   ["c4","Algebra I","Math","MAT101",4,30],["c5","Geometry","Math","MAT201",3,30],["c6","Algebra II","Math","MAT301",3,30],
   ["c7","Biology","Science","SCI101",4,30],["c8","Chemistry","Science","SCI201",3,30],["c9","Physics","Science","SCI301",2,28],
@@ -46,7 +46,10 @@ const seedCourses: CourseOffering[] = [
   ["c12","Spanish I","LOTE","LAN101",2,28],["c13","Cybersecurity","CTE / Fine Arts","CTE401",2,24],
   ["c14","Computer Science I","CTE / Fine Arts","CTE201",2,24],["c15","Art I","CTE / Fine Arts","ART101",2,24],
   ["c16","PE Foundations","Athletics / PE","PE101",3,45],["c17","Inclusion Support","NGC Shared / SPED","SPED101",2,8],
-].map((r:any)=>({id:r[0],name:r[1],department:r[2],code:r[3],targetBlocks:r[4],capacity:r[5]}));
+];
+const seedCourses: CourseOffering[] = seedCourseRows.map(([id, name, department, code, targetBlocks, capacity]) => ({
+  id, name, department, code, targetBlocks, capacity,
+}));
 const seedAssignments: TeacherCourseAssignment[] = [
   {teacherId:"t1",preps:[{courseId:"c1",sections:2},{courseId:"c2",sections:2}]},
   {teacherId:"t2",preps:[{courseId:"c4",sections:2},{courseId:"c5",sections:1},{courseId:"c6",sections:1}]},
