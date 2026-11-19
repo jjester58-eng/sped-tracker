@@ -99,7 +99,7 @@ create or replace function public.validate_master_schedule_teacher_period()
 returns trigger
 language plpgsql
 set search_path = public
-as $
+as $$
 begin
   if exists (
     select 1 from public.inclusion_assignments
@@ -111,7 +111,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 drop trigger if exists validate_master_schedule_teacher_period_before_write on public.master_schedule_entries;
 create trigger validate_master_schedule_teacher_period_before_write
