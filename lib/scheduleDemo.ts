@@ -73,13 +73,13 @@ export function loadDemoSchedule(year = "2026-27"): DemoScheduleData {
     return { ...data, entries: data.entries.filter(e=>e.school_year===year), inclusions: data.inclusions.filter(a=>a.school_year===year) };
   } catch { return { ...seed, entries: seed.entries.filter(e=>e.school_year===year), inclusions: seed.inclusions.filter(a=>a.school_year===year) }; }
 }
-export function saveDemoSchedule(data: DemoScheduleData) {
+export function saveDemoSchedule(data: DemoScheduleData, schoolYear?: string) {
   if (typeof window === "undefined") return;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     const existing = raw ? JSON.parse(raw) as DemoScheduleData : seed;
-    const yearsBeingSaved = new Set(data.entries.map(entry => entry.school_year));
-    const inclusionYearsBeingSaved = new Set(data.inclusions.map(item => item.school_year));
+    const yearsBeingSaved = new Set([...(schoolYear ? [schoolYear] : []), ...data.entries.map(entry => entry.school_year)]);
+    const inclusionYearsBeingSaved = new Set([...(schoolYear ? [schoolYear] : []), ...data.inclusions.map(item => item.school_year)]);
     const merged: DemoScheduleData = {
       teachers: data.teachers,
       periods: data.periods,
