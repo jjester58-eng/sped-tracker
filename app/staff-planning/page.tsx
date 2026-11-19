@@ -37,6 +37,7 @@ function buildTeacherGrid(data:PlanningData) {
     let cursor=0;
     rotated.forEach(period=>{if(!slots[period]&&courseList[cursor])slots[period]=courseList[cursor++].name;});
     Object.entries(slots).forEach(([period,value])=>{
+      if(offChoices.includes(value)) return;
       const course=data.courses.find(c=>c.name.toLowerCase()===value.toLowerCase()) || {id:"locked-"+staff.id+"-"+period,name:value,department:staff.department,capacity:28};
       sections.push({id:newPlanningId("section"),teacherId:staff.id,period:Number(period),courseId:course.id,courseName:course.name,department:course.department,room:staff.room,capacity:course.capacity,enrolled:0,spedEnrolled:0});
     });
