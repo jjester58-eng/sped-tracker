@@ -68,6 +68,7 @@ const teacherNonTeachingPeriods = [
 
 function getCourseDepartment(courseName: string) {
   const normalized = courseName.toLowerCase();
+  if (/(math|algebra|geometry|calculus|statistics)/i.test(normalized)) return "Math";
   return courses.find((course) => normalized.includes(course.name.toLowerCase()))?.department ?? "Other";
 }
 
@@ -169,7 +170,6 @@ export default function SchedulingPrototypePage() {
   const [newStudentName, setNewStudentName] = useState("");
   const [newStudentGrade, setNewStudentGrade] = useState("9");
   const [notice, setNotice] = useState("Demo data is stored only in this browser session. No SIS or Supabase connection is active.");
-  const [masterView, setMasterView] = useState<"schedule" | "availability">("schedule");
   const [masterSearch, setMasterSearch] = useState("");
   const [masterDepartment, setMasterDepartment] = useState("all");
   const [masterPeriod, setMasterPeriod] = useState("all");
@@ -463,11 +463,7 @@ export default function SchedulingPrototypePage() {
                 <div><h2>Master schedule</h2><p>Search, filter, and sort teaching assignments and non-teaching periods.</p></div>
                 <span className={styles.softBadge}>DEMO DATA</span>
               </div>
-              <div className={styles.viewToggle}>
-                <button className={masterView === "schedule" ? styles.viewActive : styles.viewButton} onClick={() => setMasterView("schedule")}>Schedule records</button>
-                <button className={masterView === "availability" ? styles.viewActive : styles.viewButton} onClick={() => setMasterView("availability")}>Teacher availability</button>
-              </div>
-              {masterView === "schedule" && <>
+
                 <div className={styles.masterFilters}>
                   <input className={styles.searchInput} value={masterSearch} onChange={(event) => setMasterSearch(event.target.value)} placeholder="Search teacher, course, department, or room..." aria-label="Search master schedule" />
                   <select value={masterDepartment} onChange={(event) => setMasterDepartment(event.target.value)} aria-label="Filter by department"><option value="all">All departments</option>{[...new Set(courses.map((course) => course.department))].sort().map((department) => <option key={department} value={department}>{department}</option>)}</select>
@@ -495,20 +491,7 @@ export default function SchedulingPrototypePage() {
                   </table>
                 </div>
                 <p className={styles.resultCount}>Showing {masterRows.length} schedule entries. Conference and PLC are classified as non-teaching periods.</p>
-              </>}
-              {masterView === "availability" && <div className={styles.availabilityBlock}>
-                <div className={styles.masterFilters}>
-                  <input className={styles.searchInput} value={availabilitySearch} onChange={(event) => setAvailabilitySearch(event.target.value)} placeholder="Search teachers..." aria-label="Search teachers" />
-                  <select value={availabilityDepartment} onChange={(event) => setAvailabilityDepartment(event.target.value)} aria-label="Filter availability by department"><option value="all">All departments</option>{[...new Set(courses.map((course) => course.department))].sort().map((department) => <option key={department} value={department}>{department}</option>)}</select>
-                  <select value={availabilityPeriod} onChange={(event) => setAvailabilityPeriod(event.target.value)} aria-label="Focus on a period"><option value="all">All periods</option>{[1,2,3,4,5,6,7].map((period) => <option key={period} value={String(period)}>Period {period}</option>)}</select>
-                </div>
-                <div className={styles.availabilityLegend}><span className={styles.statusTeaching}>Teaching (includes Inclusion)</span><span className={styles.statusConference}>Conference</span><span className={styles.statusPlc}>PLC</span><span className={styles.statusEmpty}>No entry recorded</span></div>
-                <div className={styles.tableWrap}><table className={styles.availabilityTable}>
-                  <thead><tr><th>Teacher</th><th>Department</th>{[1,2,3,4,5,6,7].filter((period) => availabilityPeriod === "all" || String(period) === availabilityPeriod).map((period) => <th key={period}>P{period}</th>)}</tr></thead>
-                  <tbody>{availabilityTeachers.map(({teacher, department}) => <tr key={teacher}><td><strong>{teacher}</strong></td><td><span className={styles["subject" + department.replace(/\s/g, "")]}>{department}</span></td>{[1,2,3,4,5,6,7].filter((period) => availabilityPeriod === "all" || String(period) === availabilityPeriod).map((period) => { const entry = getTeacherPeriod(teacher, period); return <td key={period}><div className={styles.availabilityCell}><span className={entry.status === "Teaching" ? styles.statusTeaching : entry.status === "Conference" ? styles.statusConference : entry.status === "PLC" ? styles.statusPlc : styles.statusEmpty}>{entry.status}</span>{entry.status === "Teaching" && <small>{entry.detail}<br />Room {entry.room}</small>}</div></td>; })}</tr>)}</tbody>
-                </table></div>
-                <p className={styles.resultCount}>Conference and PLC are the designated off-period types. A blank entry is not automatically treated as available.</p>
-              </div>}
+
             </div>
           )}
 
