@@ -111,7 +111,7 @@ export default function InclusionSupportPage() {
       const demo = loadDemoSchedule(year);
       const item = { id: newDemoId("inclusion"), schedule_entry_id: section.id, inclusion_teacher_id: selectedTeacher, class_period_id: section.class_period_id, school_year: year };
       const next = { ...demo, inclusions: [...demo.inclusions, item] };
-      saveDemoSchedule(next); setAssignments(next.inclusions);
+      saveDemoSchedule(next, year); setAssignments(next.inclusions);
       setNotice(`${teacherName(selectedTeacher)} assigned to ${section.course_name}, ${periodName(section.class_period_id)} (demo).`);
       setSaving(false); return;
     }
@@ -136,7 +136,7 @@ export default function InclusionSupportPage() {
     if (isDemoMode()) {
       const demo = loadDemoSchedule(year);
       const nextData = { ...demo, entries: demo.entries.map(e => e.id === section.id ? { ...e, needs_inclusion: next } : e) };
-      saveDemoSchedule(nextData);
+      saveDemoSchedule(nextData, year);
       setSections(old => old.map(s => s.id === section.id ? { ...s, needs_inclusion: next } : s));
       setScheduleBlocks(nextData.entries);
       setNotice(next ? "Class flagged for inclusion review (demo)." : "Inclusion flag removed (demo)."); return;
