@@ -32,6 +32,10 @@ function buildTeacherGrid(data:PlanningData) {
       const course=data.courses.find(c=>c.id===prep.courseId);
       return course?Array.from({length:Math.max(0,Math.min(8,prep.sections||0))},()=>course):[];
     });
+    Object.values(staff.lockedPeriods||{}).forEach(lockedName=>{
+      const lockedIndex=courseList.findIndex(course=>course.name.toLowerCase()===lockedName.toLowerCase());
+      if(lockedIndex>=0) courseList.splice(lockedIndex,1);
+    });
     const preferred=[2,3,4,5,6,7,1,8];
     const rotated=preferred.slice(index%6).concat(preferred.slice(0,index%6));
     let cursor=0;
@@ -78,6 +82,7 @@ function syncGeneratedGridToMasterSchedule(data:PlanningData, sections:PlannedSe
 
 function autoSchedule(data:PlanningData, sections:PlannedSection[]) {
   const working=sections.map(s=>({...s}));
+  const advisoryTeachers=data.staff.filter(s=>/Advisory|UI/i.test(s.advisory)).map(s=>({staff:s,enrolled:0}));
   const schedules=data.requests.map(student=>{
     const placed:Record<number,string>={};
     const missing:string[]=[];
@@ -94,7 +99,11 @@ function autoSchedule(data:PlanningData, sections:PlannedSection[]) {
       const altIndex=remaining.findIndex(alt=>working.some(s=>s.courseName.toLowerCase()===alt.toLowerCase()&&!placed[s.period]&&s.enrolled<s.capacity&&(!student.sped||s.spedEnrolled<8)));
       if(altIndex>=0){const alt=remaining.splice(altIndex,1)[0];const chosen=working.filter(s=>s.courseName.toLowerCase()===alt.toLowerCase()&&!placed[s.period]&&s.enrolled<s.capacity&&(!student.sped||s.spedEnrolled<8)).sort((a,b)=>a.enrolled-b.enrolled)[0];chosen.enrolled++;if(student.sped)chosen.spedEnrolled++;placed[chosen.period]=chosen.courseName+" · "+(data.staff.find(t=>t.id===chosen.teacherId)?.name||"Teacher")+" · "+chosen.room;missing.splice(missing.indexOf(request),1);}
     });
-    return {studentId:student.id,name:student.name,grade:student.grade,sped:student.sped,periods:placed,advisory:"Advisory / daily assignment pending",missing,status:missing.length?"Needs counselor review":"All requests placed"};
+    advisoryTeachers.sort((a,b)=>a.enrolled-b.enrolled);
+    const advisory=advisoryTeachers[0];
+    if(advisory) advisory.enrolled++;
+    const advisoryLabel=advisory?`${advisory.staff.advisory} (${advisory.staff.name} - ${advisory.staff.room})`:"Unassigned";
+    return {studentId:student.id,name:student.name,grade:student.grade,sped:student.sped,periods:placed,advisory:advisoryLabel,missing,status:missing.length?"Needs counselor review":"All requests placed"};
   });
   return {working,schedules};
 }
@@ -134,7 +143,7 @@ export default function StaffPlanningPage(){
   function updateLocked(staffId:string,period:number,value:string){if(!data)return;setData({...data,staff:data.staff.map(s=>s.id===staffId?{...s,lockedPeriods:{...s.lockedPeriods,...(value?{[period]:value}:{})}}:s)});}
   function addStudent(event:React.FormEvent){event.preventDefault();if(!data||!studentDraft.name.trim())return;const item:StudentRequest={id:editingStudent||newPlanningId("student"),name:studentDraft.name.trim(),grade:studentDraft.grade,sped:studentDraft.sped,requests:studentDraft.requests.filter(Boolean),alternates:studentDraft.alternates.filter(Boolean),notes:studentDraft.notes};setData({...data,requests:editingStudent?data.requests.map(s=>s.id===editingStudent?item:s):[...data.requests,item]});setStudentDraft({name:"",grade:10,sped:false,requests:Array(8).fill(""),alternates:["","",""],notes:""});setEditingStudent("");setMessage("Student course requests saved.");}
   function editStudent(s:StudentRequest){setStudentDraft({name:s.name,grade:s.grade,sped:s.sped,requests:Array.from({length:8},(_,i)=>s.requests[i]||""),alternates:Array.from({length:3},(_,i)=>s.alternates[i]||""),notes:s.notes});setEditingStudent(s.id);}
-  function importBulkRequests(){if(!data||!bulkText.trim())return;const rows=bulkText.trim().split(/\\r?\\n/).filter(Boolean);const imported:StudentRequest[]=[];rows.forEach((line,index)=>{const cells=line.split("\\t");if(index===0&&/student.?id/i.test(cells[0]||""))return;if(cells.length<5)return;const name=(cells[1]||"").trim();if(!name)return;imported.push({id:(cells[0]||"").trim()||newPlanningId("student"),name,grade:Number(cells[2])||10,sped:/^y|yes|true/i.test((cells[3]||"").trim()),requests:cells.slice(4,12).map(x=>x.trim()).filter(Boolean),alternates:cells.slice(12,15).map(x=>x.trim()).filter(Boolean),notes:(cells[15]||"").trim()});});if(!imported.length){setMessage("No student rows found. Copy rows from the spreadsheet including Student ID, Name, Grade, SPED, 8 requests, 3 alternates, and Notes.");return;}setData({...data,requests:[...data.requests,...imported]});setBulkText("");setMessage(`Imported ${imported.length} student request rows from the spreadsheet.`);}
+  function importBulkRequests(){if(!data||!bulkText.trim())return;const rows=bulkText.trim().split(/\r?\n/).filter(Boolean);const imported:StudentRequest[]=[];rows.forEach((line,index)=>{const cells=line.split("\t");if(index===0&&/student.?id/i.test(cells[0]||""))return;if(cells.length<5)return;const name=(cells[1]||"").trim();if(!name)return;imported.push({id:(cells[0]||"").trim()||newPlanningId("student"),name,grade:Number(cells[2])||10,sped:/^y|yes|true/i.test((cells[3]||"").trim()),requests:cells.slice(4,12).map(x=>x.trim()).filter(Boolean),alternates:cells.slice(12,15).map(x=>x.trim()).filter(Boolean),notes:(cells[15]||"").trim()});});if(!imported.length){setMessage("No student rows found. Copy rows from the spreadsheet including Student ID, Name, Grade, SPED, 8 requests, 3 alternates, and Notes.");return;}setData({...data,requests:[...data.requests,...imported]});setBulkText("");setMessage(`Imported ${imported.length} student request rows from the spreadsheet.`);}
   function runScheduler(){if(!data)return;const sections=buildTeacherGrid(data);syncGeneratedGridToMasterSchedule(data,sections);const result=autoSchedule(data,sections);setData({...data,generatedSections:result.working,studentSchedules:result.schedules});setMessage(`Built ${sections.length} teacher sections, synced the teacher schedule, and placed ${result.schedules.length} student schedules. Review any requests that remain unplaced.`);setTab("results");}
   if(!data)return <main className={styles.page}><div className={styles.shell}>Loading demo planning workspace…</div></main>;
   return <main className={styles.page}><div className={styles.shell}>
