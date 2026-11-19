@@ -74,7 +74,28 @@ export function loadDemoSchedule(year = "2026-27"): DemoScheduleData {
   } catch { return { ...seed, entries: seed.entries.filter(e=>e.school_year===year), inclusions: seed.inclusions.filter(a=>a.school_year===year) }; }
 }
 export function saveDemoSchedule(data: DemoScheduleData) {
-  if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const existing = raw ? JSON.parse(raw) as DemoScheduleData : seed;
+    const yearsBeingSaved = new Set(data.entries.map(entry => entry.school_year));
+    const inclusionYearsBeingSaved = new Set(data.inclusions.map(item => item.school_year));
+    const merged: DemoScheduleData = {
+      teachers: data.teachers,
+      periods: data.periods,
+      entries: [
+        ...existing.entries.filter(entry => !yearsBeingSaved.has(entry.school_year)),
+        ...data.entries,
+      ],
+      inclusions: [
+        ...existing.inclusions.filter(item => !inclusionYearsBeingSaved.has(item.school_year)),
+        ...data.inclusions,
+      ],
+    };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+  } catch {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
 }
 export function newDemoId(prefix: string) {
   return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7);
