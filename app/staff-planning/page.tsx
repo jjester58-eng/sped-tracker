@@ -13,6 +13,7 @@ const offChoices=["CONF","PLC","DEPT","COACH","TRAVEL"];
 const lunchChoices=["A Lunch (11:25-11:55)","B Lunch (12:10-12:40)","C Lunch (1:00-1:30)","Travel / Flex"];
 const advisoryChoices=["Advisory Class","UI / Intervention","Hall / Campus Duty","Lunch Prep / Cafeteria Duty","NGC Travel Buffer"];
 const blankStaff=():StaffMember=>({id:"",name:"",department:"English",room:"",campus:"WHS",lunchWave:lunchChoices[0],offPeriods:2,offPeriodTypes:["CONF","PLC"],advisory:"Advisory Class",lockedPeriods:{},notes:"",status:"Active"});
+function getOffLabels(staff:StaffMember){const labels=staff.offPeriodTypes.slice(0,staff.offPeriods);while(labels.length<staff.offPeriods)labels.push(labels[0]==="CONF"?"PLC":"CONF");return labels;}
 
 function buildTeacherGrid(data:PlanningData) {
   const sections:PlannedSection[]=[];
@@ -20,7 +21,7 @@ function buildTeacherGrid(data:PlanningData) {
   staffRows.forEach((staff,index)=>{
     const slots:Record<number,string>={};
     Object.entries(staff.lockedPeriods||{}).forEach(([p,c])=>{const n=Number(p);if(n>=1&&n<=8&&c)slots[n]=c;});
-    const off=staff.offPeriodTypes.slice(0,staff.offPeriods);
+    const off=getOffLabels(staff);
     if(off.every(x=>x==="TRAVEL")&&off.length===2){if(!slots[4])slots[4]="TRAVEL";if(!slots[5])slots[5]="TRAVEL";}
     else {
       const patterns=[[2,3],[4,5],[6,7]];
