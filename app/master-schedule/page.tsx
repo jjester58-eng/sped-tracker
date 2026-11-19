@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useSupabase } from "@/lib/useSupabase";
 import styles from "./schedule.module.css";
 
@@ -33,7 +32,6 @@ function subjectFamily(subject: string | null, department: string | null) {
 
 export default function MasterSchedulePage() {
   const supabase = useSupabase();
-  const router = useRouter();
   const [authorized, setAuthorized] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,17 +61,8 @@ export default function MasterSchedulePage() {
 
   const db = supabase as any;
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { router.replace("/admin/login"); return; }
-      const { data: isAdmin, error: adminError } = await db.rpc("is_admin");
-      if (adminError || !isAdmin) { setError("Administrator access is required to manage the master schedule."); setAuthChecked(true); return; }
-      if (alive) { setAuthorized(true); setAuthChecked(true); }
-    })().catch(() => { if (alive) { setError("Unable to verify administrator access."); setAuthChecked(true); } });
-    return () => { alive = false; };
-  }, [supabase, router]);
+  // Master schedule is intentionally open; authentication is not required to view or use this workspace.
+  useEffect(() => { setAuthorized(true); setAuthChecked(true); }, []);
 
   const load = useCallback(async () => {
     if (!authorized) return;
